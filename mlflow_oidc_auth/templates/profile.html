@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Profile</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+</head>
+
+<body>
+    {% if not username %}
+    <p>You are not logged in. Please log in first.</p>
+    <a href="{{ url_for('login') }}"><button>OIDC Login</button></a>
+    {% else %}
+    <h1>Hello, {{ username }}! This is your groups.</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>Group names</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for group in groups%}
+            <tr>
+                <td>
+                    {{ group }}
+                </td>
+            </tr>
+             {% endfor%}
+            </form>
+        </tbody>
+    <a href="{{ url_for('index') }}"><button>Back</button></a>
+    <a href="{{ url_for('logout') }}"><button>Logout</button></a>
+    {% endif %}
+</body>
+
+</html>

@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en-US">
+{% set title = "Permissions " ~ active_tab %}
+{% include '_head.html' %}
+
+<body>
+    {% include '_header.html' %}
+    <div class="content">
+        <h1>Permissions for {{ current_username }}</h1>
+
+        {% set table_header = "Experiments access" %}
+        {% set table_experiment_id  = "experiments" %}
+        {% include '_table_w_search_user_details.html' %}
+
+<!--        {% set table_header = "Models access" %}-->
+<!--        {% set table_model_id = "models" %}-->
+<!--        {% include '_table_w_search_user_details.html' %}-->
+    </div>
+    {% include '_footer.html' %}
+</body>
+
+</html>

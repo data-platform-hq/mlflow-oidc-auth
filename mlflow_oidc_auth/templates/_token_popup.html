@@ -1,0 +1,58 @@
+<div id="popup" class="popup">
+    <div class="popup-content">
+        <span class="close-button" id="closeButton">&times;</span>
+        <h3>Access key:</h3>
+        <div class="token-container">
+            <input type="text" id="token" name="token" value="put_here_token" readonly="true">
+            <button id="copyButton"><i class="fas fa-copy"></i></button>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const popupButton = document.getElementById('accesskey');
+        const popup = document.getElementById('popup');
+        const closeButton = document.getElementById('closeButton');
+        const tokenInput = document.getElementById('token');
+        const copyButton = document.getElementById('copyButton');
+        const updateButton = document.getElementById('updateButton');
+        popupButton.addEventListener('click', () => {
+            popup.style.display = 'block';
+        });
+
+        closeButton.addEventListener('click', () => {
+            popup.style.display = 'none';
+        });
+        copyButton.addEventListener('click', () => {
+            tokenInput.select(); // Select the token value
+            document.execCommand('copy'); // Copy the selected text
+            // Optionally, you can display a tooltip or a message indicating that the token has been copied
+            copyButton.innerHTML = '<i class="fas fa-check"></i>'; // Change the icon to a checkmark
+            setTimeout(() => {
+                copyButton.innerHTML = '<i class="fas fa-copy"></i>'; // Reset the icon after a short delay
+            }, 1000);
+        });
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                popup.style.display = 'none';
+            }
+
+            updateButton.addEventListener('click', async () => {
+             try {
+                const response = await fetch('/update_username_password', { method: 'POST' });
+                if (!response.ok) {
+                    throw new Error('Failed to update password');
+                }
+                const data = await response.json();
+                // Update the token input field with the new password
+                tokenInput.value = data.new_password;
+            } catch (error) {
+                console.error('Error:', error.message);
+            }
+        });
+        });
+    });
+
+
+</script>

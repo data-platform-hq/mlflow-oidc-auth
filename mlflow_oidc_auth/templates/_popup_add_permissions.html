@@ -1,0 +1,45 @@
+<div id="popup_add_permissions_{{ table_id }}" class="popup">
+    <div class="popup-content">
+        <span class="close-button" id="close-button-add-permissions-{{ table_id }}">&times;</span>
+        <h3>{{ permission_who }} permission for <div id="popup-content-{{ table_id }}"></div>:</h3>
+        <dropdown>
+            <select id="permissions_{{ table_id }}">
+                <option value="READ">Read</option>
+                <option value="EDIT">Edit</option>
+                <option value="MANAGE">Manage</option>
+                <option value="NO_PERMISSIONS">No permission</option>
+            </select>
+        </dropdown>
+        <button id="updateButton_{{ table_id }}">Update</button>
+        <button id="revokeButton_{{ table_id }}">Revoke</button>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const table = document.getElementById('dataTable_{{ table_id }}');
+        const popup = document.getElementById('popup_{{ table_id }}');
+        const closeButton = document.getElementById('closeButton_{{ table_id }}');
+        const popupContent = document.getElementById('popup-content-{{ table_id }}');
+        
+        table.addEventListener('click', function (event) {
+            if (event.target.getAttribute('data-id')) {
+                const dataId = event.target.getAttribute('data-id');
+                popupContent.textContent = `${dataId}`;
+                popup.style.display = 'block';
+            }
+        });
+
+        closeButton.addEventListener('click', () => {
+            popup.style.display = 'none';
+        });
+        
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                popup.style.display = 'none';
+            }
+        });
+    });
+
+
+</script>

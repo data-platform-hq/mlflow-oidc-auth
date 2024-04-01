@@ -1,0 +1,72 @@
+<div class="table-block">
+    <div class="block-header">
+        <h2>{{ table_header }}</h2>
+        <div class="search-container">
+            <input type="text" id="searchInput_{{ table_id }}" placeholder="Search...">
+        </div>
+    </div>
+    <table id="dataTable_{{ table_id }}">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Permission</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Experiment 1</td>
+                <td>Read</td>
+            </tr>
+            <tr>
+                <td>Experiment 2</td>
+                <td>Write</td>
+            </tr>
+            <tr>
+                <td>Experiment 3</td>
+                <td>Read/Write</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+<!-- <script src="{{ url_for('oidc_static', filename='script.js') }}"></script> -->
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+    const searchInput = document.getElementById('searchInput_{{ table_id }}');
+    
+    // Function to filter table rows based on search input
+    const filterTable = () => {
+        const filter = searchInput.value.toLowerCase();
+        const rows = document.querySelectorAll('#dataTable_{{ table_id }} tbody tr');
+        
+        rows.forEach(row => {
+            const columns = row.querySelectorAll('td');
+            let found = false;
+            
+            columns.forEach(column => {
+                if (column.textContent.toLowerCase().includes(filter)) {
+                    found = true;
+                }
+            });
+            
+            if (found) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    };
+    
+    // Event listener for search input keyup event
+    searchInput.addEventListener('keyup', filterTable);
+    
+    // Event listener for search input keydown event to handle "Enter" and "Escape" keys
+    searchInput.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+        } else if (event.key === 'Escape') {
+            searchInput.value = '';  // Clear search input
+            filterTable();  // Reset table filtering
+        }
+    });
+});
+</script>

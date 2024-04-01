@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Login</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    {% if appstream_allowed %}
+    {% if not admin_allowed %}
+    <meta http-equiv="refresh" content="25; url='{{ url_for('appstream') }}'"/>
+    <style>
+        body {
+            cursor:wait;
+        }
+    </style>
+    {% endif %}
+    {% endif %}
+</head>
+
+<body>
+    {% if not username %}
+    <h1>auth page</h1>
+    <p>Please log in with OpenID Connect:</p>
+    <a href="{{ url_for('login') }}"><button>OIDC Login</button></a>
+    {% else %}
+    <p>Hello, {{ username }}!</p>
+    <a href="{{ url_for('create_user_page') }}"><button>User Administration</button></a>
+<!--    <a href="{{ url_for('reset_password_page') }}"><button>Reset Password</button></a>-->
+    {% if appstream_allowed %}
+    {% if not admin_allowed %}
+    <p>You will be automatically redirected in 25 seconds.</p>
+    <p>Or click AppStream button to continue</p>
+    {% endif %}
+    <a href="{{ url_for('appstream') }}"><button>AppStream</button></a>
+    {% endif %}
+    {% if admin_allowed %}
+    <a href="{{ url_for('admin') }}"><button>Admin</button></a>
+    {% endif %}
+    <a href="{{ url_for('profile') }}"><button>View Profile</button></a>
+    <a href="{{ url_for('logout') }}"><button>Logout</button></a>
+    {% endif %}
+    {% include '_footer.html' %}
+</body>
+
+</html>
