@@ -38,16 +38,15 @@ from mlflow.tracking import MlflowClient
 from oauthlib.oauth2 import WebApplicationClient
 
 from mlflow_oidc_auth import routes
-from mlflow_oidc_auth.client import AuthServiceClient
+# from mlflow_oidc_auth.client import AuthServiceClient
 from mlflow_oidc_auth.config import AppConfig
 from mlflow_oidc_auth.sqlalchemy_store import SqlAlchemyStore
 
 # Create the OAuth2 client
 auth_client = WebApplicationClient(AppConfig.get_property("OIDC_CLIENT_ID"))
-# mlflow_auth_client = AuthServiceClient(os.environ.get("TRACKING_URI"))
 mlflow_client = MlflowClient()
 store = SqlAlchemyStore()
-store.init_db((AppConfig.get_property("DATABASE_URI")))
+store.init_db((AppConfig.get_property("OIDC_USERS_DB_URI")))
 _logger = logging.getLogger(__name__)
 
 
@@ -119,6 +118,12 @@ def _set_username(username):
     session["username"] = username
     return
 
+def _set_is_admin(_is_admin: bool = False):
+    session["is_admin"] = _is_admin
+    return
+
+def _get_is_admin():
+    return session.get("is_admin")
 
 def _get_permission_from_experiment_id() -> Permission:
     experiment_id = _get_request_param("experiment_id")
@@ -166,7 +171,13 @@ def before_request_hook():
     else:
         # authentication
         if not _get_username():
-            return render_template("auth.html", username=None)
+            return render_template(
+                "auth.html",
+                username=None,
+                provide_display_name=AppConfig.get_property(
+                    "OIDC_PROVIDER_DISPLAY_NAME"
+                ),
+            )
     # authorization
     if validator := BEFORE_REQUEST_VALIDATORS.get((request.path, request.method)):
         if not validator():
@@ -181,9 +192,8 @@ def make_forbidden_response() -> Response:
 
 def make_basic_auth_response() -> Response:
     res = make_response(
-        "You are not authenticated. Please see "
-        "https://www.mlflow.org/docs/latest/auth/index.html#authenticating-to-mlflow "
-        "on how to authenticate."
+        "You are not authenticated. Please see documentation for details"
+        "https://github.com/data-platform-hq/mlflow-oidc-auth"
     )
     res.status_code = 401
     res.headers["WWW-Authenticate"] = 'Basic realm="mlflow"'
@@ -205,15 +215,6 @@ def search_experiment():
     return render_template("home.html", username=_get_username())
 
 
-def index():
-    admin_allowed = False
-    return render_template(
-        "login.html",
-        username=_get_username(),
-        admin_allowed=admin_allowed,
-    )
-
-
 def login():
     state = secrets.token_urlsafe(16)
     session["oauth_state"] = state
@@ -221,7 +222,7 @@ def login():
     authorization_url = auth_client.prepare_request_uri(
         AppConfig.get_property("OIDC_AUTHORIZATION_URL"),
         redirect_uri=AppConfig.get_property("OIDC_REDIRECT_URI"),
-        scope=["openid", "profile", "email"],
+        scope=AppConfig.get_property("OIDC_SCOPE").split(","),
         state=state,
     )
     return redirect(authorization_url)
@@ -262,6 +263,36 @@ def callback():
     user_data = user_response.json()
     email = user_data.get("email", "Unknown")
 
+    # check if user is in the group
+    if AppConfig.get_property("OIDC_PROVIDER_TYPE") == "microsoft":
+        # get groups from graph api
+        graph_url = "https://graph.microsoft.com/v1.0/me/memberOf"
+        group_response = requests.get(
+            graph_url,
+            headers={
+                "Authorization": f"Bearer {access_token}",
+                "Content-Type": "application/json",
+            },
+        )
+        group_data = group_response.json()
+        print(AppConfig.get_property("OIDC_GROUP_NAME"))
+        if not any(group["displayName"] == AppConfig.get_property("OIDC_GROUP_NAME") for group in group_data["value"]):
+            return "User not in group", 401
+        # set is_admin if user is in admin group
+        if any(group["displayName"] == AppConfig.get_property("OIDC_ADMIN_GROUP_NAME") for group in group_data["value"]):
+            _set_is_admin(True)
+        else:
+            _set_is_admin(False)
+    elif AppConfig.get_property("OIDC_PROVIDER_TYPE") == "oidc":
+        print(user_data.get("groups", []))
+        if AppConfig.get_property("OIDC_GROUP_NAME") not in user_data.get("groups", []):
+            return "User not in group", 401
+        # set is_admin if user is in admin group
+        if AppConfig.get_property("OIDC_ADMIN_GROUP_NAME") in user_data.get("groups", []):
+            _set_is_admin(True)
+        else:
+            _set_is_admin(False)
+
     # Store the user data in the session.
     _set_username(email)
     # Create user due to auth
@@ -292,7 +323,7 @@ def create_user():
         )
     except MlflowException:
         password = _password_generation()
-        user = store.create_user(_get_username(), password)
+        user = store.create_user(username=_get_username(), password=password, is_admin=_get_is_admin())
         return (
             jsonify(
                 {

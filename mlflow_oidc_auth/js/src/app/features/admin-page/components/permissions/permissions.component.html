@@ -1,0 +1,15 @@
+<mat-tab-group (selectedTabChange)="handleTabSelection($event)">
+
+  <mat-tab label="Users permissions">
+    <ml-user-permissions></ml-user-permissions>
+  </mat-tab>
+
+  <mat-tab label="Experiment permissions">
+    <ml-experiment-permissions></ml-experiment-permissions>
+  </mat-tab>
+
+  <mat-tab label="Model permissions">
+    <ml-model-permissions></ml-model-permissions>
+  </mat-tab>
+
+</mat-tab-group>
