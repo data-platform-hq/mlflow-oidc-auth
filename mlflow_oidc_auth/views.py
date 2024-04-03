@@ -4,6 +4,8 @@ import requests
 import secrets
 import string
 from typing import Callable, Union
+
+from sqlalchemy import text
 from werkzeug.datastructures import Authorization
 
 from flask import (
@@ -118,12 +120,15 @@ def _set_username(username):
     session["username"] = username
     return
 
+
 def _set_is_admin(_is_admin: bool = False):
     session["is_admin"] = _is_admin
     return
 
+
 def _get_is_admin():
     return session.get("is_admin")
+
 
 def _get_permission_from_experiment_id() -> Permission:
     experiment_id = _get_request_param("experiment_id")
@@ -306,6 +311,7 @@ def oidc_static(filename):
     # Return the file from the specified directory
     return send_from_directory(static_directory, filename)
 
+
 def oidc_ui(filename=None):
     # Specify the directory where your static files are located
     ui_directory = os.path.join(os.path.dirname(__file__), "ui")
@@ -315,6 +321,7 @@ def oidc_ui(filename=None):
     elif not os.path.exists(os.path.join(ui_directory, filename)):
         filename = "index.html"
     return send_from_directory(ui_directory, filename)
+
 
 # TODO
 def search_model():
@@ -367,38 +374,24 @@ def permissions():
 def permissions_users():
     users = store.list_users()
     usernames = [user.username for user in users]
-    return render_template(
-        "permissions.html",
-        username=_get_username(),
-        active_tab="users",
-        items=usernames,
-    )
+    # return as json
+    return jsonify({"usernames": usernames})
 
 
 def permissions_experiments():
     # all experiments
     list_experiments = mlflow_client.search_experiments()
     experiment_names = [experiment.name for experiment in list_experiments]
-
-    return render_template(
-        "permissions.html",
-        username=_get_username(),
-        active_tab="experiments",
-        items=experiment_names,
-    )
+    # return as json
+    return jsonify({"experiment_names": experiment_names})
 
 
 def permissions_models():
     # all models
     registered_models = mlflow_client.search_registered_models()
     model_names = [model.name for model in registered_models]
-
-    return render_template(
-        "permissions.html",
-        username=_get_username(),
-        active_tab="models",
-        items=model_names,
-    )
+    # return as json
+    return jsonify({"model_names": model_names})
 
 
 def permissions_user_details(current_username):
@@ -408,36 +401,52 @@ def permissions_user_details(current_username):
     for experiments in list_experiments:
         experiment = mlflow_client.get_experiment(experiments.experiment_id)
         experiments_list.append(
-            {"name": experiment.name, "permission": experiments.permission}
+            {"experiment_name": experiment.name,
+             "experiment_id": experiments.experiment_id,
+             "experiment_permission": experiments.permission}
         )
 
     # get list of models for current user
     registered_models = store.list_registered_model_permissions(current_username)
     models = []
     for model in registered_models:
-        models.append({"name": model.name, "permission": model.permission})
-
-    return render_template(
-        "permissions_user_details.html",
-        username=session.get("username"),
-        current_username=current_username,
-        experiments=experiments_list,
-        models=models,
-    )
+        models.append({"model_name": model.name, "model_permission": model.permission})
+    # return as json
+    return jsonify({"experiments": experiments_list, "models": models})
 
 
 def permissions_experiment_details(experiment_id):
-    return render_template(
-        "permissions_details.html",
-        username=_get_username(),
-        experiment_id=experiment_id,
-    )
+    # experiment_permissions is table name for experiments
+    # users is a table for users
+    with store.ManagedSessionMaker() as session:
+        query = text("""
+                    SELECT users.username, experiment_permissions.permission 
+                    FROM users 
+                    JOIN experiment_permissions ON users.id = experiment_permissions.user_id 
+                    WHERE experiment_permissions.experiment_id = :experiment_id
+                """)
+        results = session.execute(query, {'experiment_id': experiment_id})
+
+        users_permissions = [{'username': row[0], 'permission': row[1]} for row in results]
+
+    return jsonify(users_permissions)
 
 
 def permissions_model_details(model_name):
-    return render_template(
-        "permissions_details.html", username=_get_username(), model_name=model_name
-    )
+    # registered_model_permissions is table name for models
+    # users is a table for users
+    with store.ManagedSessionMaker() as session:
+        query = text("""
+            SELECT users.username, registered_model_permissions.permission 
+            FROM users 
+            JOIN registered_model_permissions ON users.id = registered_model_permissions.user_id 
+            WHERE registered_model_permissions.name = :model_name
+        """)
+        results = session.execute(query, {'model_name': model_name})
+
+        models_permissions = [{'username': row[0], 'permission': row[1]} for row in results]
+
+    return jsonify(models_permissions)
 
 
 def _password_generation():
@@ -459,7 +468,7 @@ def update_experiment_permission():
         request_data.get("user_name"),
         request_data.get("new_permission"),
     )
-    return render_template("permissions_details.html", username=_get_username())
+    return "Experiment permission has been changed."
 
 
 def update_model_permission():
@@ -470,4 +479,4 @@ def update_model_permission():
         request_data.get("user_name"),
         request_data.get("new_permission"),
     )
-    return render_template("permissions_details.html", username=_get_username())
+    return "Model permission has been changed."
