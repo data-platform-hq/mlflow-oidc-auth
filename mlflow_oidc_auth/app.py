@@ -21,6 +21,8 @@ app.add_url_rule(
     rule=routes.CALLBACK, methods=["GET", "POST"], view_func=views.callback
 )
 app.add_url_rule(rule=routes.STATIC, methods=["GET"], view_func=views.oidc_static)
+app.add_url_rule(rule=routes.UI, methods=["GET"], view_func=views.oidc_ui)
+app.add_url_rule(rule=routes.UI_ROOT, methods=["GET"], view_func=views.oidc_ui)
 app.add_url_rule(rule=routes.OIDC_HOME, methods=["GET"], view_func=views.oidc_home)
 app.add_url_rule(
     rule=routes.SEARCH_MODEL, methods=["GET"], view_func=views.search_model

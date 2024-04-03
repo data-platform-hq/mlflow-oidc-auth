@@ -1,0 +1,13 @@
+<div class="controls-container">
+  <button mat-flat-button aria-label="login" color="primary" class="me-2">
+    <span>Login to MLFlow</span>
+  </button>
+  <button mat-flat-button aria-label="login" color="primary" (click)="showAccessKeyModal()">
+    <span>Create access key</span>
+  </button>
+</div>
+
+<div class="content d-flex flex-column gap-3 py-3">
+  <ml-table [columnConfig]="experimentsColumnConfig" [data]="experimentsDataSource"></ml-table>
+  <ml-table [columnConfig]="modelsColumnConfig" [data]="modelsDataSource"></ml-table>
+</div>

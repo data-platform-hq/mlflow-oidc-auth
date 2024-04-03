@@ -1,6 +1,6 @@
 /venv/
 /instance/
-/mlruns/
+mlruns/
 basic_auth.db
 basic_auth
 # Byte-compiled / optimized / DLL files
@@ -169,3 +169,7 @@ flask_session/
 *.db
 *.sqlite3
 *.sqlite
+
+node_modules/
+.angular/
+mlflow_oidc_auth/ui

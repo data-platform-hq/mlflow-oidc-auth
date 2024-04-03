@@ -1,0 +1,36 @@
+{
+    "branches": [
+        {
+            "name": "main"
+        },
+        {
+            "name": "pre-release",
+            "channel": "prerelease",
+            "prerelease": true
+        }
+    ],
+    "ci": true,
+    "dryRun": false,
+    "plugins": [
+        "@semantic-release/commit-analyzer",
+        "@semantic-release/release-notes-generator",
+        [
+            "@semantic-release/exec",
+            {
+                "prepareCmd": "./scripts/release.sh ${nextRelease.version}"
+            }
+        ],
+        [
+            "@semantic-release/github",
+            {
+                "assets": [
+                    {
+                        "path": "dist/*.whl"
+                    }
+                ],
+                "successComment": true,
+                "addReleases": "top"
+            }
+        ]
+    ]
+}

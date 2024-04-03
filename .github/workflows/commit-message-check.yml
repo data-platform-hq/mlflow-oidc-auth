@@ -1,4 +1,4 @@
-name: 'Conventional commit message checker'
+name: "Conventional commit message checker"
 on:
   pull_request:
     types:
@@ -17,7 +17,7 @@ jobs:
         with:
           pattern: '^(|feat|fix|chore|docs|style|ci|refactor|perf|test)(\([\w-]+\))?:\s.+$|^(Merge\sbranch)'
           error: 'Your first line has to contain a commit type like "feat|fix|chore|docs|style|ci|refactor|perf|test".'
-          excludeDescription: 'true' # optional: this excludes the description body of a pull request
-          excludeTitle: 'true' # optional: this excludes the title of a pull request
-          checkAllCommitMessages: 'true' # optional: this checks all commits associated with a pull request
-          accessToken: ${{ secrets.GITHUB_TOKEN }} # github access token is only required if checkAllCommitMessages is true
+          excludeDescription: "true"
+          excludeTitle: "true"
+          checkAllCommitMessages: "true"
+          accessToken: ${{ secrets.GITHUB_TOKEN }}
