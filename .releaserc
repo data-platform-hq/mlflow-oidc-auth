@@ -4,8 +4,7 @@
             "name": "main"
         },
         {
-            "name": "pre-release",
-            "channel": "prerelease",
+            "name": "rc",
             "prerelease": true
         }
     ],
