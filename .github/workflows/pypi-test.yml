@@ -2,7 +2,7 @@ name: Pre Release
 on:
   push:
     branches:
-      - pre-release
+      - rc
 jobs:
     pypi-publish:
       name: upload release to PyPI Test

@@ -5,6 +5,7 @@
         },
         {
             "name": "rc",
+            "channel": "rc",
             "prerelease": true
         }
     ],
