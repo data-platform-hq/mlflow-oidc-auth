@@ -8,8 +8,7 @@ jobs:
       name: upload release to PyPI Test
       runs-on: ubuntu-latest
       environment: PyPI Test
-      permissions:
-        id-token: write
+      permissions: write-all
       steps:
         - name: Checkout
           uses: actions/checkout@v4
