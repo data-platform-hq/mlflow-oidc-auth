@@ -6,6 +6,8 @@ LOGOUT = "/logout"
 CALLBACK = "/callback"
 
 STATIC = "/oidc/static/<path:filename>"
+UI = "/oidc/ui/<path:filename>"
+UI_ROOT = "/oidc/ui/"
 PERMISSIONS = "/oidc/permissions"
 PERMISSIONS_USERS = "/oidc/permissions/users"
 PERMISSIONS_EXPERIMENTS = "/oidc/permissions/experiments"

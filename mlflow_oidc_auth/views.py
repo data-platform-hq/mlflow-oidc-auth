@@ -75,7 +75,7 @@ def _get_request_param(param: str) -> str:
 
 def _is_unprotected_route(path: str) -> bool:
     return path.startswith(
-        ("/static", "/favicon.ico", "/health", "/login", "/callback", "/oidc/static")
+        ("/static", "/favicon.ico", "/health", "/login", "/callback", "/oidc/static", "/oidc/ui")
     )
 
 
@@ -306,6 +306,15 @@ def oidc_static(filename):
     # Return the file from the specified directory
     return send_from_directory(static_directory, filename)
 
+def oidc_ui(filename=None):
+    # Specify the directory where your static files are located
+    ui_directory = os.path.join(os.path.dirname(__file__), "ui")
+    print(filename)
+    if not filename:
+        filename = "index.html"
+    elif not os.path.exists(os.path.join(ui_directory, filename)):
+        filename = "index.html"
+    return send_from_directory(ui_directory, filename)
 
 # TODO
 def search_model():
