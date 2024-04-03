@@ -27,6 +27,6 @@ jobs:
             extra_plugins: |
               - @semantic-release/exec
           env:
-            GIT_USER: ${{ secrets.GITHUB_TOKEN }}  
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         - name: Publish package distributions to PyPI
           uses: pypa/gh-action-pypi-publish@release/v1
