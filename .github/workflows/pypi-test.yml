@@ -7,7 +7,9 @@ jobs:
     pypi-publish:
       name: upload release to PyPI Test
       runs-on: ubuntu-latest
-      environment: PyPI Test
+      environment:
+        name: PyPI Test
+        url: https://test.pypi.org/project/mlflow-oidc-auth/
       permissions: write-all
       steps:
         - name: Checkout
