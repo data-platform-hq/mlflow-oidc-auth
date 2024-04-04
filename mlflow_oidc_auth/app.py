@@ -16,8 +16,8 @@ app.template_folder = template_dir
 
 # OIDC routes
 app.add_url_rule(rule=routes.LOGIN, methods=["GET"], view_func=views.login)
-app.add_url_rule(rule=routes.LOGOUT, methods=["GET", "POST"], view_func=views.logout)
-app.add_url_rule(rule=routes.CALLBACK, methods=["GET", "POST"], view_func=views.callback)
+app.add_url_rule(rule=routes.LOGOUT, methods=["GET"], view_func=views.logout)
+app.add_url_rule(rule=routes.CALLBACK, methods=["GET"], view_func=views.callback)
 
 # UI routes
 app.add_url_rule(rule=routes.STATIC, methods=["GET"], view_func=views.oidc_static)
@@ -25,7 +25,7 @@ app.add_url_rule(rule=routes.UI, methods=["GET"], view_func=views.oidc_ui)
 app.add_url_rule(rule=routes.UI_ROOT, methods=["GET"], view_func=views.oidc_ui)
 
 # User token
-app.add_url_rule(rule=routes.CREATE_ACCESS_TOKEN, methods=["POST"], view_func=views.create_access_token)
+app.add_url_rule(rule=routes.CREATE_ACCESS_TOKEN, methods=["GET"], view_func=views.create_access_token)
 app.add_url_rule(rule=routes.GET_CURRENT_USER, methods=["GET"], view_func=views.get_current_user)
 
 # UI routes support
