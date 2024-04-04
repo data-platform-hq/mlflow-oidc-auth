@@ -4,6 +4,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { UserPermissionDetailsComponent } from '../details/user-permission-details/user-permission-details.component';
 import { ExperimentPermissionsComponent } from './experiment-permissions/experiment-permissions.component';
 import { ModelPermissionsComponent } from './model-permissions/model-permissions.component';
+import { DataService } from '../../../../shared/services';
 
 @Component({
   selector: 'ml-permissions',
@@ -14,7 +15,7 @@ export class PermissionsComponent implements OnInit {
 
   constructor(
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
   ) { }
 
   ngOnInit(): void {

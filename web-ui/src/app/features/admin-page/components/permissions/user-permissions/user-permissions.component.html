@@ -3,4 +3,5 @@
   [data]="dataSource"
   [isActionsActive]="true"
   (editEvent)="handleUserEdit($event)"
+  *ngIf="dataSource.length"
 ></ml-table>

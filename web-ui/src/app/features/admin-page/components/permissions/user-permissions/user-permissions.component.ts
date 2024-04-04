@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { DataService } from '../../../../../shared/services';
 
 @Component({
   selector: 'ml-user-permissions',
@@ -12,24 +13,20 @@ export class UserPermissionsComponent implements OnInit {
     title: 'User',
     key: 'user',
   }];
-  dataSource = [
-    {
-      user: 'Alex',
-      id: '1',
-    },
-    {
-      user: 'Bob',
-      id: '2',
-    },
-  ];
+  dataSource: { user: string, id: string }[] = [];
 
   constructor(
     private router: Router,
     private route: ActivatedRoute,
+    private dataService: DataService,
   ) {
   }
 
   ngOnInit(): void {
+    this.dataService.getAllUsers()
+      .subscribe(({ users }) => {
+        this.dataSource = users.map((user) => ({ user, id: user }));
+      })
   }
 
   handleUserEdit(event: any) {

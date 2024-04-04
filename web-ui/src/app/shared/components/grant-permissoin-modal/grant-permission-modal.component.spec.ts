@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { GrantPermissinModalComponent } from './grant-permissin-modal.component';
+import { GrantPermissionModalComponent } from './grant-permission-modal.component';
 
 describe('GrantPermissinModalComponent', () => {
-  let component: GrantPermissinModalComponent;
-  let fixture: ComponentFixture<GrantPermissinModalComponent>;
+  let component: GrantPermissionModalComponent;
+  let fixture: ComponentFixture<GrantPermissionModalComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ GrantPermissinModalComponent ]
+      declarations: [ GrantPermissionModalComponent ]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(GrantPermissinModalComponent);
+    fixture = TestBed.createComponent(GrantPermissionModalComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

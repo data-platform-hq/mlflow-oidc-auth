@@ -2,6 +2,12 @@
 <mat-dialog-content>
   <p>Permissions</p>
   <mat-form-field>
+    <mat-label>Exp</mat-label>
+    <select matNativeControl required>
+      <option value="manage">Exp 1</option>
+    </select>
+  </mat-form-field>
+  <mat-form-field>
     <mat-label>Permissions</mat-label>
     <select matNativeControl required>
       <option value="manage">Manage</option>
@@ -12,5 +18,5 @@
 </mat-dialog-content>
 <mat-dialog-actions>
   <button mat-button (click)="onNoClick()">Cancel</button>
-  <button mat-button [mat-dialog-close]="data" cdkFocusInitial>Ok</button>
+  <button mat-button [mat-dialog-close]="null" cdkFocusInitial>Ok</button>
 </mat-dialog-actions>

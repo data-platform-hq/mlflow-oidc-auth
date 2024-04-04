@@ -3,7 +3,9 @@ import { MatDialog } from '@angular/material/dialog';
 import {
   AccessKeyDialogData,
   AccessKeyModalComponent,
-} from '../../../../shared/components/access-key-modal/access-key-modal.component';
+} from '../../../../shared/components';
+import { finalize, forkJoin, switchMap } from 'rxjs';
+import { AuthService, DataService } from '../../../../shared/services';
 
 @Component({
   selector: 'ml-home-page',
@@ -11,6 +13,8 @@ import {
   styleUrls: ['./home-page.component.scss'],
 })
 export class HomePageComponent implements OnInit {
+  currentUser?: string;
+  loading = false;
   experimentsColumnConfig = [
     {
       title: 'Experiment name',
@@ -21,10 +25,7 @@ export class HomePageComponent implements OnInit {
       key: 'permissions',
     },
   ];
-  experimentsDataSource = [
-    { name: 'experiment1', permissions: 'read' },
-    { name: 'experiment2', permissions: 'modify' },
-  ];
+  experimentsDataSource = [];
 
   modelsColumnConfig = [
     {
@@ -36,25 +37,44 @@ export class HomePageComponent implements OnInit {
       key: 'permissions',
     },
   ];
-  modelsDataSource = [
-    { name: 'model1', permissions: 'read' },
-    { name: 'model2', permissions: 'write' },
-  ];
+  modelsDataSource = [];
 
   constructor(
     private readonly dialog: MatDialog,
+    private readonly dataService: DataService,
+    private readonly authService: AuthService,
   ) {
   }
 
   ngOnInit(): void {
+    this.currentUser = this.authService.getUser();
+
+    if (this.currentUser) {
+      this.loading = true;
+      forkJoin([
+        this.dataService.getExperimentsForUser(this.currentUser),
+        this.dataService.getModelsForUser(this.currentUser),
+      ])
+        .pipe(
+          finalize(() => this.loading = false),
+        )
+        .subscribe(([experiments, models]) => {
+          this.experimentsDataSource = experiments;
+          this.modelsDataSource = models;
+        });
+    }
   }
 
   showAccessKeyModal() {
-    const apiKey = '1234';
-    this.dialog.open<AccessKeyModalComponent, AccessKeyDialogData>(AccessKeyModalComponent, {
-      data: {
-        apiKey,
-      },
-    });
+    this.dataService.getAccessKey()
+      .pipe(
+        switchMap(({ token }) => this.dialog.open<AccessKeyModalComponent, AccessKeyDialogData>(AccessKeyModalComponent, {
+          data: {
+            token,
+          },
+        })
+          .afterClosed()),
+      )
+      .subscribe();
   }
 }
