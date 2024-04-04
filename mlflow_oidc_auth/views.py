@@ -305,7 +305,7 @@ def callback():
     _set_username(email)
     # Create user due to auth
     create_user()
-    return redirect(url_for("oidc_home"))
+    return redirect(url_for("oidc_ui"))
 
 
 def oidc_static(filename):
