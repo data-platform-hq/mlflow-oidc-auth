@@ -352,6 +352,8 @@ def create_access_token():
     store.update_user(_get_username(), new_token)
     return jsonify({"token": new_token})
 
+def get_current_user():
+    return jsonify({"username": _get_username()})
 
 def update_username_password():
     new_password = _password_generation()
