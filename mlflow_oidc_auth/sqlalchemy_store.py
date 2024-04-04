@@ -273,3 +273,12 @@ class SqlAlchemyStore:
         with self.ManagedSessionMaker() as session:
             perm = self._get_registered_model_permission(session, name, username)
             session.delete(perm)
+
+    def list_experiment_permissions_for_experiment(self, experiment_id: str):
+        with self.ManagedSessionMaker() as session:
+            perms = (
+                session.query(SqlExperimentPermission)
+                .filter(SqlExperimentPermission.experiment_id == experiment_id)
+                .all()
+            )
+            return [p.to_mlflow_entity() for p in perms]

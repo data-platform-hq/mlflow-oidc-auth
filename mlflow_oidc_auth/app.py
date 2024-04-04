@@ -14,71 +14,44 @@ app.config.from_object(AppConfig)
 app.secret_key = app.config["SECRET_KEY"].encode("utf8")
 app.template_folder = template_dir
 
-# Add new routes
+# OIDC routes
 app.add_url_rule(rule=routes.LOGIN, methods=["GET"], view_func=views.login)
 app.add_url_rule(rule=routes.LOGOUT, methods=["GET", "POST"], view_func=views.logout)
-app.add_url_rule(
-    rule=routes.CALLBACK, methods=["GET", "POST"], view_func=views.callback
-)
+app.add_url_rule(rule=routes.CALLBACK, methods=["GET", "POST"], view_func=views.callback)
+
+# UI routes
 app.add_url_rule(rule=routes.STATIC, methods=["GET"], view_func=views.oidc_static)
 app.add_url_rule(rule=routes.UI, methods=["GET"], view_func=views.oidc_ui)
 app.add_url_rule(rule=routes.UI_ROOT, methods=["GET"], view_func=views.oidc_ui)
-app.add_url_rule(rule=routes.OIDC_HOME, methods=["GET"], view_func=views.oidc_home)
-app.add_url_rule(
-    rule=routes.SEARCH_MODEL, methods=["GET"], view_func=views.search_model
-)
-app.add_url_rule(
-    rule=routes.SEARCH_EXPERIMENT, methods=["POST"], view_func=views.create_user
-)
-# app.add_url_rule(routes.LOGIN_MLFLOW, methods=['POST'], view_func=views.login_mlflow)
-app.add_url_rule(rule=routes.PERMISSIONS, methods=["GET"], view_func=views.permissions)
-app.add_url_rule(
-    rule=routes.PERMISSIONS_USERS, methods=["GET"], view_func=views.permissions_users
-)
-app.add_url_rule(
-    rule=routes.PERMISSIONS_EXPERIMENTS,
-    methods=["GET"],
-    view_func=views.permissions_experiments,
-)
-app.add_url_rule(
-    rule=routes.PERMISSIONS_MODELS, methods=["GET"], view_func=views.permissions_models
-)
-app.add_url_rule(
-    rule=routes.PERMISSIONS_USER_DETAILS,
-    methods=["GET"],
-    view_func=views.permissions_user_details,
-)
-app.add_url_rule(
-    rule=routes.PERMISSIONS_EXPERIMENT_DETAILS,
-    methods=["GET"],
-    view_func=views.permissions_experiment_details,
-)
-app.add_url_rule(
-    rule=routes.PERMISSIONS_MODEL_DETAILS,
-    methods=["GET"],
-    view_func=views.permissions_model_details,
-)
-app.add_url_rule(
-    rule=routes.GET_EXPERIMENT_PERMISSION,
-    methods=["GET"],
-    view_func=views.get_experiment_permission,
-)
-app.add_url_rule(
-    rule=routes.UPDATE_USER_PASSWORD,
-    methods=["GET"],
-    view_func=views.update_username_password,
-)
+
+# User token
+app.add_url_rule(rule=routes.CREATE_ACCESS_TOKEN, methods=["POST"], view_func=views.create_access_token)
+
+# UI routes support
+app.add_url_rule(rule=routes.GET_EXPERIMENTS, methods=["GET"], view_func=views.get_experiments)
+app.add_url_rule(rule=routes.GET_MODELS, methods=["GET"], view_func=views.get_models)
+app.add_url_rule(rule=routes.GET_USERS, methods=["GET"], view_func=views.get_users)
+app.add_url_rule(rule=routes.GET_USER_EXPERIMENTS, methods=["GET"], view_func=views.get_user_experiments)
+app.add_url_rule(rule=routes.GET_USER_MODELS, methods=["GET"], view_func=views.get_user_models)
+app.add_url_rule(rule=routes.GET_EXPERIMENT_USERS, methods=["GET"], view_func=views.get_experiment_users)
+app.add_url_rule(rule=routes.GET_MODEL_USERS, methods=["GET"], view_func=views.get_model_users)
+
+# User management
+app.add_url_rule(rule=routes.CREATE_USER, methods=["POST"], view_func=views.create_user)
 app.add_url_rule(rule=routes.GET_USER, methods=["GET"], view_func=views.get_user)
-app.add_url_rule(
-    rule=routes.UPDATE_EXPERIMENT_PERMISSION,
-    methods=["POST"],
-    view_func=views.update_experiment_permission,
-)
-app.add_url_rule(
-    rule=routes.UPDATE_REGISTERED_MODEL_PERMISSION,
-    methods=["POST"],
-    view_func=views.update_model_permission,
-)
+app.add_url_rule(rule=routes.UPDATE_USER_PASSWORD, methods=["GET"], view_func=views.update_username_password)
+app.add_url_rule(rule=routes.UPDATE_USER_ADMIN, methods=["GET"], view_func=views.update_user_admin)
+app.add_url_rule(rule=routes.DELETE_USER, methods=["GET"], view_func=views.delete_user)
+
+# permission management
+app.add_url_rule(rule=routes.CREATE_EXPERIMENT_PERMISSION, methods=["POST"], view_func=views.create_experiment_permission)
+app.add_url_rule(rule=routes.GET_EXPERIMENT_PERMISSION, methods=["GET"], view_func=views.get_experiment_permission)
+app.add_url_rule(rule=routes.UPDATE_EXPERIMENT_PERMISSION, methods=["POST"], view_func=views.update_experiment_permission)
+app.add_url_rule(rule=routes.DELETE_EXPERIMENT_PERMISSION, methods=["POST"], view_func=views.delete_experiment_permission)
+app.add_url_rule(rule=routes.CREATE_REGISTERED_MODEL_PERMISSION, methods=["POST"], view_func=views.create_model_permission)
+app.add_url_rule(rule=routes.GET_REGISTERED_MODEL_PERMISSION, methods=["GET"], view_func=views.get_model_permission)
+app.add_url_rule(rule=routes.UPDATE_REGISTERED_MODEL_PERMISSION, methods=["POST"], view_func=views.update_model_permission)
+app.add_url_rule(rule=routes.DELETE_REGISTERED_MODEL_PERMISSION, methods=["POST"], view_func=views.delete_model_permission)
 
 # Add new hooks
 app.before_request(views.before_request_hook)

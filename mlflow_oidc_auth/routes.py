@@ -8,39 +8,31 @@ CALLBACK = "/callback"
 STATIC = "/oidc/static/<path:filename>"
 UI = "/oidc/ui/<path:filename>"
 UI_ROOT = "/oidc/ui/"
-PERMISSIONS = "/oidc/permissions"
-PERMISSIONS_USERS = "/oidc/permissions/users"
-PERMISSIONS_EXPERIMENTS = "/oidc/permissions/experiments"
-PERMISSIONS_MODELS = "/oidc/permissions/models"
-PERMISSIONS_OIDC_GROUP = "/oidc/permissions/oidc-group"
-PERMISSIONS_USER_DETAILS = "/oidc/permissions/users/<string:current_username>"
-PERMISSIONS_EXPERIMENT_DETAILS = "/oidc/permissions/experiments/<int:experiment_id>"
-PERMISSIONS_MODEL_DETAILS = "/oidc/permissions/models/<string:model_name>"
-PERMISSIONS_OIDC_GROUP_DETAILS = "/oidc/permissions/oidc-group/<string:group_name>"
-OIDC_HOME = "/oidc"
 
-SEARCH_MODEL = _get_rest_path("/mlflow/search_model")
-SEARCH_EXPERIMENT = _get_rest_path("/mlflow/search_experiment")
-LOGIN_MLFLOW = _get_rest_path("/login_mlflow")
+# create access token for current user
+CREATE_ACCESS_TOKEN = _get_rest_path("/mlflow/users/access-token")
+# list of experiments, models, users
+GET_EXPERIMENTS = _get_rest_path("/mlflow/experiments")
+GET_MODELS = _get_rest_path("/mlflow/registered-models")
+GET_USERS = _get_rest_path("/mlflow/users")
+# list of experiments, models, filtered by user
+GET_USER_EXPERIMENTS = _get_rest_path("/mlflow/users/<string:username>/experiments")
+GET_USER_MODELS = _get_rest_path("/mlflow/users/<string:username>/registered-models")
+# list of users filtered by experiment, model
+GET_EXPERIMENT_USERS = _get_rest_path("/mlflow/experiments/<int:experiment_id>/users")
+GET_MODEL_USERS = _get_rest_path("/mlflow/registered-models/<string:model_name>/users")
+
+# CRUD routes from basic_auth
 CREATE_USER = _get_rest_path("/mlflow/users/create")
 GET_USER = _get_rest_path("/mlflow/users/get")
 UPDATE_USER_PASSWORD = _get_rest_path("/mlflow/users/update-password")
 UPDATE_USER_ADMIN = _get_rest_path("/mlflow/users/update-admin")
 DELETE_USER = _get_rest_path("/mlflow/users/delete")
-CREATE_EXPERIMENTS = _get_rest_path("mlflow/experiments/create")
 CREATE_EXPERIMENT_PERMISSION = _get_rest_path("/mlflow/experiments/permissions/create")
 GET_EXPERIMENT_PERMISSION = _get_rest_path("/mlflow/experiments/permissions/get")
 UPDATE_EXPERIMENT_PERMISSION = _get_rest_path("/mlflow/experiments/permissions/update")
 DELETE_EXPERIMENT_PERMISSION = _get_rest_path("/mlflow/experiments/permissions/delete")
-CREATE_REGISTERED_MODEL_PERMISSION = _get_rest_path(
-    "/mlflow/registered-models/permissions/create"
-)
-GET_REGISTERED_MODEL_PERMISSION = _get_rest_path(
-    "/mlflow/registered-models/permissions/get"
-)
-UPDATE_REGISTERED_MODEL_PERMISSION = _get_rest_path(
-    "/mlflow/registered-models/permissions/update"
-)
-DELETE_REGISTERED_MODEL_PERMISSION = _get_rest_path(
-    "/mlflow/registered-models/permissions/delete"
-)
+CREATE_REGISTERED_MODEL_PERMISSION = _get_rest_path("/mlflow/registered-models/permissions/create")
+GET_REGISTERED_MODEL_PERMISSION = _get_rest_path("/mlflow/registered-models/permissions/get")
+UPDATE_REGISTERED_MODEL_PERMISSION = _get_rest_path("/mlflow/registered-models/permissions/update")
+DELETE_REGISTERED_MODEL_PERMISSION = _get_rest_path("/mlflow/registered-models/permissions/delete")
