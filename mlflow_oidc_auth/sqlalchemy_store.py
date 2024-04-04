@@ -10,18 +10,18 @@ from mlflow.protos.databricks_pb2 import (
     RESOURCE_ALREADY_EXISTS,
     RESOURCE_DOES_NOT_EXIST,
 )
-from mlflow.server.auth.db import utils as dbutils
-from mlflow.server.auth.db.models import (
+from mlflow_oidc_auth.db import utils as dbutils
+from mlflow_oidc_auth.db.models import (
     SqlExperimentPermission,
     SqlRegisteredModelPermission,
     SqlUser,
 )
-from mlflow.server.auth.entities import (
+from mlflow_oidc_auth.entities import (
     ExperimentPermission,
     RegisteredModelPermission,
     User,
 )
-from mlflow.server.auth.permissions import _validate_permission
+from mlflow_oidc_auth.permissions import _validate_permission
 from mlflow.store.db.utils import (
     _get_managed_session_maker,
     create_sqlalchemy_engine_with_retry,
@@ -37,9 +37,7 @@ class SqlAlchemyStore:
         self.engine = create_sqlalchemy_engine_with_retry(db_uri)
         dbutils.migrate_if_needed(self.engine, "head")
         SessionMaker = sessionmaker(bind=self.engine)
-        self.ManagedSessionMaker = _get_managed_session_maker(
-            SessionMaker, self.db_type
-        )
+        self.ManagedSessionMaker = _get_managed_session_maker(SessionMaker, self.db_type)
 
     def authenticate_user(self, username: str, password: str) -> bool:
         with self.ManagedSessionMaker() as session:
@@ -49,14 +47,12 @@ class SqlAlchemyStore:
             except MlflowException:
                 return False
 
-    def create_user(self, username: str, password: str, is_admin: bool = False) -> User:
+    def create_user(self, username: str, password: str, display_name: str, is_admin: bool = False) -> User:
         _validate_username(username)
         pwhash = generate_password_hash(password)
         with self.ManagedSessionMaker() as session:
             try:
-                user = SqlUser(
-                    username=username, password_hash=pwhash, is_admin=is_admin
-                )
+                user = SqlUser(username=username, password_hash=pwhash, is_admin=is_admin, display_name=display_name)
                 session.add(user)
                 session.flush()
                 return user.to_mlflow_entity()
@@ -83,10 +79,7 @@ class SqlAlchemyStore:
 
     def has_user(self, username: str) -> bool:
         with self.ManagedSessionMaker() as session:
-            return (
-                session.query(SqlUser).filter(SqlUser.username == username).first()
-                is not None
-            )
+            return session.query(SqlUser).filter(SqlUser.username == username).first() is not None
 
     def get_user(self, username: str) -> User:
         with self.ManagedSessionMaker() as session:
@@ -117,16 +110,12 @@ class SqlAlchemyStore:
             user = self._get_user(session, username)
             session.delete(user)
 
-    def create_experiment_permission(
-        self, experiment_id: str, username: str, permission: str
-    ) -> ExperimentPermission:
+    def create_experiment_permission(self, experiment_id: str, username: str, permission: str) -> ExperimentPermission:
         _validate_permission(permission)
         with self.ManagedSessionMaker() as session:
             try:
                 user = self._get_user(session, username=username)
-                perm = SqlExperimentPermission(
-                    experiment_id=experiment_id, user_id=user.id, permission=permission
-                )
+                perm = SqlExperimentPermission(experiment_id=experiment_id, user_id=user.id, permission=permission)
                 session.add(perm)
                 session.flush()
                 return perm.to_mlflow_entity()
@@ -137,9 +126,7 @@ class SqlAlchemyStore:
                     RESOURCE_ALREADY_EXISTS,
                 )
 
-    def _get_experiment_permission(
-        self, session, experiment_id: str, username: str
-    ) -> SqlExperimentPermission:
+    def _get_experiment_permission(self, session, experiment_id: str, username: str) -> SqlExperimentPermission:
         try:
             user = self._get_user(session, username=username)
             return (
@@ -152,38 +139,26 @@ class SqlAlchemyStore:
             )
         except NoResultFound:
             raise MlflowException(
-                f"Experiment permission with experiment_id={experiment_id} and "
-                f"username={username} not found",
+                f"Experiment permission with experiment_id={experiment_id} and " f"username={username} not found",
                 RESOURCE_DOES_NOT_EXIST,
             )
         except MultipleResultsFound:
             raise MlflowException(
-                f"Found multiple experiment permissions with experiment_id={experiment_id} "
-                f"and username={username}",
+                f"Found multiple experiment permissions with experiment_id={experiment_id} " f"and username={username}",
                 INVALID_STATE,
             )
 
-    def get_experiment_permission(
-        self, experiment_id: str, username: str
-    ) -> ExperimentPermission:
+    def get_experiment_permission(self, experiment_id: str, username: str) -> ExperimentPermission:
         with self.ManagedSessionMaker() as session:
-            return self._get_experiment_permission(
-                session, experiment_id, username
-            ).to_mlflow_entity()
+            return self._get_experiment_permission(session, experiment_id, username).to_mlflow_entity()
 
     def list_experiment_permissions(self, username: str) -> List[ExperimentPermission]:
         with self.ManagedSessionMaker() as session:
             user = self._get_user(session, username=username)
-            perms = (
-                session.query(SqlExperimentPermission)
-                .filter(SqlExperimentPermission.user_id == user.id)
-                .all()
-            )
+            perms = session.query(SqlExperimentPermission).filter(SqlExperimentPermission.user_id == user.id).all()
             return [p.to_mlflow_entity() for p in perms]
 
-    def update_experiment_permission(
-        self, experiment_id: str, username: str, permission: str
-    ) -> ExperimentPermission:
+    def update_experiment_permission(self, experiment_id: str, username: str, permission: str) -> ExperimentPermission:
         _validate_permission(permission)
         with self.ManagedSessionMaker() as session:
             perm = self._get_experiment_permission(session, experiment_id, username)
@@ -195,29 +170,22 @@ class SqlAlchemyStore:
             perm = self._get_experiment_permission(session, experiment_id, username)
             session.delete(perm)
 
-    def create_registered_model_permission(
-        self, name: str, username: str, permission: str
-    ) -> RegisteredModelPermission:
+    def create_registered_model_permission(self, name: str, username: str, permission: str) -> RegisteredModelPermission:
         _validate_permission(permission)
         with self.ManagedSessionMaker() as session:
             try:
                 user = self._get_user(session, username=username)
-                perm = SqlRegisteredModelPermission(
-                    name=name, user_id=user.id, permission=permission
-                )
+                perm = SqlRegisteredModelPermission(name=name, user_id=user.id, permission=permission)
                 session.add(perm)
                 session.flush()
                 return perm.to_mlflow_entity()
             except IntegrityError as e:
                 raise MlflowException(
-                    f"Registered model permission (name={name}, username={username}) "
-                    f"already exists. Error: {e}",
+                    f"Registered model permission (name={name}, username={username}) " f"already exists. Error: {e}",
                     RESOURCE_ALREADY_EXISTS,
                 )
 
-    def _get_registered_model_permission(
-        self, session, name: str, username: str
-    ) -> SqlRegisteredModelPermission:
+    def _get_registered_model_permission(self, session, name: str, username: str) -> SqlRegisteredModelPermission:
         try:
             user = self._get_user(session, username=username)
             return (
@@ -235,34 +203,21 @@ class SqlAlchemyStore:
             )
         except MultipleResultsFound:
             raise MlflowException(
-                f"Found multiple registered model permissions with name={name} "
-                f"and username={username}",
+                f"Found multiple registered model permissions with name={name} " f"and username={username}",
                 INVALID_STATE,
             )
 
-    def get_registered_model_permission(
-        self, name: str, username: str
-    ) -> RegisteredModelPermission:
+    def get_registered_model_permission(self, name: str, username: str) -> RegisteredModelPermission:
         with self.ManagedSessionMaker() as session:
-            return self._get_registered_model_permission(
-                session, name, username
-            ).to_mlflow_entity()
+            return self._get_registered_model_permission(session, name, username).to_mlflow_entity()
 
-    def list_registered_model_permissions(
-        self, username: str
-    ) -> List[RegisteredModelPermission]:
+    def list_registered_model_permissions(self, username: str) -> List[RegisteredModelPermission]:
         with self.ManagedSessionMaker() as session:
             user = self._get_user(session, username=username)
-            perms = (
-                session.query(SqlRegisteredModelPermission)
-                .filter(SqlRegisteredModelPermission.user_id == user.id)
-                .all()
-            )
+            perms = session.query(SqlRegisteredModelPermission).filter(SqlRegisteredModelPermission.user_id == user.id).all()
             return [p.to_mlflow_entity() for p in perms]
 
-    def update_registered_model_permission(
-        self, name: str, username: str, permission: str
-    ) -> RegisteredModelPermission:
+    def update_registered_model_permission(self, name: str, username: str, permission: str) -> RegisteredModelPermission:
         _validate_permission(permission)
         with self.ManagedSessionMaker() as session:
             perm = self._get_registered_model_permission(session, name, username)
@@ -276,9 +231,5 @@ class SqlAlchemyStore:
 
     def list_experiment_permissions_for_experiment(self, experiment_id: str):
         with self.ManagedSessionMaker() as session:
-            perms = (
-                session.query(SqlExperimentPermission)
-                .filter(SqlExperimentPermission.experiment_id == experiment_id)
-                .all()
-            )
+            perms = session.query(SqlExperimentPermission).filter(SqlExperimentPermission.experiment_id == experiment_id).all()
             return [p.to_mlflow_entity() for p in perms]

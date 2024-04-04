@@ -3,7 +3,7 @@ from logging.config import fileConfig
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 
-from mlflow.server.auth.db.models import Base
+from mlflow_oidc_auth.db.models import Base
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

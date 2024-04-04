@@ -30,7 +30,7 @@ from mlflow.protos.databricks_pb2 import (
 from mlflow.protos.service_pb2 import (
     CreateExperiment,
 )
-from mlflow.server.auth.permissions import Permission, get_permission
+from mlflow_oidc_auth.permissions import Permission, get_permission
 from mlflow.server.handlers import (
     catch_mlflow_exception,
     get_endpoints,
@@ -115,6 +115,15 @@ def _get_username():
 
 def _set_username(username):
     session["username"] = username
+    return
+
+
+def _get_display_name():
+    return session.get("display_name")
+
+
+def _set_display_name(display_name):
+    session["display_name"] = display_name
     return
 
 
@@ -270,6 +279,7 @@ def callback():
     # Process the user data
     user_data = user_response.json()
     email = user_data.get("email", "Unknown")
+    _set_display_name(user_data.get("name", "Unknown"))
 
     # check if user is in the group
     if AppConfig.get_property("OIDC_PROVIDER_TYPE") == "microsoft":
@@ -340,7 +350,9 @@ def create_user():
         )
     except MlflowException:
         password = _password_generation()
-        user = store.create_user(username=_get_username(), password=password, is_admin=_get_is_admin())
+        user = store.create_user(
+            username=_get_username(), password=password, display_name=_get_display_name(), is_admin=_get_is_admin()
+        )
         return (
             jsonify({"message": f"User {user.username} (ID: {user.id}) successfully created"}),
             201,
@@ -352,8 +364,10 @@ def create_access_token():
     store.update_user(_get_username(), new_token)
     return jsonify({"token": new_token})
 
+
 def get_current_user():
-    return jsonify({"username": _get_username()})
+    return jsonify({"username": _get_username(), "displayName": _get_display_name(), "isAdmin": _get_is_admin()})
+
 
 def update_username_password():
     new_password = _password_generation()
