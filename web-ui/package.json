@@ -4,10 +4,10 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
-    "build": "ng build",
+    "build": "ng build --base-href .",
     "clean": "rimraf ../mlflow_oidc_auth/ui",
     "release": "yarn clean && ng build --base-href .",
-    "watch": "ng build --watch --configuration development",
+    "watch": "ng build --watch --base-href . --configuration development",
     "test": "ng test"
   },
   "private": true,
