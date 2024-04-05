@@ -1,35 +1,49 @@
 #!/usr/bin/env bash
 set -e
 
-# function wait_server_ready {
-#   for backoff in 0 1 2 4 8; do
-#     echo "Waiting for tracking server to be ready..."
-#     sleep $backoff
-#     if curl --fail --silent --show-error --output /dev/null $1; then
-#       echo "Server is ready"
-#       return 0
-#     fi
-#   done
-#   echo -e "\nFailed to launch tracking server"
-#   return 1
-# }
+cleanup() {
+    echo "Cleaning up..."
+    kill $mlflow $ui 2>/dev/null
+    exit
+}
 
-# mkdir -p outputs
-# echo 'Running tracking server in the background'
-# if [ -z "$MLFLOW_TRACKING_URI" ]; then
-#   backend_store_uri=""
-#   default_artifact_root=""
-# else
-#   backend_store_uri="--backend-store-uri $MLFLOW_TRACKING_URI"
-#   default_artifact_root="--default-artifact-root mlruns"
-# fi
+python_preconfigure() {
+  if [ ! -d venv ]; then
+    python3 -m venv venv
+    python3 -m pip install --upgrade pip
+    python3 -m pip install build setuptools
+    source venv/bin/activate
+    python3 -m pip install -e .
+  fi
+}
 
-if [ ! -d "web-ui/node_modules" ]; then
-  pushd web-ui
-  yarn install
-  popd
-fi
+ui_preconfigure() {
+  if [ ! -d "web-ui/node_modules" ]; then
+    pushd web-ui
+    yarn install
+    popd
+  fi
+}
 
-# mlflow server $backend_store_uri $default_artifact_root --dev &
-# wait_server_ready localhost:5000/health
-# yarn --cwd mlflow/server/js start
+wait_server_ready() {
+  for backoff in 0 1 2 4 8; do
+    echo "Waiting for tracking server to be ready..."
+    sleep $backoff
+    if curl --fail --silent --show-error --output /dev/null $1; then
+      echo "Server is ready"
+      return 0
+    fi
+  done
+  echo -e "\nFailed to launch tracking server"
+  return 1
+}
+
+python_preconfigure
+source venv/bin/activate
+mlflow server --dev --app-name oidc-auth --host 0.0.0.0 --port 8080 &
+mlflow=$!
+wait_server_ready localhost:8080/health
+ui_preconfigure
+yarn --cwd web-ui watch
+
+trap cleanup SIGINT
