@@ -1,9 +1,10 @@
 import { Component, Inject, OnInit } from '@angular/core';
 import { MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { PermissionEnum, PERMISSIONS } from '../../../core/configs/permissions';
 
 export interface GrantPermissionModalData {
-  userName: string;
+  user: string;
   type: 'model' | 'experiment';
   entities: string[];
 }
@@ -16,6 +17,9 @@ export interface GrantPermissionModalData {
 export class GrantPermissionModalComponent implements OnInit {
   form!: FormGroup;
 
+  permissions = PERMISSIONS;
+  title: string = '';
+
   constructor(
     @Inject(MAT_DIALOG_DATA) public data: GrantPermissionModalData,
     private readonly fb: FormBuilder,
@@ -23,10 +27,11 @@ export class GrantPermissionModalComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.title = `Grant ${this.data.type} permissions for ${this.data.user}`;
     this.form = this.fb.group({
-      user: this.data.userName,
+      user: this.data.user,
       type: this.data.type,
-      permission: [null, Validators.required],
+      permission: [PermissionEnum.READ, Validators.required],
       entity: [null, Validators.required],
     })
   }

@@ -1,4 +1,4 @@
-<div class="controls-container">
+<div class="controls-container pb-3">
   <button mat-flat-button aria-label="login" color="primary" class="me-2">
     <span>Login to MLFlow</span>
   </button>
@@ -7,18 +7,32 @@
   </button>
 </div>
 
-<div class="content d-flex flex-column gap-3 py-3" *ngIf="!loading; else loader">
-  <h4>Experiments</h4>
-  <ml-table [columnConfig]="experimentsColumnConfig" [data]="experimentsDataSource" *ngIf="experimentsDataSource.length; else noExperimentData"></ml-table>
-  <h4>Models</h4>
-  <ml-table [columnConfig]="modelsColumnConfig" [data]="modelsDataSource" *ngIf="modelsDataSource.length; else noModelData"></ml-table>
-</div>
+<div>
 
-<ng-template #loader>
-  <div class="d-flex w-100 justify-content-center py-5">
-    <mat-spinner color="primary"></mat-spinner>
-  </div>
-</ng-template>
+  <mat-tab-group>
+
+    <mat-tab label="Experiments">
+      <div class="my-3">
+        <ml-table
+                [columnConfig]="experimentsColumnConfig"
+                [data]="experimentsDataSource"
+                *ngIf="experimentsDataSource.length; else noExperimentData">
+        </ml-table>
+      </div>
+    </mat-tab>
+
+    <mat-tab label="Models">
+      <div class="my-3">
+        <ml-table
+                [columnConfig]="modelsColumnConfig"
+                [data]="modelsDataSource"
+                *ngIf="modelsDataSource.length; else noModelData">
+        </ml-table>
+      </div>
+    </mat-tab>
+
+  </mat-tab-group>
+</div>
 
 <ng-template #noExperimentData>
   <div class="d-flex w-100 justify-content-center py-5">

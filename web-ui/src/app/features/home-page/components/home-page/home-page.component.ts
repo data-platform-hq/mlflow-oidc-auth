@@ -1,10 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
-import {
-  AccessKeyDialogData,
-  AccessKeyModalComponent,
-} from '../../../../shared/components';
-import { finalize, forkJoin, switchMap } from 'rxjs';
+import { AccessKeyDialogData, AccessKeyModalComponent } from '../../../../shared/components';
 import { AuthService, DataService } from '../../../../shared/services';
 import { ExperimentModel, ModelModel, UserResponseModel } from '../../../../shared/interfaces/data.interfaces';
 
@@ -17,27 +13,14 @@ export class HomePageComponent implements OnInit {
   currentUserInfo: UserResponseModel | null = null;
   loading = false;
   experimentsColumnConfig = [
-    {
-      title: 'Experiment name',
-      key: 'name',
-    },
-    {
-      title: 'Permissions',
-      key: 'permission',
-    },
+    { title: 'Experiment Name', key: 'name' },
+    { title: 'Permission', key: 'permission' },
   ];
   modelsColumnConfig = [
-    {
-      title: 'Model name',
-      key: 'name',
-    },
-    {
-      title: 'Permissions',
-      key: 'permission',
-    },
+    { title: 'Model name', key: 'name' },
+    { title: 'Permissions', key: 'permission' },
   ];
   experimentsDataSource: ExperimentModel[] = [];
-
   modelsDataSource: ModelModel[] = [];
 
   constructor(
@@ -51,25 +34,18 @@ export class HomePageComponent implements OnInit {
     this.currentUserInfo = this.authService.getUserInfo();
 
     if (this.currentUserInfo) {
-      const { username } = this.currentUserInfo;
-      
-      if (username) {
-        this.experimentsDataSource = this.currentUserInfo.experiment_permissions;
-        this.modelsDataSource = this.currentUserInfo.registered_model_permissions;
-      }
+      const { experiment_permissions, registered_model_permissions } = this.currentUserInfo;
+
+      this.modelsDataSource = registered_model_permissions;
+      this.experimentsDataSource = experiment_permissions;
     }
   }
 
   showAccessKeyModal() {
     this.dataService.getAccessKey()
-      .pipe(
-        switchMap(({ token }) => this.dialog.open<AccessKeyModalComponent, AccessKeyDialogData>(AccessKeyModalComponent, {
-          data: {
-            token,
-          },
-        })
-          .afterClosed()),
-      )
-      .subscribe();
+      .subscribe(({ token }) => {
+        const data = { token };
+        this.dialog.open<AccessKeyModalComponent, AccessKeyDialogData>(AccessKeyModalComponent, { data })
+      });
   }
 }

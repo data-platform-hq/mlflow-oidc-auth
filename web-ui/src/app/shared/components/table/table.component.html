@@ -1,8 +1,8 @@
 <div class="search-section">
   <mat-form-field>
     <mat-label>Search</mat-label>
-    <input matInput type="text" (keyup)="filter($event)">
-    <button matSuffix mat-icon-button aria-label="Clear" (click)="searchValue=''" *ngIf="searchValue">
+    <input matInput type="text" (keyup)="filter($event)" #search>
+    <button matSuffix mat-icon-button aria-label="Clear" (click)="search.value=''" *ngIf="search.value">
       <mat-icon>close</mat-icon>
     </button>
   </mat-form-field>
@@ -25,14 +25,12 @@
         <mat-icon>more_vert</mat-icon>
       </button>
       <mat-menu #menu="matMenu">
-        <button mat-menu-item (click)="edit(item)">
-          <mat-icon>edit</mat-icon>
-          <span>Edit</span>
-        </button>
-        <button mat-menu-item (click)="delete(item)">
-          <mat-icon>key_off</mat-icon>
-          <span>Revoke</span>
-        </button>
+        <ng-container *ngFor="let action of actions">
+          <button mat-menu-item (click)="handleActionClick(item, action)">
+            <mat-icon>{{action.icon}}</mat-icon>
+            <span>{{action.name}}</span>
+          </button>
+        </ng-container>
       </mat-menu>
     </td>
   </ng-container>

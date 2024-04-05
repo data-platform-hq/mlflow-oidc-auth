@@ -1,0 +1,4 @@
+export const CORE_CONFIGS = {
+  SNACK_BAR_DURATION: 7_000,
+  DEBOUNCE_TIME: 300,
+}

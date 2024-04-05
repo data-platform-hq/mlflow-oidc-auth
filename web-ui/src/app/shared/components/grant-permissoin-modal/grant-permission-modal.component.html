@@ -1,4 +1,4 @@
-<h2 mat-dialog-title>Add {{data.type}} permissions for {{data.userName}}</h2>
+<h2 mat-dialog-title>{{title}}</h2>
 <mat-dialog-content [formGroup]="form">
   <div class="d-flex flex-column">
     <mat-form-field>
@@ -12,9 +12,7 @@
     <mat-form-field>
       <mat-label>Permissions</mat-label>
       <select matNativeControl formControlName="permission">
-        <option value="MANAGE">Manage</option>
-        <option value="READ">Read</option>
-        <option value="EDIT">Edit</option>
+        <option *ngFor="let permission of permissions" [value]="permission.value">{{permission.title}}</option>
       </select>
     </mat-form-field>
   </div>

@@ -1,16 +1,13 @@
-<h2 mat-dialog-title>"User name" permissions for model/experiment "name"</h2>
-<mat-dialog-content>
-  <p>Permissions</p>
+<h2 mat-dialog-title>{{title}}</h2>
+<mat-dialog-content class="d-flex flex-column" [formGroup]="form">
   <mat-form-field>
     <mat-label>Permissions</mat-label>
-    <select matNativeControl required>
-      <option value="manage">Manage</option>
-      <option value="read">Read</option>
-      <option value="edit">Edit</option>
+    <select matNativeControl formControlName="permission">
+      <option *ngFor="let permission of permissions" [value]="permission.value">{{permission.title}}</option>
     </select>
   </mat-form-field>
 </mat-dialog-content>
 <mat-dialog-actions>
-  <button mat-button (click)="onNoClick()">Cancel</button>
-  <button mat-button [mat-dialog-close]="data" cdkFocusInitial>Ok</button>
+  <button mat-button [mat-dialog-close]="null">Cancel</button>
+  <button mat-button [mat-dialog-close]="form.value" cdkFocusInitial>Ok</button>
 </mat-dialog-actions>

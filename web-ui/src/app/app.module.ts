@@ -5,6 +5,8 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { SharedModule } from './shared/shared.module';
+import { HTTP_INTERCEPTORS } from '@angular/common/http';
+import { ErrorHandlerInterceptor } from './shared/unterceptors/error-handler.interceptor';
 
 @NgModule({
   declarations: [
@@ -15,6 +17,9 @@ import { SharedModule } from './shared/shared.module';
     AppRoutingModule,
     BrowserAnimationsModule,
     SharedModule,
+  ],
+  providers: [
+    { provide: HTTP_INTERCEPTORS, useClass: ErrorHandlerInterceptor, multi: true }
   ],
   bootstrap: [AppComponent]
 })

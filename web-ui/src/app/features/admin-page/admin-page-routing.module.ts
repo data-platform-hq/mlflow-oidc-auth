@@ -3,12 +3,14 @@ import { RouterModule, Routes } from '@angular/router';
 import { AdminPageComponent } from './components/admin-page/admin-page.component';
 import { PermissionsComponent } from './components/permissions/permissions.component';
 import {
-  UserPermissionDetailsComponent
+  UserPermissionDetailsComponent,
 } from './components/details/user-permission-details/user-permission-details.component';
 import {
-  ExperimentPermissionsComponent
-} from './components/permissions/experiment-permissions/experiment-permissions.component';
-import { ModelPermissionsComponent } from './components/permissions/model-permissions/model-permissions.component';
+  ExperimentPermissionDetailsComponent,
+} from './components/details/experiment-permission-details/experiment-permission-details.component';
+import {
+  ModelPermisionDetailsComponent,
+} from './components/details/model-permision-details/model-permision-details.component';
 
 
 const routes: Routes = [
@@ -26,11 +28,11 @@ const routes: Routes = [
       },
       {
         path: 'experiment/:id',
-        component: ExperimentPermissionsComponent,
+        component: ExperimentPermissionDetailsComponent,
       },
       {
         path: 'model/:id',
-        component: ModelPermissionsComponent,
+        component: ModelPermisionDetailsComponent,
       },
       {
         path: '**',

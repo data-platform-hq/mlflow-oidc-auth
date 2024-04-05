@@ -9,6 +9,7 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
 
 const MATERIAL_MODULES = [
   MatTableModule,
@@ -20,6 +21,7 @@ const MATERIAL_MODULES = [
   MatMenuModule,
   MatDialogModule,
   MatProgressSpinnerModule,
+  MatSnackBarModule,
 ];
 
 @NgModule({

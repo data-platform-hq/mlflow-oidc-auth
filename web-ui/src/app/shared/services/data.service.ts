@@ -1,9 +1,13 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import {
-  CreateExperimentPermissionRequestBodyModel, CreateModelPermissionRequestBodyModel,
-  ExperimentsResponseModel,
+  CreateExperimentPermissionRequestBodyModel,
+  CreateModelPermissionRequestBodyModel,
+  ExperimentModel,
+  ExperimentsResponseModel, ModelModel,
+  ModelsResponseModel,
   UserResponseModel,
+  UsersForModelModel,
 } from '../interfaces/data.interfaces';
 import { map } from 'rxjs'
 
@@ -26,11 +30,11 @@ export class DataService {
   }
 
   getAllExperiments() {
-    return this.http.get<{experiments: string[]}>('/api/2.0/mlflow/experiments');
+    return this.http.get<ExperimentModel[]>('/api/2.0/mlflow/experiments');
   }
 
   getAllModels() {
-    return this.http.get<{models: string[]}>('/api/2.0/mlflow/registered-models');
+    return this.http.get<ModelModel[]>('/api/2.0/mlflow/registered-models');
   }
 
   getAllUsers() {
@@ -45,7 +49,10 @@ export class DataService {
   }
 
   getModelsForUser(userName: string) {
-    return this.http.get<[]>(`/api/2.0/mlflow/users/${userName}/registered-models`);
+    return this.http.get<ModelsResponseModel>(`/api/2.0/mlflow/users/${userName}/registered-models`)
+      .pipe(
+        map(response => response.models),
+      );
   }
 
   createExperimentPermission(body: CreateExperimentPermissionRequestBodyModel) {
@@ -54,5 +61,28 @@ export class DataService {
 
   createModelPermission(body: CreateModelPermissionRequestBodyModel) {
     return this.http.post('/api/2.0/mlflow/registered-models/permissions/create', body);
+  }
+
+  getUsersForExperiment(experimentName: string) {
+    return this.http.get<{
+      permission: string,
+      username: string
+    }[]>(`/api/2.0/mlflow/experiments/${experimentName}/users`);
+  }
+
+  getUsersForModel(modelName: string) {
+    return this.http.get<UsersForModelModel[]>(`/api/2.0/mlflow/registered-models/${modelName}/users`);
+  }
+
+  updateModelPermission(body: { user_name: string, model_name: string, new_permission: string }) {
+    return this.http.post('/api/2.0/mlflow/registered-models/permissions/update', body,  {responseType: 'text'});
+  }
+
+  deleteModelPermission(body: any) {
+    return this.http.post('/api/2.0/mlflow/registered-models/permissions/delete', body);
+  }
+
+  updateExperimentPermission(body: { user_name: string, experiment_name: string, new_permission: string }) {
+    return this.http.post('/api/2.0/mlflow/experiments/permissions/update', body, { responseType: 'text' });
   }
 }
