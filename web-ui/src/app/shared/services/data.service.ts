@@ -1,5 +1,11 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import {
+  CreateExperimentPermissionRequestBodyModel, CreateModelPermissionRequestBodyModel,
+  ExperimentsResponseModel,
+  UserResponseModel,
+} from '../interfaces/data.interfaces';
+import { map } from 'rxjs'
 
 @Injectable({
   providedIn: 'root',
@@ -12,7 +18,7 @@ export class DataService {
   }
 
   getCurrentUser() {
-    return this.http.get<{ username: string }>('/api/2.0/mlflow/users/current');
+    return this.http.get<UserResponseModel>('/api/2.0/mlflow/users/current');
   }
 
   getAccessKey() {
@@ -32,10 +38,21 @@ export class DataService {
   }
 
   getExperimentsForUser(userName: string) {
-    return this.http.get<[]>(`/api/2.0/mlflow/users/${userName}/experiments`);
+    return this.http.get<ExperimentsResponseModel>(`/api/2.0/mlflow/users/${userName}/experiments`)
+      .pipe(
+        map(response => response.experiments),
+      );
   }
 
   getModelsForUser(userName: string) {
     return this.http.get<[]>(`/api/2.0/mlflow/users/${userName}/registered-models`);
+  }
+
+  createExperimentPermission(body: CreateExperimentPermissionRequestBodyModel) {
+    return this.http.post('/api/2.0/mlflow/experiments/permissions/create', body);
+  }
+
+  createModelPermission(body: CreateModelPermissionRequestBodyModel) {
+    return this.http.post('/api/2.0/mlflow/registered-models/permissions/create', body);
   }
 }
