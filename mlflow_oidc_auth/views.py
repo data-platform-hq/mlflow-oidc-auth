@@ -144,7 +144,7 @@ def _get_permission_from_experiment_id() -> Permission:
 
 def _validate_can_manage_experiment():
     # return _get_permission_from_experiment_id().can_manage
-    return False
+    return True
 
 
 def _get_before_request_handler(request_class):
@@ -366,7 +366,8 @@ def create_access_token():
 
 
 def get_current_user():
-    return jsonify({"username": _get_username(), "displayName": _get_display_name(), "isAdmin": _get_is_admin()})
+    user = store.get_user(_get_username())
+    return jsonify(user.to_json())
 
 
 def update_username_password():
