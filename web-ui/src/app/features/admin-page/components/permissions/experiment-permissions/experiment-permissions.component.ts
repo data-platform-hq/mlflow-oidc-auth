@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { DataService } from '../../../../../shared/services';
 
 @Component({
   selector: 'ml-experiment-permissions',
@@ -9,25 +10,22 @@ import { ActivatedRoute, Router } from '@angular/router';
 export class ExperimentPermissionsComponent implements OnInit {
   searchValue: string = '';
   columnConfig = [{
-    title: 'User',
-    key: 'user'
+    title: 'Experiment Name',
+    key: 'experiment'
   }];
-  dataSource = [
-    {
-      user: 'experiment',
-      id: '1',
-    },
-    {
-      user: 'experiment2',
-      id: '2',
-    }
-  ];
+  dataSource: { experiment: string, id: string }[] = [];
+
   constructor(
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private dataService: DataService,
   ) { }
 
   ngOnInit(): void {
+    this.dataService.getAllExperiments()
+      .subscribe(({ experiments }) => {
+        this.dataSource = experiments.map((experiment) => ({ experiment, id: experiment }));
+      })
   }
 
   handleExperimentEdit($event: any) {

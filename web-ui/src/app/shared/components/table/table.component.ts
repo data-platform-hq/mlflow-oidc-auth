@@ -1,5 +1,4 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
-import { DataSource } from '@angular/cdk/collections';
 import { MatTableDataSource } from '@angular/material/table';
 
 @Component({
@@ -12,7 +11,8 @@ export class TableComponent<T> implements OnInit {
   @Input() data: T[] = [];
   @Input() isActionsActive = false;
 
-  @Output() editEvent = new EventEmitter<any>();
+  @Output() editEvent = new EventEmitter<T>();
+  @Output() deleteEvent = new EventEmitter<T>();
 
   dataSource: MatTableDataSource<T> = new MatTableDataSource<T>();
 
@@ -25,10 +25,15 @@ export class TableComponent<T> implements OnInit {
   ngOnInit(): void {
     this.columns = this.columnConfig.map(c => c.key);
     this.dataSource = new MatTableDataSource(this.data);
+    this.columns = ['actions', ...this.columns];
   }
 
   edit(item: T) {
     this.editEvent.emit(item);
+  }
+
+  delete(item: T) {
+    this.deleteEvent.emit(item);
   }
 
   filter(value: Event) {

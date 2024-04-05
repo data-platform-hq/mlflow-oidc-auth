@@ -2,7 +2,7 @@ import { Component, Inject, OnInit } from '@angular/core';
 import { MAT_DIALOG_DATA } from '@angular/material/dialog';
 
 export interface AccessKeyDialogData {
-  apiKey: string;
+  token: string;
 }
 
 @Component({
@@ -11,14 +11,14 @@ export interface AccessKeyDialogData {
   styleUrls: ['./access-key-modal.component.scss']
 })
 export class AccessKeyModalComponent implements OnInit {
-  apiKey: string = '';
+  token: string = '';
 
   constructor(
     @Inject(MAT_DIALOG_DATA) public data: AccessKeyDialogData,
   ) { }
 
   ngOnInit(): void {
-    this.apiKey = this.data.apiKey;
+    this.token = this.data.token;
   }
 
   copyInputMessage(userInput: HTMLInputElement) {

@@ -5,6 +5,7 @@ class User:
         username,
         password_hash,
         is_admin,
+        display_name,
         experiment_permissions=None,
         registered_model_permissions=None,
     ):
@@ -14,6 +15,7 @@ class User:
         self._is_admin = is_admin
         self._experiment_permissions = experiment_permissions
         self._registered_model_permissions = registered_model_permissions
+        self._display_name = display_name
 
     @property
     def id(self):
@@ -51,17 +53,22 @@ class User:
     def registered_model_permissions(self, registered_model_permissions):
         self._registered_model_permissions = registered_model_permissions
 
+    @property
+    def display_name(self):
+        return self._display_name
+
+    @display_name.setter
+    def display_name(self, display_name):
+        self._display_name = display_name
+
     def to_json(self):
         return {
             "id": self.id,
             "username": self.username,
             "is_admin": self.is_admin,
-            "experiment_permissions": [
-                p.to_json() for p in self.experiment_permissions
-            ],
-            "registered_model_permissions": [
-                p.to_json() for p in self.registered_model_permissions
-            ],
+            "display_name": self.display_name,
+            "experiment_permissions": [p.to_json() for p in self.experiment_permissions],
+            "registered_model_permissions": [p.to_json() for p in self.registered_model_permissions],
         }
 
     @classmethod
@@ -69,15 +76,12 @@ class User:
         return cls(
             id_=dictionary["id"],
             username=dictionary["username"],
+            display_name=dictionary["display_name"],
             password_hash="REDACTED",
             is_admin=dictionary["is_admin"],
-            experiment_permissions=[
-                ExperimentPermission.from_json(p)
-                for p in dictionary["experiment_permissions"]
-            ],
+            experiment_permissions=[ExperimentPermission.from_json(p) for p in dictionary["experiment_permissions"]],
             registered_model_permissions=[
-                RegisteredModelPermission.from_json(p)
-                for p in dictionary["registered_model_permissions"]
+                RegisteredModelPermission.from_json(p) for p in dictionary["registered_model_permissions"]
             ],
         )
 

@@ -4,6 +4,8 @@ import requests
 import secrets
 import string
 from typing import Callable, Union
+
+from sqlalchemy import text
 from werkzeug.datastructures import Authorization
 
 from flask import (
@@ -28,7 +30,7 @@ from mlflow.protos.databricks_pb2 import (
 from mlflow.protos.service_pb2 import (
     CreateExperiment,
 )
-from mlflow.server.auth.permissions import Permission, get_permission
+from mlflow_oidc_auth.permissions import Permission, get_permission
 from mlflow.server.handlers import (
     catch_mlflow_exception,
     get_endpoints,
@@ -38,6 +40,7 @@ from mlflow.tracking import MlflowClient
 from oauthlib.oauth2 import WebApplicationClient
 
 from mlflow_oidc_auth import routes
+
 # from mlflow_oidc_auth.client import AuthServiceClient
 from mlflow_oidc_auth.config import AppConfig
 from mlflow_oidc_auth.sqlalchemy_store import SqlAlchemyStore
@@ -74,14 +77,10 @@ def _get_request_param(param: str) -> str:
 
 
 def _is_unprotected_route(path: str) -> bool:
-    return path.startswith(
-        ("/static", "/favicon.ico", "/health", "/login", "/callback", "/oidc/static", "/oidc/ui")
-    )
+    return path.startswith(("/static", "/favicon.ico", "/health", "/login", "/callback", "/oidc/static", "/oidc/ui"))
 
 
-def _get_permission_from_store_or_default(
-    store_permission_func: Callable[[], str]
-) -> Permission:
+def _get_permission_from_store_or_default(store_permission_func: Callable[[], str]) -> Permission:
     """
     Attempts to get permission from store,
     and returns default permission if no record is found.
@@ -118,19 +117,29 @@ def _set_username(username):
     session["username"] = username
     return
 
+
+def _get_display_name():
+    return session.get("display_name")
+
+
+def _set_display_name(display_name):
+    session["display_name"] = display_name
+    return
+
+
 def _set_is_admin(_is_admin: bool = False):
     session["is_admin"] = _is_admin
     return
 
+
 def _get_is_admin():
     return session.get("is_admin")
+
 
 def _get_permission_from_experiment_id() -> Permission:
     experiment_id = _get_request_param("experiment_id")
     username = _get_username()
-    return _get_permission_from_store_or_default(
-        lambda: store.get_experiment_permission(experiment_id, username).permission
-    )
+    return _get_permission_from_store_or_default(lambda: store.get_experiment_permission(experiment_id, username).permission)
 
 
 def _validate_can_manage_experiment():
@@ -174,9 +183,7 @@ def before_request_hook():
             return render_template(
                 "auth.html",
                 username=None,
-                provide_display_name=AppConfig.get_property(
-                    "OIDC_PROVIDER_DISPLAY_NAME"
-                ),
+                provide_display_name=AppConfig.get_property("OIDC_PROVIDER_DISPLAY_NAME"),
             )
     # authorization
     if validator := BEFORE_REQUEST_VALIDATORS.get((request.path, request.method)):
@@ -192,12 +199,25 @@ def make_forbidden_response() -> Response:
 
 def make_basic_auth_response() -> Response:
     res = make_response(
-        "You are not authenticated. Please see documentation for details"
-        "https://github.com/data-platform-hq/mlflow-oidc-auth"
+        "You are not authenticated. Please see documentation for details" "https://github.com/data-platform-hq/mlflow-oidc-auth"
     )
     res.status_code = 401
     res.headers["WWW-Authenticate"] = 'Basic realm="mlflow"'
     return res
+
+
+def create_experiment_permission():
+    request_data = request.get_json()
+    # Get the experiment
+    experiment = mlflow_client.get_experiment_by_name(request_data.get("experiment_name"))
+
+    # # Update the experiment
+    store.create_experiment_permission(
+        experiment.experiment_id,
+        request_data.get("user_name"),
+        request_data.get("new_permission"),
+    )
+    return "Experiment permission has been created."
 
 
 # Experiment views
@@ -236,10 +256,7 @@ def logout():
 def callback():
     """Validate the state to protect against CSRF"""
 
-    if (
-        "oauth_state" not in session
-        or _get_request_param("state") != session["oauth_state"]
-    ):
+    if "oauth_state" not in session or _get_request_param("state") != session["oauth_state"]:
         return "Invalid state parameter", 401
 
     # Get the access token from the authorization code
@@ -262,6 +279,7 @@ def callback():
     # Process the user data
     user_data = user_response.json()
     email = user_data.get("email", "Unknown")
+    _set_display_name(user_data.get("name", "Unknown"))
 
     # check if user is in the group
     if AppConfig.get_property("OIDC_PROVIDER_TYPE") == "microsoft":
@@ -297,7 +315,7 @@ def callback():
     _set_username(email)
     # Create user due to auth
     create_user()
-    return redirect(url_for("oidc_home"))
+    return redirect(url_for("oidc_ui"))
 
 
 def oidc_static(filename):
@@ -305,6 +323,7 @@ def oidc_static(filename):
     static_directory = os.path.join(os.path.dirname(__file__), "static")
     # Return the file from the specified directory
     return send_from_directory(static_directory, filename)
+
 
 def oidc_ui(filename=None):
     # Specify the directory where your static files are located
@@ -316,6 +335,7 @@ def oidc_ui(filename=None):
         filename = "index.html"
     return send_from_directory(ui_directory, filename)
 
+
 # TODO
 def search_model():
     return render_template("home.html", username=_get_username())
@@ -325,28 +345,45 @@ def create_user():
     try:
         user = store.get_user(_get_username())
         return (
-            jsonify(
-                {"message": f"User {user.username} (ID: {user.id}) already exists"}
-            ),
+            jsonify({"message": f"User {user.username} (ID: {user.id}) already exists"}),
             200,
         )
     except MlflowException:
         password = _password_generation()
-        user = store.create_user(username=_get_username(), password=password, is_admin=_get_is_admin())
+        user = store.create_user(
+            username=_get_username(), password=password, display_name=_get_display_name(), is_admin=_get_is_admin()
+        )
         return (
-            jsonify(
-                {
-                    "message": f"User {user.username} (ID: {user.id}) successfully created"
-                }
-            ),
+            jsonify({"message": f"User {user.username} (ID: {user.id}) successfully created"}),
             201,
         )
+
+
+def create_access_token():
+    new_token = _password_generation()
+    store.update_user(_get_username(), new_token)
+    return jsonify({"token": new_token})
+
+
+def get_current_user():
+    return jsonify({"username": _get_username(), "displayName": _get_display_name(), "isAdmin": _get_is_admin()})
 
 
 def update_username_password():
     new_password = _password_generation()
     store.update_user(_get_username(), new_password)
     return jsonify({"token": new_password})
+
+
+def update_user_admin():
+    is_admin = _get_request_param("is_admin")
+    store.update_user(_get_username(), is_admin)
+    return jsonify({"is_admin": is_admin})
+
+
+def delete_user():
+    store.delete_user(_get_username())
+    return jsonify({"message": f"User {_get_username()} has been deleted"})
 
 
 @catch_mlflow_exception
@@ -361,83 +398,93 @@ def oidc_home():
 
 
 def permissions():
-    return redirect(url_for("permissions_users"))
+    return redirect(url_for("list_users"))
 
 
-def permissions_users():
-    users = store.list_users()
-    usernames = [user.username for user in users]
-    return render_template(
-        "permissions.html",
-        username=_get_username(),
-        active_tab="users",
-        items=usernames,
-    )
+def get_users():
+    # check is admin
+    # if not _get_is_admin():
+    #     return make_forbidden_response()
+    users = [user.username for user in store.list_users()]
+    return jsonify({"users": users})
 
 
-def permissions_experiments():
-    # all experiments
+def get_experiments():
+    # return all experiments
     list_experiments = mlflow_client.search_experiments()
-    experiment_names = [experiment.name for experiment in list_experiments]
-
-    return render_template(
-        "permissions.html",
-        username=_get_username(),
-        active_tab="experiments",
-        items=experiment_names,
-    )
+    experiments = [experiment.name for experiment in list_experiments]
+    # return as json
+    return jsonify({"experiments": experiments})
 
 
-def permissions_models():
-    # all models
+def get_models():
+    # return all models
     registered_models = mlflow_client.search_registered_models()
-    model_names = [model.name for model in registered_models]
-
-    return render_template(
-        "permissions.html",
-        username=_get_username(),
-        active_tab="models",
-        items=model_names,
-    )
+    models = [model.name for model in registered_models]
+    # return as json
+    return jsonify({"models": models})
 
 
-def permissions_user_details(current_username):
-    # get list of experiments for current user
-    list_experiments = store.list_experiment_permissions(current_username)
+def get_user_experiments(username):
+    # get list of experiments for the user
+    list_experiments = store.list_experiment_permissions(username)
     experiments_list = []
     for experiments in list_experiments:
         experiment = mlflow_client.get_experiment(experiments.experiment_id)
         experiments_list.append(
-            {"name": experiment.name, "permission": experiments.permission}
+            {
+                "name": experiment.name,
+                "id": experiments.experiment_id,
+                "permissions": experiments.permission,
+            }
         )
+    return jsonify({"experiments": experiments_list})
 
+
+def get_user_models(username):
     # get list of models for current user
-    registered_models = store.list_registered_model_permissions(current_username)
+    registered_models = store.list_registered_model_permissions(username)
     models = []
     for model in registered_models:
-        models.append({"name": model.name, "permission": model.permission})
-
-    return render_template(
-        "permissions_user_details.html",
-        username=session.get("username"),
-        current_username=current_username,
-        experiments=experiments_list,
-        models=models,
-    )
+        models.append({"name": model.name, "permissions": model.permission})
+    # return as json
+    return jsonify({"models": models})
 
 
-def permissions_experiment_details(experiment_id):
-    return render_template(
-        "permissions_details.html",
-        username=_get_username(),
-        experiment_id=experiment_id,
-    )
+def get_experiment_users(experiment_id):
+    # experiment_permissions is table name for experiments
+    # users is a table for users
+    with store.ManagedSessionMaker() as session:
+        query = text(
+            """
+                    SELECT users.username, experiment_permissions.permission 
+                    FROM users 
+                    JOIN experiment_permissions ON users.id = experiment_permissions.user_id 
+                    WHERE experiment_permissions.experiment_id = :experiment_id
+                """
+        )
+        results = session.execute(query, {"experiment_id": experiment_id})
+        users_permissions = [{"username": row[0], "permission": row[1]} for row in results]
+
+    return jsonify(users_permissions)
 
 
-def permissions_model_details(model_name):
-    return render_template(
-        "permissions_details.html", username=_get_username(), model_name=model_name
-    )
+def get_model_users(model_name):
+    # registered_model_permissions is table name for models
+    # users is a table for users
+    with store.ManagedSessionMaker() as session:
+        query = text(
+            """
+            SELECT users.username, registered_model_permissions.permission 
+            FROM users 
+            JOIN registered_model_permissions ON users.id = registered_model_permissions.user_id 
+            WHERE registered_model_permissions.name = :model_name
+        """
+        )
+        results = session.execute(query, {"model_name": model_name})
+        models_permissions = [{"username": row[0], "permission": row[1]} for row in results]
+
+    return jsonify(models_permissions)
 
 
 def _password_generation():
@@ -449,9 +496,7 @@ def _password_generation():
 def update_experiment_permission():
     request_data = request.get_json()
     # Get the experiment
-    experiment = mlflow_client.get_experiment_by_name(
-        request_data.get("experiment_name")
-    )
+    experiment = mlflow_client.get_experiment_by_name(request_data.get("experiment_name"))
 
     # # Update the experiment
     store.update_experiment_permission(
@@ -459,7 +504,41 @@ def update_experiment_permission():
         request_data.get("user_name"),
         request_data.get("new_permission"),
     )
-    return render_template("permissions_details.html", username=_get_username())
+    return "Experiment permission has been changed."
+
+
+def delete_experiment_permission():
+    request_data = request.get_json()
+    # Get the experiment
+    experiment = mlflow_client.get_experiment_by_name(request_data.get("experiment_name"))
+
+    # # Update the experiment
+    store.delete_experiment_permission(
+        experiment.experiment_id,
+        request_data.get("user_name"),
+    )
+    return "Experiment permission has been deleted."
+
+
+def create_model_permission():
+    request_data = request.get_json()
+
+    store.create_registered_model_permission(
+        request_data.get("model_name"),
+        request_data.get("user_name"),
+        request_data.get("new_permission"),
+    )
+    return "Model permission has been created."
+
+
+def get_model_permission():
+    request_data = request.get_json()
+
+    permission = store.get_registered_model_permission(
+        request_data.get("model_name"),
+        request_data.get("user_name"),
+    )
+    return jsonify({"model_permission": permission.to_json()})
 
 
 def update_model_permission():
@@ -470,4 +549,14 @@ def update_model_permission():
         request_data.get("user_name"),
         request_data.get("new_permission"),
     )
-    return render_template("permissions_details.html", username=_get_username())
+    return "Model permission has been changed."
+
+
+def delete_model_permission():
+    request_data = request.get_json()
+
+    store.delete_registered_model_permission(
+        request_data.get("model_name"),
+        request_data.get("user_name"),
+    )
+    return "Model permission has been deleted."

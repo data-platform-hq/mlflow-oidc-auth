@@ -2,14 +2,14 @@
 
 <mat-dialog-content>
   <mat-form-field>
-    <mat-label>Api Key</mat-label>
-    <input matInput type="text" [(ngModel)]="apiKey" #apiKeyInput readonly>
-    <button matSuffix mat-icon-button aria-label="copy" (click)="copyInputMessage(apiKeyInput)" >
+    <mat-label>Access Key</mat-label>
+    <input matInput type="text" [(ngModel)]="token" #apiKeyInput readonly>
+    <button matSuffix mat-icon-button cdkFocusInitial aria-label="copy" (click)="copyInputMessage(apiKeyInput)" >
       <mat-icon>content_copy</mat-icon>
     </button>
   </mat-form-field>
 </mat-dialog-content>
 
 <mat-dialog-actions>
-  <button mat-button [mat-dialog-close]="null" cdkFocusInitial>Ok</button>
+  <button mat-button [mat-dialog-close]="null" >Ok</button>
 </mat-dialog-actions>
