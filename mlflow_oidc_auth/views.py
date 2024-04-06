@@ -712,12 +712,12 @@ def create_registered_model_permission():
     return make_response({"registered_model_permission": rmp.to_json()})
 
 
-    store.create_registered_model_permission(
-        request_data.get("model_name"),
-        request_data.get("user_name"),
-        request_data.get("new_permission"),
-    )
-    return jsonify({"message": "Model permission has been created."})
+@catch_mlflow_exception
+def get_registered_model_permission():
+    name = _get_request_param("name")
+    username = _get_username()
+    rmp = store.get_registered_model_permission(name, username)
+    return make_response({"registered_model_permission": rmp.to_json()})
 
 
 @catch_mlflow_exception
@@ -737,19 +737,17 @@ def delete_registered_model_permission():
     return make_response("Model permission has been deleted")
 
 
-    store.update_registered_model_permission(
-        request_data.get("model_name"),
-        request_data.get("user_name"),
-        request_data.get("new_permission"),
-    )
-    return jsonify({"message": "Model permission has been changed."})
+def set_can_manage_experiment_permission(resp: Response):
+    response_message = CreateExperiment.Response()
+    parse_dict(resp.json, response_message)
+    experiment_id = response_message.experiment_id
+    username = _get_username()
+    store.create_experiment_permission(experiment_id, username, MANAGE.name)
 
 
-def delete_model_permission():
-    request_data = request.get_json()
-
-    store.delete_registered_model_permission(
-        request_data.get("model_name"),
-        request_data.get("user_name"),
-    )
-    return jsonify({"message": "Model permission has been deleted."})
+def set_can_manage_registered_model_permission(resp: Response):
+    response_message = CreateRegisteredModel.Response()
+    parse_dict(resp.json, response_message)
+    name = response_message.registered_model.name
+    username = _get_username()
+    store.create_registered_model_permission(name, username, MANAGE.name)
