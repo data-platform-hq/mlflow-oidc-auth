@@ -372,7 +372,7 @@ def get_current_user():
         {
             "name": mlflow_client.get_experiment(permission.experiment_id).name,
             "id": permission.experiment_id,
-            "permission": permission.permission
+            "permission": permission.permission,
         }
         for permission in user.experiment_permissions
     ]
@@ -420,19 +420,31 @@ def get_users():
 
 
 def get_experiments():
-    # return all experiments
     list_experiments = mlflow_client.search_experiments()
-    experiments = [experiment.name for experiment in list_experiments]
-    # return as json
-    return jsonify({"experiments": experiments})
+    experiments = [
+        {
+            "name": experiment.name,
+            "id": experiment.experiment_id,
+            "tags": experiment.tags,
+        }
+        for experiment in list_experiments
+    ]
+    return jsonify(experiments)
 
 
 def get_models():
-    # return all models
     registered_models = mlflow_client.search_registered_models()
-    models = [model.name for model in registered_models]
-    # return as json
-    return jsonify({"models": models})
+    models = [
+        {
+            "name": model.name,
+            "tags": model.tags,
+            "description": model.description,
+            "latest_versions": model.latest_versions,
+            "aliases": model.aliases,
+        }
+        for model in registered_models
+    ]
+    return jsonify(models)
 
 
 def get_user_experiments(username):
