@@ -9,7 +9,7 @@ import {
   TableComponent,
 } from './components';
 import { MaterialModule } from './material/material.module';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { TableSearchPipe } from './pipes/table-search.pipe';
 import { RouterLinkWithHref } from '@angular/router';
@@ -46,6 +46,7 @@ const SHARED_PIPES = [
     NgbModule,
     RouterLinkWithHref,
     HttpClientModule,
+    ReactiveFormsModule,
   ],
 })
 export class SharedModule { }

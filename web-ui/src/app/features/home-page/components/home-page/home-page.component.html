@@ -8,13 +8,26 @@
 </div>
 
 <div class="content d-flex flex-column gap-3 py-3" *ngIf="!loading; else loader">
-  <ml-table [columnConfig]="experimentsColumnConfig" [data]="experimentsDataSource"></ml-table>
-  <ml-table [columnConfig]="modelsColumnConfig" [data]="modelsDataSource"></ml-table>
+  <h4>Experiments</h4>
+  <ml-table [columnConfig]="experimentsColumnConfig" [data]="experimentsDataSource" *ngIf="experimentsDataSource.length; else noExperimentData"></ml-table>
+  <h4>Models</h4>
+  <ml-table [columnConfig]="modelsColumnConfig" [data]="modelsDataSource" *ngIf="modelsDataSource.length; else noModelData"></ml-table>
 </div>
-
 
 <ng-template #loader>
   <div class="d-flex w-100 justify-content-center py-5">
     <mat-spinner color="primary"></mat-spinner>
+  </div>
+</ng-template>
+
+<ng-template #noExperimentData>
+  <div class="d-flex w-100 justify-content-center py-5">
+    <span>You have no experiments</span>
+  </div>
+</ng-template>
+
+<ng-template #noModelData>
+  <div class="d-flex w-100 justify-content-center py-5">
+    <span>You have no models</span>
   </div>
 </ng-template>

@@ -6,6 +6,7 @@ import {
 } from '../../../../shared/components';
 import { finalize, forkJoin, switchMap } from 'rxjs';
 import { AuthService, DataService } from '../../../../shared/services';
+import { ExperimentModel, ModelModel, UserResponseModel } from '../../../../shared/interfaces/data.interfaces';
 
 @Component({
   selector: 'ml-home-page',
@@ -13,7 +14,7 @@ import { AuthService, DataService } from '../../../../shared/services';
   styleUrls: ['./home-page.component.scss'],
 })
 export class HomePageComponent implements OnInit {
-  currentUser?: string;
+  currentUserInfo: UserResponseModel | null = null;
   loading = false;
   experimentsColumnConfig = [
     {
@@ -22,11 +23,9 @@ export class HomePageComponent implements OnInit {
     },
     {
       title: 'Permissions',
-      key: 'permissions',
+      key: 'permission',
     },
   ];
-  experimentsDataSource = [];
-
   modelsColumnConfig = [
     {
       title: 'Model name',
@@ -34,10 +33,12 @@ export class HomePageComponent implements OnInit {
     },
     {
       title: 'Permissions',
-      key: 'permissions',
+      key: 'permission',
     },
   ];
-  modelsDataSource = [];
+  experimentsDataSource: ExperimentModel[] = [];
+
+  modelsDataSource: ModelModel[] = [];
 
   constructor(
     private readonly dialog: MatDialog,
@@ -47,21 +48,15 @@ export class HomePageComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.currentUser = this.authService.getUser();
+    this.currentUserInfo = this.authService.getUserInfo();
 
-    if (this.currentUser) {
-      this.loading = true;
-      forkJoin([
-        this.dataService.getExperimentsForUser(this.currentUser),
-        this.dataService.getModelsForUser(this.currentUser),
-      ])
-        .pipe(
-          finalize(() => this.loading = false),
-        )
-        .subscribe(([experiments, models]) => {
-          this.experimentsDataSource = experiments;
-          this.modelsDataSource = models;
-        });
+    if (this.currentUserInfo) {
+      const { username } = this.currentUserInfo;
+      
+      if (username) {
+        this.experimentsDataSource = this.currentUserInfo.experiment_permissions;
+        this.modelsDataSource = this.currentUserInfo.registered_model_permissions;
+      }
     }
   }
 

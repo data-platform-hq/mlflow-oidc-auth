@@ -1,7 +1,7 @@
 <div class="my-3">
   <div class="header-section">
     <h3>Model Access</h3>
-    <button mat-button (click)="add()">
+    <button mat-button (click)="addModelPermissionToUser()">
       <mat-icon>add</mat-icon>
       <span>Add</span>
     </button>
@@ -11,14 +11,14 @@
     [columnConfig]="modelColumnConfig"
     [data]="modelDataSource"
     [isActionsActive]="true"
-    (editEvent)="handleUserEditForModel($event)"
+    (editEvent)="handleUserEditForModel()"
   ></ml-table>
 </div>
 
 <div class="my-3">
   <div class="header-section">
     <h3>Experiment Access</h3>
-    <button mat-button>
+    <button mat-button (click)="addExperimentPermissionToUser()">
       <mat-icon>add</mat-icon>
       <span>Add</span>
     </button>
@@ -28,6 +28,6 @@
     [columnConfig]="experimentColumnConfig"
     [data]="experimentDataSource"
     [isActionsActive]="true"
-    (editEvent)="handleUserEditForExperiment($event)"
+    (editEvent)="handleUserEditForExperiment()"
   ></ml-table>
 </div>

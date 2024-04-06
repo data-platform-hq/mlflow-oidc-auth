@@ -9,7 +9,7 @@ import { AuthService, DataService } from './shared/services';
 export class AppComponent implements OnInit {
   title = 'mlflow-oidc-auth-front';
 
-  name: string = 'Alex';
+  name: string = '';
 
   constructor(
     private readonly dataService: DataService,
@@ -18,8 +18,10 @@ export class AppComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.dataService.getCurrentUser().subscribe(({ username }) => {
-      this.authService.setUser(username);
-    });
+    this.dataService.getCurrentUser()
+      .subscribe((userInfo) => {
+        this.authService.setUserInfo(userInfo);
+        this.name = userInfo.display_name;
+      });
   }
 }

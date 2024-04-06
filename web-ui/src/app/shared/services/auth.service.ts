@@ -1,19 +1,20 @@
 import { Injectable } from '@angular/core';
+import { UserResponseModel } from '../interfaces/data.interfaces';
 
 @Injectable({
   providedIn: 'root',
 })
 export class AuthService {
-  private user?: string;
+  private user: UserResponseModel | null = null;
 
   constructor() {
   }
 
-  getUser() {
-    return this.user;
+  getUserInfo(): UserResponseModel | null {
+    return this.user ? this.user : null;
   }
 
-  setUser(user: string) {
+  setUserInfo(user: UserResponseModel) {
     this.user = user;
   }
 }

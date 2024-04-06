@@ -1,22 +1,26 @@
-<h2 mat-dialog-title>"User name" permissions for model/experiment "name"</h2>
-<mat-dialog-content>
-  <p>Permissions</p>
-  <mat-form-field>
-    <mat-label>Exp</mat-label>
-    <select matNativeControl required>
-      <option value="manage">Exp 1</option>
-    </select>
-  </mat-form-field>
-  <mat-form-field>
-    <mat-label>Permissions</mat-label>
-    <select matNativeControl required>
-      <option value="manage">Manage</option>
-      <option value="read">Read</option>
-      <option value="edit">Edit</option>
-    </select>
-  </mat-form-field>
+<h2 mat-dialog-title>Add {{data.type}} permissions for {{data.userName}}</h2>
+<mat-dialog-content [formGroup]="form">
+  <div class="d-flex flex-column">
+    <mat-form-field>
+      <mat-label>{{data.type | titlecase}}</mat-label>
+      <select matNativeControl formControlName="entity">
+        <ng-container *ngFor="let entity of data.entities">
+          <option value="{{entity}}">{{entity}}</option>
+        </ng-container>
+      </select>
+    </mat-form-field>
+    <mat-form-field>
+      <mat-label>Permissions</mat-label>
+      <select matNativeControl formControlName="permission">
+        <option value="MANAGE">Manage</option>
+        <option value="READ">Read</option>
+        <option value="EDIT">Edit</option>
+      </select>
+    </mat-form-field>
+  </div>
+
 </mat-dialog-content>
 <mat-dialog-actions>
-  <button mat-button (click)="onNoClick()">Cancel</button>
-  <button mat-button [mat-dialog-close]="null" cdkFocusInitial>Ok</button>
+  <button mat-button [mat-dialog-close]="null">Cancel</button>
+  <button mat-button [mat-dialog-close]="form.value" cdkFocusInitial [disabled]="form.invalid">Ok</button>
 </mat-dialog-actions>

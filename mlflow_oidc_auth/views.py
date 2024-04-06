@@ -367,7 +367,16 @@ def create_access_token():
 
 def get_current_user():
     user = store.get_user(_get_username())
-    return jsonify(user.to_json())
+    user_json = user.to_json()
+    user_json["experiment_permissions"] = [
+        {
+            "name": mlflow_client.get_experiment(permission.experiment_id).name,
+            "id": permission.experiment_id,
+            "permission": permission.permission
+        }
+        for permission in user.experiment_permissions
+    ]
+    return jsonify(user_json)
 
 
 def update_username_password():
