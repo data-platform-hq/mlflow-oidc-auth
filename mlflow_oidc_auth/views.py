@@ -174,9 +174,9 @@ def _get_is_admin():
 
 def _get_permission_from_experiment_id() -> Permission:
     experiment_id = _get_request_param("experiment_id")
-    username = _get_username()
+    user = store.get_user(_get_username())
     return _get_permission_from_store_or_default(
-        lambda: store.get_experiment_permission(experiment_id, username).permission)
+        lambda: store.get_experiment_permission(experiment_id, user.username).permission)
 
 
 def _get_permission_from_experiment_name() -> Permission:
@@ -187,17 +187,17 @@ def _get_permission_from_experiment_name() -> Permission:
             f"Could not find experiment with name {experiment_name}",
             error_code=RESOURCE_DOES_NOT_EXIST,
         )
-    username = _get_username()
+    user = store.get_user(_get_username())
     return _get_permission_from_store_or_default(
-        lambda: store.get_experiment_permission(store_exp.experiment_id, username).permission
+        lambda: store.get_experiment_permission(store_exp.experiment_id, user.username).permission
     )
 
 
 def _get_permission_from_registered_model_name() -> Permission:
     name = _get_request_param("name")
-    username = _get_username()
+    user = store.get_user(_get_username())
     return _get_permission_from_store_or_default(
-        lambda: store.get_registered_model_permission(name, username).permission
+        lambda: store.get_registered_model_permission(name, user.username).permission
     )
 
 
@@ -205,16 +205,16 @@ def _set_can_manage_experiment_permission(resp: Response):
     response_message = CreateExperiment.Response()
     parse_dict(resp.json, response_message)
     experiment_id = response_message.experiment_id
-    username = _get_username()
-    store.create_experiment_permission(experiment_id, username, MANAGE.name)
+    user = store.get_user(_get_username())
+    store.create_experiment_permission(experiment_id, user.username, MANAGE.name)
 
 
 def _set_can_manage_registered_model_permission(resp: Response):
     response_message = CreateRegisteredModel.Response()
     parse_dict(resp.json, response_message)
     name = response_message.registered_model.name
-    username = _get_username()
-    store.create_registered_model_permission(name, username, MANAGE.name)
+    user = store.get_user(_get_username())
+    store.create_registered_model_permission(name, user.username, MANAGE.name)
 
 
 def delete_can_manage_registered_model_permission(resp: Response):
@@ -228,8 +228,8 @@ def delete_can_manage_registered_model_permission(resp: Response):
     """
     # Get model name from request context because it's not available in the response
     name = request.get_json(force=True, silent=True)["name"]
-    username = _get_username()
-    store.delete_registered_model_permission(name, username)
+    user = store.get_user(_get_username())
+    store.delete_registered_model_permission(name, user.username)
 
 
 def _validate_can_manage_experiment():
@@ -380,9 +380,9 @@ def make_basic_auth_response() -> Response:
 @catch_mlflow_exception
 def create_experiment_permission():
     experiment_id = _get_request_param("experiment_id")
-    username = _get_username()
+    user = store.get_user(_get_username())
     permission = _get_request_param("permission")
-    ep = store.create_experiment_permission(experiment_id, username, permission)
+    ep = store.create_experiment_permission(experiment_id, user.username, permission)
     return jsonify({"experiment_permission": ep.to_json()})
 
 
@@ -390,8 +390,8 @@ def create_experiment_permission():
 @catch_mlflow_exception
 def get_experiment_permission():
     experiment_id = _get_request_param("experiment_id")
-    username = _get_username()
-    ep = store.get_experiment_permission(experiment_id, username)
+    user = store.get_user(_get_username())
+    ep = store.get_experiment_permission(experiment_id, user.username)
     return make_response({"experiment_permission": ep.to_json()})
 
 
@@ -669,51 +669,51 @@ def _password_generation():
 @catch_mlflow_exception
 def update_experiment_permission():
     experiment_id = _get_request_param("experiment_id")
-    username = _get_username()
+    user = store.get_user(_get_username())
     permission = _get_request_param("permission")
-    store.update_experiment_permission(experiment_id, username, permission)
+    store.update_experiment_permission(experiment_id, user.username, permission)
     return make_response("Experiment permission has been updated")
 
 
 @catch_mlflow_exception
 def delete_experiment_permission():
     experiment_id = _get_request_param("experiment_id")
-    username = _get_username()
-    store.delete_experiment_permission(experiment_id, username)
+    user = store.get_user(_get_username())
+    store.delete_experiment_permission(experiment_id, user.username)
     return make_response("Experiment permission has been deleted")
 
 
 @catch_mlflow_exception
 def create_registered_model_permission():
     name = _get_request_param("name")
-    username = _get_username()
+    user = store.get_user(_get_username())
     permission = _get_request_param("permission")
-    rmp = store.create_registered_model_permission(name, username, permission)
+    rmp = store.create_registered_model_permission(name, user.username, permission)
     return make_response({"registered_model_permission": rmp.to_json()})
 
 
 @catch_mlflow_exception
 def get_registered_model_permission():
     name = _get_request_param("name")
-    username = _get_username()
-    rmp = store.get_registered_model_permission(name, username)
+    user = store.get_user(_get_username())
+    rmp = store.get_registered_model_permission(name, user.username)
     return make_response({"registered_model_permission": rmp.to_json()})
 
 
 @catch_mlflow_exception
 def update_registered_model_permission():
     name = _get_request_param("name")
-    username = _get_username()
+    user = store.get_user(_get_username())
     permission = _get_request_param("permission")
-    store.update_registered_model_permission(name, username, permission)
+    store.update_registered_model_permission(name, user.username, permission)
     return make_response("Model permission has been changed")
 
 
 @catch_mlflow_exception
 def delete_registered_model_permission():
     name = _get_request_param("name")
-    username = _get_username()
-    store.delete_registered_model_permission(name, username)
+    user = store.get_user(_get_username())
+    store.delete_registered_model_permission(name, user.username)
     return make_response("Model permission has been deleted")
 
 
@@ -721,13 +721,13 @@ def set_can_manage_experiment_permission(resp: Response):
     response_message = CreateExperiment.Response()
     parse_dict(resp.json, response_message)
     experiment_id = response_message.experiment_id
-    username = _get_username()
-    store.create_experiment_permission(experiment_id, username, MANAGE.name)
+    user = store.get_user(_get_username())
+    store.create_experiment_permission(experiment_id, user.username, MANAGE.name)
 
 
 def set_can_manage_registered_model_permission(resp: Response):
     response_message = CreateRegisteredModel.Response()
     parse_dict(resp.json, response_message)
     name = response_message.registered_model.name
-    username = _get_username()
-    store.create_registered_model_permission(name, username, MANAGE.name)
+    user = store.get_user(_get_username())
+    store.create_registered_model_permission(name, user.username, MANAGE.name)
