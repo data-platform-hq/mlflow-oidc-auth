@@ -10,6 +10,7 @@ load_dotenv()  # take environment variables from .env.
 
 
 class AppConfig:
+    DEFAULT_MLFLOW_PERMISSION = os.environ.get("DEFAULT_MLFLOW_PERMISSION", "MANAGE")
     SECRET_KEY = os.environ.get("SECRET_KEY", secrets.token_hex(16))
     SESSION_TYPE = "cachelib"
     LEVEL = logging.DEBUG if os.environ.get("DEBUG") else logging.INFO

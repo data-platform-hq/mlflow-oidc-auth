@@ -49,10 +49,10 @@ app.add_url_rule(rule=routes.CREATE_EXPERIMENT_PERMISSION, methods=["POST"], vie
 app.add_url_rule(rule=routes.GET_EXPERIMENT_PERMISSION, methods=["GET"], view_func=views.get_experiment_permission)
 app.add_url_rule(rule=routes.UPDATE_EXPERIMENT_PERMISSION, methods=["POST"], view_func=views.update_experiment_permission)
 app.add_url_rule(rule=routes.DELETE_EXPERIMENT_PERMISSION, methods=["POST"], view_func=views.delete_experiment_permission)
-app.add_url_rule(rule=routes.CREATE_REGISTERED_MODEL_PERMISSION, methods=["POST"], view_func=views.create_model_permission)
-app.add_url_rule(rule=routes.GET_REGISTERED_MODEL_PERMISSION, methods=["GET"], view_func=views.get_model_permission)
-app.add_url_rule(rule=routes.UPDATE_REGISTERED_MODEL_PERMISSION, methods=["POST"], view_func=views.update_model_permission)
-app.add_url_rule(rule=routes.DELETE_REGISTERED_MODEL_PERMISSION, methods=["POST"], view_func=views.delete_model_permission)
+app.add_url_rule(rule=routes.CREATE_REGISTERED_MODEL_PERMISSION, methods=["POST"], view_func=views.create_registered_model_permission)
+app.add_url_rule(rule=routes.GET_REGISTERED_MODEL_PERMISSION, methods=["GET"], view_func=views.get_registered_model_permission)
+app.add_url_rule(rule=routes.UPDATE_REGISTERED_MODEL_PERMISSION, methods=["POST"], view_func=views.update_registered_model_permission)
+app.add_url_rule(rule=routes.DELETE_REGISTERED_MODEL_PERMISSION, methods=["POST"], view_func=views.delete_registered_model_permission)
 
 # Add new hooks
 app.before_request(views.before_request_hook)
