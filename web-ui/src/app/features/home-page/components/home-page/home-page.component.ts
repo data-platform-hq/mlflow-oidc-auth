@@ -23,7 +23,7 @@ export class HomePageComponent implements OnInit {
     },
     {
       title: 'Permissions',
-      key: 'permissions',
+      key: 'permission',
     },
   ];
   modelsColumnConfig = [
@@ -33,7 +33,7 @@ export class HomePageComponent implements OnInit {
     },
     {
       title: 'Permissions',
-      key: 'permissions',
+      key: 'permission',
     },
   ];
   experimentsDataSource: ExperimentModel[] = [];
@@ -52,20 +52,10 @@ export class HomePageComponent implements OnInit {
 
     if (this.currentUserInfo) {
       const { username } = this.currentUserInfo;
-
+      
       if (username) {
-        this.loading = true;
-        forkJoin([
-          this.dataService.getExperimentsForUser(username),
-          this.dataService.getModelsForUser(username),
-        ])
-          .pipe(
-            finalize(() => this.loading = false),
-          )
-          .subscribe(([experiments, models]) => {
-            this.experimentsDataSource = experiments;
-            this.modelsDataSource = models;
-          });
+        this.experimentsDataSource = this.currentUserInfo.experiment_permissions;
+        this.modelsDataSource = this.currentUserInfo.registered_model_permissions;
       }
     }
   }

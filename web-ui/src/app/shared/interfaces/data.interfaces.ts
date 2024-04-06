@@ -8,13 +8,14 @@ export interface UserResponseModel {
 }
 
 export interface ExperimentModel {
-  id: string
+  id: string;
   name: string;
+  permission: string;
 }
 
 export interface ModelModel {
-  id: string
   name: string;
+  permission: string;
 }
 
 export interface ExperimentsResponseModel {
