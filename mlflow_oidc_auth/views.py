@@ -522,7 +522,7 @@ def update_experiment_permission():
 
     # # Update the experiment
     store.update_experiment_permission(
-        experiment.experiment_id,
+        request_data.get("experiment_id", experiment.experiment_id),
         request_data.get("user_name"),
         request_data.get("new_permission"),
     )
