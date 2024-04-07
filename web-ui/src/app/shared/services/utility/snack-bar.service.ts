@@ -11,9 +11,10 @@ export class SnackBarService {
     private readonly snackBarService: MatSnackBar,
   ) { }
 
-  openErrorSnackBar(message: string) {
+  openSnackBar(message: string) {
     return this.snackBarService.open(message, 'OK', {
       duration: CORE_CONFIGS.SNACK_BAR_DURATION
     });
   }
+
 }

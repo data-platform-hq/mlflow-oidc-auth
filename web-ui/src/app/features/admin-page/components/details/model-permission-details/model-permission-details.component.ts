@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { filter, switchMap } from 'rxjs';
+import { filter, switchMap, tap } from 'rxjs';
 
 import {
   EditPermissionsModalComponent,
@@ -9,7 +9,7 @@ import {
 } from 'src/app//shared/components';
 import { MatDialog } from '@angular/material/dialog';
 import { TableActionEvent, TableActionModel } from 'src/app/shared/components/table/table.interface';
-import { ModelsDataService, PermissionDataService, UserDataService } from 'src/app//shared/services';
+import { ModelsDataService, PermissionDataService, SnackBarService, UserDataService } from 'src/app//shared/services';
 import { COLUMN_CONFIG, TABLE_ACTIONS } from './model-permission-details.config';
 import { TableActionEnum } from 'src/app/shared/components/table/table.config';
 import {
@@ -36,6 +36,7 @@ export class ModelPermissionDetailsComponent implements OnInit {
     private readonly modelDataService: ModelsDataService,
     private readonly permissionDataService: PermissionDataService,
     private readonly userDataService: UserDataService,
+    private readonly snackService: SnackBarService,
   ) {
   }
 
@@ -70,6 +71,7 @@ export class ModelPermissionDetailsComponent implements OnInit {
           new_permission: permission,
           user_name: username,
         })),
+        tap(() => this.snackService.openSnackBar('Permission updated')),
         switchMap(() => this.loadUsersForModel(this.modelId)),
       )
       .subscribe((users) => {
