@@ -1,4 +1,15 @@
-<div class="container">
-  <ml-header [name]="name"></ml-header>
-  <router-outlet> </router-outlet>
-</div>
+<ng-container *ngIf="!loading && this.user; else loader">
+
+  <div class="container">
+    <ml-header [name]="user.display_name"></ml-header>
+    <router-outlet> </router-outlet>
+  </div>
+
+</ng-container>
+
+
+<ng-template #loader>
+  <div class="loader d-flex justify-content-center align-items-center">
+    <mat-spinner></mat-spinner>
+  </div>
+</ng-template>

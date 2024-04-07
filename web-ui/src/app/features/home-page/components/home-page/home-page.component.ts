@@ -1,8 +1,15 @@
 import { Component, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
-import { AccessKeyDialogData, AccessKeyModalComponent } from '../../../../shared/components';
-import { AuthService, DataService } from '../../../../shared/services';
-import { ExperimentModel, ModelModel, UserResponseModel } from '../../../../shared/interfaces/data.interfaces';
+import { AccessKeyModalComponent } from 'src/app/shared/components';
+import { AuthService } from 'src/app/shared/services';
+import { EXPERIMENTS_COLUMN_CONFIG, MODELS_COLUMN_CONFIG } from './home-page.config';
+import { AccessKeyDialogData } from 'src/app/shared/components/modals/access-key-modal/access-key-modal.interface';
+import { UserDataService } from 'src/app/shared/services/user-data.service';
+import {
+  CurrentUserModel,
+  ExperimentPermission,
+  RegisteredModelPermission,
+} from 'src/app/shared/services/user-data.interface';
 
 @Component({
   selector: 'ml-home-page',
@@ -10,23 +17,16 @@ import { ExperimentModel, ModelModel, UserResponseModel } from '../../../../shar
   styleUrls: ['./home-page.component.scss'],
 })
 export class HomePageComponent implements OnInit {
-  currentUserInfo: UserResponseModel | null = null;
-  loading = false;
-  experimentsColumnConfig = [
-    { title: 'Experiment Name', key: 'name' },
-    { title: 'Permission', key: 'permission' },
-  ];
-  modelsColumnConfig = [
-    { title: 'Model name', key: 'name' },
-    { title: 'Permissions', key: 'permission' },
-  ];
-  experimentsDataSource: ExperimentModel[] = [];
-  modelsDataSource: ModelModel[] = [];
+  currentUserInfo: CurrentUserModel | null = null;
+  experimentsColumnConfig = EXPERIMENTS_COLUMN_CONFIG;
+  modelsColumnConfig = MODELS_COLUMN_CONFIG;
+  experimentsDataSource: ExperimentPermission[] = [];
+  modelsDataSource: RegisteredModelPermission[] = [];
 
   constructor(
     private readonly dialog: MatDialog,
-    private readonly dataService: DataService,
     private readonly authService: AuthService,
+    private readonly userDataService: UserDataService,
   ) {
   }
 
@@ -42,7 +42,7 @@ export class HomePageComponent implements OnInit {
   }
 
   showAccessKeyModal() {
-    this.dataService.getAccessKey()
+    this.userDataService.getAccessKey()
       .subscribe(({ token }) => {
         const data = { token };
         this.dialog.open<AccessKeyModalComponent, AccessKeyDialogData>(AccessKeyModalComponent, { data })

@@ -1,19 +1,21 @@
 import { Component, OnInit } from '@angular/core';
 import {
   EditPermissionsModalComponent,
-  GrantUserPermissionsComponent, GrantUserPermissionsModel,
-  PermissionsDialogData,
-} from '../../../../../shared/components';
+  GrantUserPermissionsComponent,
+  GrantUserPermissionsModel,
+} from 'src/app/shared/components';
 import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute } from '@angular/router';
-import { DataService } from '../../../../../shared/services';
-import { TableActionEvent, TableActionModel } from '../../../../../shared/components/table/table.interface';
+import { DataService } from 'src/app/shared/services';
+import { TableActionEvent, TableActionModel } from 'src/app/shared/components/table/table.interface';
 import { filter, switchMap } from 'rxjs';
-
-enum TableActionsEnum {
-  EDIT = 'EDIT',
-  REVOKE = 'REVOKE',
-}
+import { TableActionEnum } from 'src/app/shared/components/table/table.config';
+import { EntityEnum } from 'src/app/core/configs/core';
+import { COLUMN_CONFIG, TABLE_ACTIONS } from './experiment-permission-details.config';
+import {
+  PermissionsDialogData
+} from '../../../../../shared/components/modals/edit-permissions-modal/edit-permissions-modal.interface';
+import { PermissionEnum } from '../../../../../core/configs/permissions';
 
 @Component({
   selector: 'ml-experiment-permission-details',
@@ -22,19 +24,8 @@ enum TableActionsEnum {
 })
 export class ExperimentPermissionDetailsComponent implements OnInit {
   experimentId!: string;
-  userColumnConfig = [
-    {
-      title: 'User name',
-      key: 'username',
-    }, {
-      title: 'Permissions',
-      key: 'permission',
-    },
-  ];
-  actions: TableActionModel[] = [
-    { action: TableActionsEnum.EDIT, icon: 'edit', name: 'Edit' },
-    { action: TableActionsEnum.REVOKE, icon: 'key_off', name: 'Revoke' },
-  ];
+  userColumnConfig = COLUMN_CONFIG;
+  actions: TableActionModel[] = TABLE_ACTIONS;
   userDataSource: { permission: string, username: string }[] = [];
 
   constructor(
@@ -55,10 +46,10 @@ export class ExperimentPermissionDetailsComponent implements OnInit {
 
   handleUserEdit(event: { permission: string; username: string }) {
     const data: PermissionsDialogData = {
-      name: event.username,
-      entity: this.route.snapshot.paramMap.get('id') ?? '',
-      type: 'experiment',
-      permission: event.permission,
+      userName: event.username,
+      entityName: this.route.snapshot.paramMap.get('id') ?? '',
+      entityType: EntityEnum.EXPERIMENT,
+      permission: event.permission as PermissionEnum,
     };
 
     this.dialog
@@ -78,8 +69,8 @@ export class ExperimentPermissionDetailsComponent implements OnInit {
 
   handleActions($event: TableActionEvent<{ permission: string; username: string }>) {
     const actionMapping: { [key: string]: any } = {
-      [TableActionsEnum.EDIT]: this.handleUserEdit.bind(this),
-      [TableActionsEnum.REVOKE]: this.revokePermissionForUser.bind(this),
+      [TableActionEnum.EDIT]: this.handleUserEdit.bind(this),
+      [TableActionEnum.REVOKE]: this.revokePermissionForUser.bind(this),
     }
 
     const selectedAction = actionMapping[$event.action.action];

@@ -1,13 +1,8 @@
 import { Component, Inject, OnInit } from '@angular/core';
 import { MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { PermissionEnum, PERMISSIONS } from '../../../core/configs/permissions';
-
-export interface GrantPermissionModalData {
-  user: string;
-  type: 'model' | 'experiment';
-  entities: string[];
-}
+import { PermissionEnum, PERMISSIONS } from 'src/app/core/configs/permissions';
+import { GrantPermissionModalData } from './grant-permission-modal.inteface';
 
 @Component({
   selector: 'ml-grant-permission-modal',
@@ -27,10 +22,8 @@ export class GrantPermissionModalComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.title = `Grant ${this.data.type} permissions for ${this.data.user}`;
+    this.title = `Grant ${this.data.entityType} permissions for ${this.data.userName}`;
     this.form = this.fb.group({
-      user: this.data.user,
-      type: this.data.type,
       permission: [PermissionEnum.READ, Validators.required],
       entity: [null, Validators.required],
     })

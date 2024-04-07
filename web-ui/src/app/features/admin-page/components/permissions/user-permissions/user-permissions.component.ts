@@ -1,11 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { DataService } from '../../../../../shared/services';
-import { TableActionEvent, TableActionModel } from '../../../../../shared/components/table/table.interface';
 
-enum UserActionsEnum {
-  EDIT = 'EDIT',
-}
+import { DataService } from 'src/app/shared/services';
+import { TableActionEvent, TableActionModel } from 'src/app/shared/components/table/table.interface';
+import { TableActionEnum } from 'src/app/shared/components/table/table.config';
+import { USER_ACTIONS, USER_COLUMN_CONFIG } from './user-permissions.config';
 
 interface UserModel {
   user: string,
@@ -18,21 +17,9 @@ interface UserModel {
   styleUrls: ['./user-permissions.component.scss'],
 })
 export class UserPermissionsComponent implements OnInit {
-  searchValue: string = '';
-  columnConfig = [
-    {
-      title: 'User',
-      key: 'user',
-    },
-  ];
+  columnConfig = USER_COLUMN_CONFIG;
+  actions: TableActionModel[] = USER_ACTIONS;
   dataSource: UserModel[] = [];
-  actions: TableActionModel[] = [
-    {
-      action: UserActionsEnum.EDIT,
-      icon: 'edit',
-      name: 'Edit',
-    },
-  ];
 
   constructor(
     private readonly router: Router,
@@ -43,23 +30,21 @@ export class UserPermissionsComponent implements OnInit {
 
   ngOnInit(): void {
     this.dataService.getAllUsers()
-      .subscribe(({ users }) => {
-        this.dataSource = users.map((user) => ({ user, id: user }));
-      })
-  }
-
-  handleUserEdit({ id }: UserModel): void {
-    this.router.navigate(['../user/' + id], { relativeTo: this.route })
+      .subscribe(({ users }) => this.dataSource = users.map((user) => ({ user, id: user })))
   }
 
   handleItemAction({ action, item }: TableActionEvent<UserModel>) {
     const actionHandlers: { [key: string]: (user: UserModel) => void } = {
-      [UserActionsEnum.EDIT]: this.handleUserEdit.bind(this),
+      [TableActionEnum.EDIT]: this.handleUserEdit.bind(this),
     }
 
     const selectedAction = actionHandlers[action.action];
     if (selectedAction) {
       selectedAction(item);
     }
+  }
+
+  handleUserEdit({ id }: UserModel): void {
+    this.router.navigate(['../user/' + id], { relativeTo: this.route })
   }
 }

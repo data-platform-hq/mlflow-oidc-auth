@@ -1,15 +1,10 @@
 import { Component, Inject, OnInit } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import { PERMISSIONS } from '../../../core/configs/permissions';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 
+import { PERMISSIONS } from 'src/app/core/configs/permissions';
+import { PermissionsDialogData } from './edit-permissions-modal.interface';
 
-export interface PermissionsDialogData {
-  entity: string;
-  name: string;
-  type: 'model' | 'experiment';
-  permission: string;
-}
 @Component({
   selector: 'ml-edit-permissions-modal',
   templateUrl: './edit-permissions-modal.component.html',
@@ -28,10 +23,8 @@ export class EditPermissionsModalComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.title = `Edit ${this.data.type} permissions for ${this.data.name}`;
+    this.title = `Edit ${this.data.entityName} permissions for ${this.data.userName}`;
     this.form = this.fb.group({
-      name: this.data.name,
-      type: this.data.type,
       permission: [this.data.permission, Validators.required],
     })
   }

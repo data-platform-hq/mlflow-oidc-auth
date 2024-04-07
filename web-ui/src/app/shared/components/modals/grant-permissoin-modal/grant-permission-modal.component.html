@@ -2,7 +2,7 @@
 <mat-dialog-content [formGroup]="form">
   <div class="d-flex flex-column">
     <mat-form-field>
-      <mat-label>{{data.type | titlecase}}</mat-label>
+      <mat-label>{{data.entityType | titlecase}}</mat-label>
       <select matNativeControl formControlName="entity">
         <ng-container *ngFor="let entity of data.entities">
           <option value="{{entity}}">{{entity}}</option>

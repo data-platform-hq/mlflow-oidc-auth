@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { ModelPermisionDetailsComponent } from './model-permision-details.component';
+import { ModelPermissionDetailsComponent } from './model-permission-details.component';
 
 describe('ModelPermisionDetailsComponent', () => {
-  let component: ModelPermisionDetailsComponent;
-  let fixture: ComponentFixture<ModelPermisionDetailsComponent>;
+  let component: ModelPermissionDetailsComponent;
+  let fixture: ComponentFixture<ModelPermissionDetailsComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ ModelPermisionDetailsComponent ]
+      declarations: [ ModelPermissionDetailsComponent ]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(ModelPermisionDetailsComponent);
+    fixture = TestBed.createComponent(ModelPermissionDetailsComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

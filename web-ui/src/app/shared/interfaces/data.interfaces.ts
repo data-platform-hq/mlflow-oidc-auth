@@ -1,11 +1,3 @@
-export interface UserResponseModel {
-  display_name: string;
-  experiment_permissions: ExperimentModel[];
-  id: number;
-  is_admin: boolean;
-  registered_model_permissions: ModelModel[];
-  username: string;
-}
 
 export interface ExperimentModel {
   id: string

@@ -1,12 +1,12 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { DataService } from '../../../../../shared/services';
-import { TableActionEvent, TableActionModel } from '../../../../../shared/components/table/table.interface';
-import { ExperimentModel } from '../../../../../shared/interfaces/data.interfaces';
 
-enum ExperimentActionsEnum {
-  MANAGE = 'MANAGE',
-}
+import { DataService } from 'src/app/shared/services';
+import { TableActionEvent, TableActionModel } from 'src/app/shared/components/table/table.interface';
+import { ExperimentModel } from 'src/app/shared/interfaces/data.interfaces';
+import { TableActionEnum } from 'src/app/shared/components/table/table.config';
+import { COLUMN_CONFIG, TABLE_ACTIONS } from './experiment-permissions.config';
+
 
 @Component({
   selector: 'ml-experiment-permissions',
@@ -14,14 +14,9 @@ enum ExperimentActionsEnum {
   styleUrls: ['./experiment-permissions.component.scss']
 })
 export class ExperimentPermissionsComponent implements OnInit {
-  columnConfig = [{
-    title: 'Experiment Name',
-    key: 'name'
-  }];
+  columnConfig = COLUMN_CONFIG;
   dataSource: ExperimentModel[] = [];
-  actions: TableActionModel[] = [
-    { action: ExperimentActionsEnum.MANAGE, icon: 'edit', name: 'Edit' },
-  ];
+  actions: TableActionModel[] = TABLE_ACTIONS;
 
   constructor(
     private router: Router,
@@ -31,14 +26,12 @@ export class ExperimentPermissionsComponent implements OnInit {
 
   ngOnInit(): void {
     this.dataService.getAllExperiments()
-      .subscribe((experiments) => {
-        this.dataSource = experiments;
-      })
+      .subscribe((experiments) => this.dataSource = experiments);
   }
 
   handleActions(event: TableActionEvent<ExperimentModel>) {
     const actionMapping: { [key: string]: any } = {
-      [ExperimentActionsEnum.MANAGE]: this.handleExperimentEdit.bind(this),
+      [TableActionEnum.EDIT]: this.handleExperimentEdit.bind(this),
     }
 
     const selectedAction = actionMapping[event.action.action];

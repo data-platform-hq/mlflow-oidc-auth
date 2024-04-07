@@ -17,12 +17,14 @@ export class TableComponent<T> implements OnInit, OnChanges {
   dataSource: MatTableDataSource<T> = new MatTableDataSource<T>();
   columns: string[] = [];
 
-  constructor() {
-  }
+  serachValue: string = '';
 
-  ngOnChanges(changes:SimpleChanges): void {
-    if (changes['data'].currentValue) {
-      this.dataSource = new MatTableDataSource(this.data);
+  readonly columnActionName = 'actions';
+
+  ngOnChanges(changes: SimpleChanges): void {
+    const data = changes['data'].currentValue;
+    if (data) {
+      this.dataSource = new MatTableDataSource(data);
     }
   }
 
@@ -32,7 +34,7 @@ export class TableComponent<T> implements OnInit, OnChanges {
     this.dataSource = new MatTableDataSource(this.data);
     this.columns = columnKeys;
     this.actions.length
-      ? this.columns = ['actions', ...columnKeys]
+      ? this.columns = [this.columnActionName, ...columnKeys]
       : this.columns = columnKeys;
   }
 

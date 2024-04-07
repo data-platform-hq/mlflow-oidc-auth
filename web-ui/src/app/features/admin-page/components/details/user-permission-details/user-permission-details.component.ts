@@ -1,9 +1,14 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
-import { GrantPermissionModalComponent, GrantPermissionModalData } from '../../../../../shared/components';
-import { DataService } from '../../../../../shared/services';
+import { GrantPermissionModalComponent } from 'src/app/shared/components';
+import { DataService } from 'src/app/shared/services';
 import { filter, forkJoin, switchMap } from 'rxjs';
 import { ActivatedRoute } from '@angular/router';
+import { EXPERIMENT_COLUMN_CONFIG, MODEL_COLUMN_CONFIG } from './user-permission-details.config';
+import { EntityEnum } from 'src/app/core/configs/core';
+import {
+  GrantPermissionModalData,
+} from 'src/app/shared/components/modals/grant-permissoin-modal/grant-permission-modal.inteface';
 
 @Component({
   selector: 'ml-user-permission-details',
@@ -12,14 +17,8 @@ import { ActivatedRoute } from '@angular/router';
 })
 export class UserPermissionDetailsComponent implements OnInit {
   userId: string = '';
-  experimentsColumnConfig = [
-    { title: 'Experiment Name', key: 'name' },
-    { title: 'Permission', key: 'permissions' },
-  ];
-  modelsColumnConfig = [
-    { title: 'Model name', key: 'name' },
-    { title: 'Permissions', key: 'permissions' },
-  ];
+  experimentsColumnConfig = EXPERIMENT_COLUMN_CONFIG;
+  modelsColumnConfig = MODEL_COLUMN_CONFIG;
 
   experimentsDataSource: any[] = [];
   modelsDataSource: any[] = [];
@@ -52,9 +51,9 @@ export class UserPermissionDetailsComponent implements OnInit {
       .pipe(
         switchMap((models) => this.dialog.open<GrantPermissionModalComponent, GrantPermissionModalData>(GrantPermissionModalComponent, {
           data: {
-            type: 'model',
+            entityType: EntityEnum.MODEL,
             entities: models.map(({ name }) => name),
-            user: this.userId,
+            userName: this.userId,
           }
           }).afterClosed()
         ),
@@ -73,9 +72,9 @@ export class UserPermissionDetailsComponent implements OnInit {
       .pipe(
         switchMap((experiments) => this.dialog.open<GrantPermissionModalComponent, GrantPermissionModalData>(GrantPermissionModalComponent, {
           data: {
-            type: 'experiment',
+            entityType: EntityEnum.EXPERIMENT,
             entities: experiments.map(({ name }) => name),
-            user: this.userId,
+            userName: this.userId,
           }
           }).afterClosed()
         ),

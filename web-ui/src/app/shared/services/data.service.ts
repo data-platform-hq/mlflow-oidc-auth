@@ -4,9 +4,9 @@ import {
   CreateExperimentPermissionRequestBodyModel,
   CreateModelPermissionRequestBodyModel,
   ExperimentModel,
-  ExperimentsResponseModel, ModelModel,
+  ExperimentsResponseModel,
+  ModelModel,
   ModelsResponseModel,
-  UserResponseModel,
   UsersForModelModel,
 } from '../interfaces/data.interfaces';
 import { map } from 'rxjs'
@@ -19,14 +19,6 @@ export class DataService {
   constructor(
     private readonly http: HttpClient,
   ) {
-  }
-
-  getCurrentUser() {
-    return this.http.get<UserResponseModel>('/api/2.0/mlflow/users/current');
-  }
-
-  getAccessKey() {
-    return this.http.get<{ token: string }>('/api/2.0/mlflow/users/access-token', {});
   }
 
   getAllExperiments() {

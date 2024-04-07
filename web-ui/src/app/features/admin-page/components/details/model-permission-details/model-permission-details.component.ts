@@ -3,43 +3,31 @@ import {
   EditPermissionsModalComponent,
   GrantUserPermissionsComponent,
   GrantUserPermissionsModel,
-  PermissionsDialogData,
-} from '../../../../../shared/components';
+} from 'src/app//shared/components';
 import { MatDialog } from '@angular/material/dialog';
-import { TableActionEvent, TableActionModel } from '../../../../../shared/components/table/table.interface';
-import { DataService } from '../../../../../shared/services';
+import { TableActionEvent, TableActionModel } from 'src/app/shared/components/table/table.interface';
+import { DataService } from 'src/app//shared/services';
 import { ActivatedRoute } from '@angular/router';
 import { filter, switchMap } from 'rxjs';
+import { COLUMN_CONFIG, TABLE_ACTIONS } from './model-permission-details.config';
+import { TableActionEnum } from 'src/app/shared/components/table/table.config';
+import {
+  PermissionsDialogData
+} from '../../../../../shared/components/modals/edit-permissions-modal/edit-permissions-modal.interface';
+import { EntityEnum } from '../../../../../core/configs/core';
 
-enum ModelActionsEnum {
-  REVOKE = 'REVOKE',
-  EDIT = 'EDIT',
-}
 
 @Component({
-  selector: 'ml-model-permision-details',
-  templateUrl: './model-permision-details.component.html',
-  styleUrls: ['./model-permision-details.component.scss'],
+  selector: 'ml-model-permission-details',
+  templateUrl: './model-permission-details.component.html',
+  styleUrls: ['./model-permission-details.component.scss'],
 })
-export class ModelPermisionDetailsComponent implements OnInit {
+export class ModelPermissionDetailsComponent implements OnInit {
   modelId!: string;
-  userColumnConfig = [
-    {
-      title: 'User name',
-      key: 'username',
-    },
-    {
-      title: 'Permissions',
-      key: 'permission',
-    },
-  ];
-
   userDataSource: any[] = [];
 
-  actions: TableActionModel[] = [
-    { action: ModelActionsEnum.REVOKE, icon: 'key_off', name: 'Revoke' },
-    { action: ModelActionsEnum.EDIT, icon: 'edit', name: 'Edit' },
-  ];
+  userColumnConfig = COLUMN_CONFIG;
+  actions: TableActionModel[] = TABLE_ACTIONS;
 
   constructor(
     private readonly dialog: MatDialog,
@@ -57,16 +45,15 @@ export class ModelPermisionDetailsComponent implements OnInit {
   }
 
   revokePermissionForUser(item: any) {
-    console.log(item, 'revokePermissionForUser')
     this.dataService.deleteModelPermission(item.id)
       .subscribe(console.log);
   }
 
   editPermissionForUser({ username, permission }: any) {
     const data: PermissionsDialogData = {
-      name: username,
-      entity: this.modelId,
-      type: 'model',
+      userName: username,
+      entityName: this.modelId,
+      entityType: EntityEnum.MODEL,
       permission,
     };
 
@@ -89,8 +76,8 @@ export class ModelPermisionDetailsComponent implements OnInit {
 
   handleActions({ action, item }: TableActionEvent<{ model: string; id: string }>) {
     const actionMapping: { [key: string]: any } = {
-      [ModelActionsEnum.REVOKE]: this.revokePermissionForUser.bind(this),
-      [ModelActionsEnum.EDIT]: this.editPermissionForUser.bind(this),
+      [TableActionEnum.REVOKE]: this.revokePermissionForUser.bind(this),
+      [TableActionEnum.EDIT]: this.editPermissionForUser.bind(this),
     };
 
     const selectedAction = actionMapping[action.action];

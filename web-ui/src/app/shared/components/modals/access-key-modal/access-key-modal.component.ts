@@ -1,9 +1,6 @@
 import { Component, Inject, OnInit } from '@angular/core';
 import { MAT_DIALOG_DATA } from '@angular/material/dialog';
-
-export interface AccessKeyDialogData {
-  token: string;
-}
+import { AccessKeyDialogData } from './access-key-modal.interface';
 
 @Component({
   selector: 'ml-access-key-modal',

@@ -1,6 +1,6 @@
 import { Component, Inject, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { PermissionEnum, PERMISSIONS } from '../../../core/configs/permissions';
+import { PermissionEnum, PERMISSIONS } from '../../../../core/configs/permissions';
 import { MAT_DIALOG_DATA } from '@angular/material/dialog';
 
 
@@ -28,7 +28,6 @@ export class GrantUserPermissionsComponent implements OnInit {
   ngOnInit(): void {
     this.title = `Grant permissions`;
     this.form = this.fb.group({
-      user: [null, Validators.required],
       permission: [PermissionEnum.READ, Validators.required],
     })
   }

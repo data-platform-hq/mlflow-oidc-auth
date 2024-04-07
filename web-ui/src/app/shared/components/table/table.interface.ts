@@ -1,7 +1,9 @@
+import { TableActionEnum } from './table.config';
+
 export interface TableActionModel {
   icon: string;
   name: string;
-  action: string;
+  action: TableActionEnum;
 }
 
 export interface TableActionEvent<T> {
