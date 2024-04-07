@@ -28,6 +28,7 @@ export class GrantUserPermissionsComponent implements OnInit {
   ngOnInit(): void {
     this.title = `Grant permissions`;
     this.form = this.fb.group({
+      user: [null, Validators.required],
       permission: [PermissionEnum.READ, Validators.required],
     })
   }

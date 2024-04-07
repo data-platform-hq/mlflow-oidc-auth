@@ -518,11 +518,11 @@ def _password_generation():
 def update_experiment_permission():
     request_data = request.get_json()
     # Get the experiment
-    experiment = mlflow_client.get_experiment_by_name(request_data.get("experiment_name"))
+    experiment_id = request_data.get("experiment_id", mlflow_client.get_experiment_by_name(request_data.get("experiment_name")).experiment_id)
 
     # # Update the experiment
     store.update_experiment_permission(
-        request_data.get("experiment_id", experiment.experiment_id),
+        experiment_id,
         request_data.get("user_name"),
         request_data.get("new_permission"),
     )

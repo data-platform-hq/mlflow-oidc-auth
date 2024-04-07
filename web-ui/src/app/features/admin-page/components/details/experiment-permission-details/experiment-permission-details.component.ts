@@ -50,7 +50,7 @@ export class ExperimentPermissionDetailsComponent implements OnInit {
   handleUserEdit(event: { permission: string; username: string }) {
     const data: PermissionsDialogData = {
       userName: event.username,
-      entityName: this.route.snapshot.paramMap.get('id') ?? '',
+      entityName: this.experimentId,
       entityType: EntityEnum.EXPERIMENT,
       permission: event.permission as PermissionEnum,
     };
@@ -61,7 +61,7 @@ export class ExperimentPermissionDetailsComponent implements OnInit {
       .pipe(
         switchMap((data) => this.permissionDataService.updateExperimentPermission({
           user_name: data.name,
-          experiment_name: this.route.snapshot.paramMap.get('id') ?? '',
+          experiment_id: this.experimentId,
           new_permission: data.permission,
         }) )
       )
@@ -94,9 +94,9 @@ export class ExperimentPermissionDetailsComponent implements OnInit {
           { data: { users } })
           .afterClosed()),
         filter(Boolean),
-        switchMap(({ user }) => this.permissionDataService.updateModelPermission({
-          model_name: this.experimentId,
-          new_permission: PermissionEnum.EDIT,
+        switchMap(({ user, permission }) => this.permissionDataService.updateExperimentPermission({
+          experiment_id: this.experimentId,
+          new_permission: permission,
           user_name: user,
         })),
         switchMap(() => this.loadUsersForExperiment(this.experimentId)),
