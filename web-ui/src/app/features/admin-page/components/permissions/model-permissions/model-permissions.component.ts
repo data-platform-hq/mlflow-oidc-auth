@@ -1,11 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 
-import { DataService } from 'src/app/shared/services';
+import { ModelsDataService } from 'src/app/shared/services';
 import { TableActionEvent, TableActionModel } from 'src/app/shared/components/table/table.interface';
-import { ModelModel } from 'src/app/shared/interfaces/data.interfaces';
 import { MODEL_COLUMN_CONFIG, MODEL_TABLE_ACTIONS } from './model-permissions.config';
 import { TableActionEnum } from 'src/app/shared/components/table/table.config';
+import { ModelModel } from 'src/app/shared/interfaces/models-data.interface';
 
 @Component({
   selector: 'ml-model-permissions',
@@ -18,14 +18,14 @@ export class ModelPermissionsComponent implements OnInit {
   actions: TableActionModel[] = MODEL_TABLE_ACTIONS;
 
   constructor(
-    private route: ActivatedRoute,
-    private router: Router,
-    private dataService: DataService,
+    private readonly route: ActivatedRoute,
+    private readonly router: Router,
+    private readonly modelDataService: ModelsDataService,
   ) {
   }
 
   ngOnInit(): void {
-    this.dataService.getAllModels()
+    this.modelDataService.getAllModels()
       .subscribe((models) => {
         this.dataSource = models;
       })

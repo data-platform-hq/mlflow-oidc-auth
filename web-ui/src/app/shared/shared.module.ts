@@ -2,7 +2,6 @@ import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   AccessKeyModalComponent,
-  ActionTableComponent,
   ConfirmModalComponent,
   EditPermissionsModalComponent,
   GrantPermissionModalComponent,
@@ -13,13 +12,11 @@ import {
 import { MaterialModule } from './material/material.module';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
-import { TableSearchPipe } from './pipes/table-search.pipe';
 import { RouterLink, RouterLinkWithHref } from '@angular/router';
 import { HttpClientModule } from '@angular/common/http';
 
 const SHARED_COMPONENTS = [
   AccessKeyModalComponent,
-  ActionTableComponent,
   ConfirmModalComponent,
   EditPermissionsModalComponent,
   GrantPermissionModalComponent,
@@ -28,18 +25,12 @@ const SHARED_COMPONENTS = [
   TableComponent,
 ];
 
-const SHARED_PIPES = [
-  TableSearchPipe
-];
-
 @NgModule({
   declarations: [
     ...SHARED_COMPONENTS,
-    ...SHARED_PIPES,
   ],
   exports: [
     ...SHARED_COMPONENTS,
-    ...SHARED_PIPES,
 
     MaterialModule,
   ],

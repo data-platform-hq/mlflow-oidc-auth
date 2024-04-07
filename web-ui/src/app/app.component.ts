@@ -1,8 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { AuthService } from './shared/services';
-import { UserDataService } from './shared/services/user-data.service';
+import { UserDataService } from './shared/services';
 import { finalize } from 'rxjs';
-import { CurrentUserModel } from './shared/services/user-data.interface';
+import { CurrentUserModel } from './shared/interfaces/user-data.interface';
 
 @Component({
   selector: 'app-root',

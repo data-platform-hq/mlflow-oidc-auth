@@ -28,7 +28,7 @@ const DELETE_ACTION = {
 
 const REVOKE_ACTION = {
   name: 'Revoke',
-  icon: 'revoke',
+  icon: 'key_off',
   action: TableActionEnum.REVOKE
 };
 

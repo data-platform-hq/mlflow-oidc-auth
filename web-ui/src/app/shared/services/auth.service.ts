@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { CurrentUserModel } from './user-data.interface';
+import { CurrentUserModel } from '../interfaces/user-data.interface';
 
 @Injectable({
   providedIn: 'root',

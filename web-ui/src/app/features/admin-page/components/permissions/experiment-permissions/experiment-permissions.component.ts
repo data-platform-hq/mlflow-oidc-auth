@@ -1,11 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 
-import { DataService } from 'src/app/shared/services';
+import { ExperimentsDataService } from 'src/app/shared/services';
 import { TableActionEvent, TableActionModel } from 'src/app/shared/components/table/table.interface';
-import { ExperimentModel } from 'src/app/shared/interfaces/data.interfaces';
 import { TableActionEnum } from 'src/app/shared/components/table/table.config';
 import { COLUMN_CONFIG, TABLE_ACTIONS } from './experiment-permissions.config';
+import { ExperimentModel } from 'src/app/shared/interfaces/experiments-data.interface';
 
 
 @Component({
@@ -19,13 +19,13 @@ export class ExperimentPermissionsComponent implements OnInit {
   actions: TableActionModel[] = TABLE_ACTIONS;
 
   constructor(
-    private router: Router,
-    private route: ActivatedRoute,
-    private dataService: DataService,
+    private readonly router: Router,
+    private readonly route: ActivatedRoute,
+    private readonly experimentDataService: ExperimentsDataService,
   ) { }
 
   ngOnInit(): void {
-    this.dataService.getAllExperiments()
+    this.experimentDataService.getAllExperiments()
       .subscribe((experiments) => this.dataSource = experiments);
   }
 

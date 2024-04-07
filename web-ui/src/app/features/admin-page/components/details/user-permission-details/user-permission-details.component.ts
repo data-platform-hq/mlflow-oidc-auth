@@ -1,9 +1,10 @@
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
-import { GrantPermissionModalComponent } from 'src/app/shared/components';
-import { DataService } from 'src/app/shared/services';
 import { filter, forkJoin, switchMap } from 'rxjs';
 import { ActivatedRoute } from '@angular/router';
+
+import { GrantPermissionModalComponent } from 'src/app/shared/components';
+import { ExperimentsDataService, ModelsDataService, PermissionDataService } from 'src/app/shared/services';
 import { EXPERIMENT_COLUMN_CONFIG, MODEL_COLUMN_CONFIG } from './user-permission-details.config';
 import { EntityEnum } from 'src/app/core/configs/core';
 import {
@@ -25,9 +26,10 @@ export class UserPermissionDetailsComponent implements OnInit {
 
   constructor(
     private readonly dialog: MatDialog,
-    private readonly dataService: DataService,
+    private readonly expDataService: ExperimentsDataService,
+    private readonly modelDataService: ModelsDataService,
+    private readonly permissionDataService: PermissionDataService,
     private readonly route: ActivatedRoute,
-    private readonly cd: ChangeDetectorRef,
   ) {
   }
 
@@ -35,19 +37,18 @@ export class UserPermissionDetailsComponent implements OnInit {
     this.userId = this.route.snapshot.paramMap.get('id') ?? '';
 
     forkJoin([
-      this.dataService.getExperimentsForUser(this.userId),
-      this.dataService.getModelsForUser(this.userId),
+      this.expDataService.getExperimentsForUser(this.userId),
+      this.modelDataService.getModelsForUser(this.userId),
     ])
       .subscribe(([experiments, models]) => {
         this.experimentsDataSource = experiments;
         this.modelsDataSource = models;
-        this.cd.detectChanges();
       });
 
   }
 
   addModelPermissionToUser() {
-    this.dataService.getAllModels()
+    this.modelDataService.getAllModels()
       .pipe(
         switchMap((models) => this.dialog.open<GrantPermissionModalComponent, GrantPermissionModalData>(GrantPermissionModalComponent, {
           data: {
@@ -58,7 +59,7 @@ export class UserPermissionDetailsComponent implements OnInit {
           }).afterClosed()
         ),
         filter(Boolean),
-        switchMap(({ entity, permission, user }) => this.dataService.createModelPermission({
+        switchMap(({ entity, permission, user }) => this.permissionDataService.createModelPermission({
           user_name: user,
           model_name: entity,
           new_permission: permission,
@@ -68,7 +69,7 @@ export class UserPermissionDetailsComponent implements OnInit {
   }
 
   addExperimentPermissionToUser() {
-    this.dataService.getAllExperiments()
+    this.expDataService.getAllExperiments()
       .pipe(
         switchMap((experiments) => this.dialog.open<GrantPermissionModalComponent, GrantPermissionModalData>(GrantPermissionModalComponent, {
           data: {
@@ -79,7 +80,7 @@ export class UserPermissionDetailsComponent implements OnInit {
           }).afterClosed()
         ),
         filter(Boolean),
-        switchMap(({ entity, permission, user }) => this.dataService.createExperimentPermission({
+        switchMap(({ entity, permission, user }) => this.permissionDataService.createExperimentPermission({
           user_name: user,
           experiment_name: entity,
           new_permission: permission,

@@ -1,6 +1,5 @@
 export * from './table/table.component';
 export * from './header/header.component';
-export * from './action-table/action-table.component';
 
 export * from './modals/edit-permissions-modal/edit-permissions-modal.component';
 export * from './modals/grant-permissoin-modal/grant-permission-modal.component';

@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpErrorResponse, HttpEvent, HttpHandler, HttpInterceptor, HttpRequest } from '@angular/common/http';
 import { catchError, Observable, throwError } from 'rxjs';
-import { SnackBarService } from '../services/snack-bar.service';
+import { SnackBarService } from '../services';
 
 @Injectable()
 export class ErrorHandlerInterceptor implements HttpInterceptor {

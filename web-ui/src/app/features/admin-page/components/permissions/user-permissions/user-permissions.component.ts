@@ -1,14 +1,13 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 
-import { DataService } from 'src/app/shared/services';
+import { UserDataService } from 'src/app/shared/services';
 import { TableActionEvent, TableActionModel } from 'src/app/shared/components/table/table.interface';
 import { TableActionEnum } from 'src/app/shared/components/table/table.config';
 import { USER_ACTIONS, USER_COLUMN_CONFIG } from './user-permissions.config';
 
 interface UserModel {
   user: string,
-  id: string
 }
 
 @Component({
@@ -24,13 +23,13 @@ export class UserPermissionsComponent implements OnInit {
   constructor(
     private readonly router: Router,
     private readonly route: ActivatedRoute,
-    private readonly dataService: DataService,
+    private readonly userDataService: UserDataService,
   ) {
   }
 
   ngOnInit(): void {
-    this.dataService.getAllUsers()
-      .subscribe(({ users }) => this.dataSource = users.map((user) => ({ user, id: user })))
+    this.userDataService.getAllUsers()
+      .subscribe(({ users }) => this.dataSource = users.map((user) => ({ user })))
   }
 
   handleItemAction({ action, item }: TableActionEvent<UserModel>) {
@@ -44,7 +43,7 @@ export class UserPermissionsComponent implements OnInit {
     }
   }
 
-  handleUserEdit({ id }: UserModel): void {
-    this.router.navigate(['../user/' + id], { relativeTo: this.route })
+  handleUserEdit({ user }: UserModel): void {
+    this.router.navigate(['../user/' + user], { relativeTo: this.route })
   }
 }

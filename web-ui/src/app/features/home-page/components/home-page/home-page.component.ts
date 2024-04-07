@@ -4,12 +4,12 @@ import { AccessKeyModalComponent } from 'src/app/shared/components';
 import { AuthService } from 'src/app/shared/services';
 import { EXPERIMENTS_COLUMN_CONFIG, MODELS_COLUMN_CONFIG } from './home-page.config';
 import { AccessKeyDialogData } from 'src/app/shared/components/modals/access-key-modal/access-key-modal.interface';
-import { UserDataService } from 'src/app/shared/services/user-data.service';
+import { UserDataService } from 'src/app/shared/services/data/user-data.service';
 import {
   CurrentUserModel,
   ExperimentPermission,
   RegisteredModelPermission,
-} from 'src/app/shared/services/user-data.interface';
+} from 'src/app/shared/interfaces/user-data.interface';
 
 @Component({
   selector: 'ml-home-page',

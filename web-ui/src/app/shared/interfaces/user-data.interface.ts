@@ -18,3 +18,11 @@ export interface RegisteredModelPermission {
   permission: string;
   user_id: number;
 }
+
+export interface TokenModel {
+  token: string;
+}
+
+export interface AllUsersListModel {
+  users: string[];
+}
