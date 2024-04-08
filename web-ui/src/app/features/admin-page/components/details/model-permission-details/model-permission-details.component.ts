@@ -49,7 +49,9 @@ export class ModelPermissionDetailsComponent implements OnInit {
   }
 
   revokePermissionForUser(item: any) {
-    this.permissionDataService.deleteModelPermission(item.id)
+    this.permissionDataService.deleteModelPermission(
+      { model_name: this.modelId, user_name: item.username }
+    )
       .subscribe(console.log);
   }
 
@@ -102,9 +104,9 @@ export class ModelPermissionDetailsComponent implements OnInit {
           { data: { users } })
           .afterClosed()),
         filter(Boolean),
-        switchMap(({ user }) => this.permissionDataService.updateModelPermission({
+        switchMap(({ user, permission }) => this.permissionDataService.createModelPermission({
           model_name: this.modelId,
-          new_permission: 'edit',
+          new_permission: permission,
           user_name: user,
         })),
         switchMap(() => this.loadUsersForModel(this.modelId)),

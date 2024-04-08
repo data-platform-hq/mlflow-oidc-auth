@@ -53,6 +53,12 @@ store.init_db((AppConfig.get_property("OIDC_USERS_DB_URI")))
 _logger = logging.getLogger(__name__)
 
 
+def _get_experiment_id(request_data: dict) -> str:
+    experiment_id = request_data.get("experiment_id")
+    if "experiment_id" not in request_data:
+        experiment_id = mlflow_client.get_experiment_by_name(request_data.get("experiment_name")).experiment_id
+    return experiment_id
+
 def _get_request_param(param: str) -> str:
     if request.method == "GET":
         args = request.args
@@ -208,16 +214,12 @@ def make_basic_auth_response() -> Response:
 
 def create_experiment_permission():
     request_data = request.get_json()
-    # Get the experiment
-    experiment = mlflow_client.get_experiment_by_name(request_data.get("experiment_name"))
-
-    # # Update the experiment
     store.create_experiment_permission(
-        experiment.experiment_id,
+        _get_experiment_id(request_data),
         request_data.get("user_name"),
         request_data.get("new_permission"),
     )
-    return "Experiment permission has been created."
+    return jsonify({"message": "Experiment permission has been created."})
 
 
 # Experiment views
@@ -517,29 +519,21 @@ def _password_generation():
 
 def update_experiment_permission():
     request_data = request.get_json()
-    # Get the experiment
-    experiment_id = request_data.get("experiment_id", mlflow_client.get_experiment_by_name(request_data.get("experiment_name")).experiment_id)
-
-    # # Update the experiment
     store.update_experiment_permission(
-        experiment_id,
+        _get_experiment_id(request_data),
         request_data.get("user_name"),
         request_data.get("new_permission"),
     )
-    return "Experiment permission has been changed."
+    return jsonify({"message": "Experiment permission has been changed."})
 
 
 def delete_experiment_permission():
     request_data = request.get_json()
-    # Get the experiment
-    experiment = mlflow_client.get_experiment_by_name(request_data.get("experiment_name"))
-
-    # # Update the experiment
     store.delete_experiment_permission(
-        experiment.experiment_id,
+        _get_experiment_id(request_data),
         request_data.get("user_name"),
     )
-    return "Experiment permission has been deleted."
+    return jsonify({"message": "Experiment permission has been deleted."})
 
 
 def create_model_permission():
@@ -550,7 +544,7 @@ def create_model_permission():
         request_data.get("user_name"),
         request_data.get("new_permission"),
     )
-    return "Model permission has been created."
+    return jsonify({"message": "Model permission has been created."})
 
 
 def get_model_permission():
@@ -571,7 +565,7 @@ def update_model_permission():
         request_data.get("user_name"),
         request_data.get("new_permission"),
     )
-    return "Model permission has been changed."
+    return jsonify({"message": "Model permission has been changed."})
 
 
 def delete_model_permission():
@@ -581,4 +575,4 @@ def delete_model_permission():
         request_data.get("model_name"),
         request_data.get("user_name"),
     )
-    return "Model permission has been deleted."
+    return jsonify({"message": "Model permission has been deleted."})

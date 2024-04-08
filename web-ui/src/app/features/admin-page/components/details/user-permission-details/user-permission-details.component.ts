@@ -56,7 +56,7 @@ export class UserPermissionDetailsComponent implements OnInit {
             entities: models.map(({ name }) => name),
             userName: this.userId,
           }
-          }).afterClosed()
+        }).afterClosed()
         ),
         filter(Boolean),
         switchMap(({ entity, permission, user }) => this.permissionDataService.createModelPermission({
@@ -77,11 +77,10 @@ export class UserPermissionDetailsComponent implements OnInit {
             entities: experiments.map(({ name }) => name),
             userName: this.userId,
           }
-          }).afterClosed()
+        }).afterClosed()
         ),
         filter(Boolean),
         switchMap(({ entity, permission, user }) => {
-          debugger
           return this.permissionDataService.createExperimentPermission({
             user_name: this.userId,
             experiment_name: entity,

@@ -60,10 +60,10 @@ export class ExperimentPermissionDetailsComponent implements OnInit {
       .afterClosed()
       .pipe(
         switchMap((data) => this.permissionDataService.updateExperimentPermission({
-          user_name: data.name,
+          user_name: event.username,
           experiment_id: this.experimentId,
           new_permission: data.permission,
-        }) )
+        }))
       )
       .subscribe((data) => {
         console.log(data)
@@ -83,7 +83,8 @@ export class ExperimentPermissionDetailsComponent implements OnInit {
   }
 
   revokePermissionForUser(item: any) {
-    this.permissionDataService.updateExperimentPermission(item.username)
+    this.permissionDataService.deleteExperimentPermission(
+      { experiment_id: this.experimentId, user_name: item.username })
       .subscribe(console.log);
   }
 
@@ -94,7 +95,7 @@ export class ExperimentPermissionDetailsComponent implements OnInit {
           { data: { users } })
           .afterClosed()),
         filter(Boolean),
-        switchMap(({ user, permission }) => this.permissionDataService.updateExperimentPermission({
+        switchMap(({ user, permission }) => this.permissionDataService.createExperimentPermission({
           experiment_id: this.experimentId,
           new_permission: permission,
           user_name: user,
