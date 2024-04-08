@@ -16,6 +16,7 @@ import {
   PermissionsDialogData,
 } from 'src/app/shared/components/modals/edit-permissions-modal/edit-permissions-modal.interface';
 import { EntityEnum } from 'src/app/core/configs/core';
+import { PermissionModalService } from '../../../../../shared/services/permission-modal.service';
 
 
 @Component({
@@ -37,6 +38,7 @@ export class ModelPermissionDetailsComponent implements OnInit {
     private readonly permissionDataService: PermissionDataService,
     private readonly userDataService: UserDataService,
     private readonly snackService: SnackBarService,
+    private readonly permissionModalService: PermissionModalService
   ) {
   }
 
@@ -56,23 +58,8 @@ export class ModelPermissionDetailsComponent implements OnInit {
   }
 
   editPermissionForUser({ username, permission }: any) {
-    const data: PermissionsDialogData = {
-      userName: username,
-      entityName: this.modelId,
-      entityType: EntityEnum.MODEL,
-      permission,
-    };
-
-    this.dialog
-      .open<EditPermissionsModalComponent, PermissionsDialogData>(EditPermissionsModalComponent, { data })
-      .afterClosed()
+    this.permissionModalService.openEditUserPermissionsForModelModal(this.modelId, username, permission)
       .pipe(
-        filter(Boolean),
-        switchMap(({ permission }) => this.permissionDataService.updateModelPermission({
-          model_name: this.modelId,
-          new_permission: permission,
-          user_name: username,
-        })),
         tap(() => this.snackService.openSnackBar('Permission updated')),
         switchMap(() => this.loadUsersForModel(this.modelId)),
       )

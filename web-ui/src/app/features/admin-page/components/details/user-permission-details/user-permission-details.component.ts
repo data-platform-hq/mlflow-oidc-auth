@@ -1,15 +1,28 @@
 import { Component, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
-import { filter, forkJoin, switchMap } from 'rxjs';
+import { filter, forkJoin, switchMap, tap } from 'rxjs';
 import { ActivatedRoute } from '@angular/router';
 
 import { GrantPermissionModalComponent } from 'src/app/shared/components';
-import { ExperimentsDataService, ModelsDataService, PermissionDataService } from 'src/app/shared/services';
-import { EXPERIMENT_COLUMN_CONFIG, MODEL_COLUMN_CONFIG } from './user-permission-details.config';
+import {
+  ExperimentsDataService,
+  ModelsDataService,
+  PermissionDataService,
+  SnackBarService,
+} from 'src/app/shared/services';
+import {
+  EXPERIMENT_ACTIONS,
+  EXPERIMENT_COLUMN_CONFIG,
+  MODEL_ACTIONS,
+  MODEL_COLUMN_CONFIG,
+} from './user-permission-details.config';
 import { EntityEnum } from 'src/app/core/configs/core';
 import {
   GrantPermissionModalData,
 } from 'src/app/shared/components/modals/grant-permissoin-modal/grant-permission-modal.inteface';
+import { TableActionEvent, TableActionModel } from 'src/app/shared/components/table/table.interface';
+import { PermissionModalService } from 'src/app/shared/services/permission-modal.service';
+import { TableActionEnum } from 'src/app/shared/components/table/table.config';
 
 @Component({
   selector: 'ml-user-permission-details',
@@ -23,6 +36,8 @@ export class UserPermissionDetailsComponent implements OnInit {
 
   experimentsDataSource: any[] = [];
   modelsDataSource: any[] = [];
+  experimentsActions: TableActionModel[] = EXPERIMENT_ACTIONS;
+  modelsActions: TableActionModel[] = MODEL_ACTIONS;
 
   constructor(
     private readonly dialog: MatDialog,
@@ -30,6 +45,8 @@ export class UserPermissionDetailsComponent implements OnInit {
     private readonly modelDataService: ModelsDataService,
     private readonly permissionDataService: PermissionDataService,
     private readonly route: ActivatedRoute,
+    private readonly permissionModalService: PermissionModalService,
+    private readonly snackBarService: SnackBarService
   ) {
   }
 
@@ -89,5 +106,46 @@ export class UserPermissionDetailsComponent implements OnInit {
         }),
       )
       .subscribe();
+  }
+
+  handleExperimentActions(event: TableActionEvent<any>) {
+    const actionMapping: { [key: string]: any } = {
+      [TableActionEnum.EDIT]: this.handleEditUserPermissionForExperiment.bind(this),
+    }
+
+    const selectedAction = actionMapping[event.action.action];
+    if (selectedAction) {
+      selectedAction(event.item);
+    }
+  }
+
+
+  handleModelActions({ action, item }: TableActionEvent<any>) {
+    const actionMapping: { [key: string]: any } = {
+      [TableActionEnum.EDIT]: this.handleEditUserPermissionForModel.bind(this),
+    }
+
+    const selectedAction = actionMapping[action.action];
+    if (selectedAction) {
+      selectedAction(item);
+    }
+  }
+
+  handleEditUserPermissionForModel({ name, permissions }: any) {
+    this.permissionModalService.openEditUserPermissionsForModelModal(name, this.userId, permissions)
+      .pipe(
+        tap(() => this.snackBarService.openSnackBar('Permissions updated successfully')),
+        switchMap(() => this.modelDataService.getModelsForUser(this.userId)),
+      )
+      .subscribe((models) => this.modelsDataSource = models);
+  }
+
+  handleEditUserPermissionForExperiment({ id, permissions }: any) {
+    this.permissionModalService.openEditUserPermissionsForExperimentModal(id, this.userId, permissions)
+      .pipe(
+        tap(() => this.snackBarService.openSnackBar('Permissions updated successfully')),
+        switchMap(() => this.expDataService.getExperimentsForUser(this.userId)),
+      )
+      .subscribe((experiments) => this.experimentsDataSource = experiments);
   }
 }
