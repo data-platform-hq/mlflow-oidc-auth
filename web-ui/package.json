@@ -7,8 +7,8 @@
     "start": "ng serve",
     "build": "ng build --base-href .",
     "clean": "rimraf ../mlflow_oidc_auth/ui",
-    "release": "yarn clean && ng build --base-href . --configuration development --watch",
-    "watch": "ng build --watch --base-href . --configuration development",
+    "release": "yarn clean && ng build --base-href .",
+    "watch": "yarn clean && ng build --watch --base-href . --configuration development",
     "test": "ng test"
   },
   "private": true,
