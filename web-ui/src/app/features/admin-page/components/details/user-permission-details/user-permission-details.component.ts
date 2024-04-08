@@ -65,24 +65,18 @@ export class UserPermissionDetailsComponent implements OnInit {
   }
 
   addModelPermissionToUser() {
-    this.modelDataService.getAllModels()
+    this.permissionModalService.openGrantModelPermissionModal(this.userId)
       .pipe(
-        switchMap((models) => this.dialog.open<GrantPermissionModalComponent, GrantPermissionModalData>(GrantPermissionModalComponent, {
-          data: {
-            entityType: EntityEnum.MODEL,
-            entities: models.map(({ name }) => name),
-            userName: this.userId,
-          }
-        }).afterClosed()
-        ),
         filter(Boolean),
-        switchMap(({ entity, permission, user }) => this.permissionDataService.createModelPermission({
+        switchMap(({ entity, permission }) => this.permissionDataService.createModelPermission({
           user_name: this.userId,
           model_name: entity,
           new_permission: permission,
         })),
+        tap(() => this.snackBarService.openSnackBar('Permission granted successfully')),
+        switchMap(() => this.modelDataService.getModelsForUser(this.userId)),
       )
-      .subscribe();
+      .subscribe((models) => this.modelsDataSource = models);
   }
 
   addExperimentPermissionToUser() {
@@ -97,20 +91,23 @@ export class UserPermissionDetailsComponent implements OnInit {
         }).afterClosed()
         ),
         filter(Boolean),
-        switchMap(({ entity, permission, user }) => {
+        switchMap(({ entity, permission }) => {
           return this.permissionDataService.createExperimentPermission({
             user_name: this.userId,
             experiment_name: entity,
             new_permission: permission,
           })
         }),
+        tap(() => this.snackBarService.openSnackBar('Permission granted successfully')),
+        switchMap(() => this.expDataService.getExperimentsForUser(this.userId)),
       )
-      .subscribe();
+      .subscribe((experiments) => this.experimentsDataSource = experiments);
   }
 
   handleExperimentActions(event: TableActionEvent<any>) {
     const actionMapping: { [key: string]: any } = {
       [TableActionEnum.EDIT]: this.handleEditUserPermissionForExperiment.bind(this),
+      [TableActionEnum.REVOKE]: this.revokeExperimentPermissionForUser.bind(this),
     }
 
     const selectedAction = actionMapping[event.action.action];
@@ -119,10 +116,29 @@ export class UserPermissionDetailsComponent implements OnInit {
     }
   }
 
+  revokeExperimentPermissionForUser(item: {id: string}) {
+    this.permissionDataService.deleteExperimentPermission({experiment_id: item.id, user_name: this.userId})
+      .pipe(
+        tap(() => this.snackBarService.openSnackBar('Permission revoked successfully')),
+        switchMap(() => this.expDataService.getExperimentsForUser(this.userId)),
+      )
+      .subscribe((experiments) => this.experimentsDataSource = experiments);
+
+  }
+
+  revokeModelPermissionForUser({name}: any) {
+    this.permissionDataService.deleteModelPermission({model_name: name, user_name: this.userId})
+      .pipe(
+        tap(() => this.snackBarService.openSnackBar('Permission revoked successfully')),
+        switchMap(() => this.modelDataService.getModelsForUser(this.userId)),
+      )
+      .subscribe((models) => this.modelsDataSource = models);
+  }
 
   handleModelActions({ action, item }: TableActionEvent<any>) {
     const actionMapping: { [key: string]: any } = {
       [TableActionEnum.EDIT]: this.handleEditUserPermissionForModel.bind(this),
+      [TableActionEnum.REVOKE]: this.revokeModelPermissionForUser.bind(this),
     }
 
     const selectedAction = actionMapping[action.action];

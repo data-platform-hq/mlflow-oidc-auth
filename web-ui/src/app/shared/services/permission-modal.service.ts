@@ -1,11 +1,13 @@
 import { Injectable } from '@angular/core';
-import { EditPermissionsModalComponent } from '../components';
+import { EditPermissionsModalComponent, GrantPermissionModalComponent } from '../components';
 import { PermissionsDialogData } from '../components/modals/edit-permissions-modal/edit-permissions-modal.interface';
-import { filter, switchMap, tap } from 'rxjs';
+import { filter, switchMap } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
 import { EntityEnum } from '../../core/configs/core';
 import { PermissionEnum } from '../../core/configs/permissions';
 import { PermissionDataService } from './data/permission-data.service';
+import { GrantPermissionModalData } from '../components/modals/grant-permissoin-modal/grant-permission-modal.inteface';
+import { ModelsDataService } from './data/models-data.service';
 
 @Injectable({
   providedIn: 'root',
@@ -14,7 +16,8 @@ export class PermissionModalService {
 
   constructor(
     private readonly dialog: MatDialog,
-    private readonly permissionDataService: PermissionDataService
+    private readonly permissionDataService: PermissionDataService,
+    private readonly modelDataService: ModelsDataService,
   ) {
   }
 
@@ -57,6 +60,20 @@ export class PermissionModalService {
           new_permission: permission,
           user_name: userName,
         })),
+      )
+  }
+
+  openGrantModelPermissionModal(userName: string) {
+    return this.modelDataService.getAllModels()
+      .pipe(
+        switchMap((models) => this.dialog.open<GrantPermissionModalComponent, GrantPermissionModalData>(GrantPermissionModalComponent, {
+            data: {
+              entityType: EntityEnum.MODEL,
+              entities: models.map(({ name }) => name),
+              userName,
+            },
+          }).afterClosed(),
+        ),
       )
   }
 }

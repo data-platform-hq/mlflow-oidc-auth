@@ -2,20 +2,12 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { filter, switchMap, tap } from 'rxjs';
 
-import {
-  EditPermissionsModalComponent,
-  GrantUserPermissionsComponent,
-  GrantUserPermissionsModel,
-} from 'src/app//shared/components';
+import { GrantUserPermissionsComponent, GrantUserPermissionsModel } from 'src/app//shared/components';
 import { MatDialog } from '@angular/material/dialog';
 import { TableActionEvent, TableActionModel } from 'src/app/shared/components/table/table.interface';
 import { ModelsDataService, PermissionDataService, SnackBarService, UserDataService } from 'src/app//shared/services';
 import { COLUMN_CONFIG, TABLE_ACTIONS } from './model-permission-details.config';
 import { TableActionEnum } from 'src/app/shared/components/table/table.config';
-import {
-  PermissionsDialogData,
-} from 'src/app/shared/components/modals/edit-permissions-modal/edit-permissions-modal.interface';
-import { EntityEnum } from 'src/app/core/configs/core';
 import { PermissionModalService } from '../../../../../shared/services/permission-modal.service';
 
 
@@ -51,10 +43,12 @@ export class ModelPermissionDetailsComponent implements OnInit {
   }
 
   revokePermissionForUser(item: any) {
-    this.permissionDataService.deleteModelPermission(
-      { model_name: this.modelId, user_name: item.username }
-    )
-      .subscribe(console.log);
+    this.permissionDataService.deleteModelPermission({ model_name: this.modelId, user_name: item.username })
+      .pipe(
+        tap(() => this.snackService.openSnackBar('Permission revoked successfully')),
+        switchMap(() => this.loadUsersForModel(this.modelId)),
+      )
+      .subscribe((users) => this.userDataSource = users);
   }
 
   editPermissionForUser({ username, permission }: any) {
