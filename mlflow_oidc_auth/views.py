@@ -89,11 +89,12 @@ store.init_db((AppConfig.get_property("OIDC_USERS_DB_URI")))
 _logger = logging.getLogger(__name__)
 
 
-def _get_experiment_id(request_data: dict) -> str:
-    experiment_id = request_data.get("experiment_id")
-    if "experiment_id" not in request_data:
-        experiment_id = mlflow_client.get_experiment_by_name(request_data.get("experiment_name")).experiment_id
+def _get_experiment_id() -> str:
+    experiment_id = _get_request_param("experiment_id")
+    if not experiment_id:
+        experiment_id = mlflow_client.get_experiment_by_name(_get_request_param("experiment_name")).experiment_id
     return experiment_id
+
 
 def _get_request_param(param: str) -> str:
     if request.method == "GET":
@@ -180,7 +181,7 @@ def _get_is_admin():
 
 def _get_permission_from_experiment_id() -> Permission:
     experiment_id = _get_request_param("experiment_id")
-    username = _get_username()
+    username = _get_request_param("user_name")
     return _get_permission_from_store_or_default(
         lambda: store.get_experiment_permission(experiment_id, username).permission)
 
@@ -193,17 +194,17 @@ def _get_permission_from_experiment_name() -> Permission:
             f"Could not find experiment with name {experiment_name}",
             error_code=RESOURCE_DOES_NOT_EXIST,
         )
-    username = _get_username()
+    username = _get_request_param("user_name")
     return _get_permission_from_store_or_default(
         lambda: store.get_experiment_permission(store_exp.experiment_id, username).permission
     )
 
 
 def _get_permission_from_registered_model_name() -> Permission:
-    name = _get_request_param("name")
-    username = _get_username()
+    model_name = _get_request_param("model_name")
+    username = _get_request_param("user_name")
     return _get_permission_from_store_or_default(
-        lambda: store.get_registered_model_permission(name, username).permission
+        lambda: store.get_registered_model_permission(model_name, username).permission
     )
 
 
@@ -211,7 +212,7 @@ def _set_can_manage_experiment_permission(resp: Response):
     response_message = CreateExperiment.Response()
     parse_dict(resp.json, response_message)
     experiment_id = response_message.experiment_id
-    username = _get_username()
+    username = _get_request_param("user_name")
     store.create_experiment_permission(experiment_id, username, MANAGE.name)
 
 
@@ -219,7 +220,7 @@ def _set_can_manage_registered_model_permission(resp: Response):
     response_message = CreateRegisteredModel.Response()
     parse_dict(resp.json, response_message)
     name = response_message.registered_model.name
-    username = _get_username()
+    username = _get_request_param("user_name")
     store.create_registered_model_permission(name, username, MANAGE.name)
 
 
@@ -233,9 +234,9 @@ def delete_can_manage_registered_model_permission(resp: Response):
     conflicts with the new model registered with the same name.
     """
     # Get model name from request context because it's not available in the response
-    name = request.get_json(force=True, silent=True)["name"]
-    username = _get_username()
-    store.delete_registered_model_permission(name, username)
+    model_name = _get_request_param("model_name")
+    username = _get_request_param("user_name")
+    store.delete_registered_model_permission(model_name, username)
 
 
 def _validate_can_manage_experiment():
@@ -383,12 +384,12 @@ def make_basic_auth_response() -> Response:
     return res
 
 
+@catch_mlflow_exception
 def create_experiment_permission():
-    request_data = request.get_json()
     store.create_experiment_permission(
-        _get_experiment_id(request_data),
-        request_data.get("user_name"),
-        request_data.get("new_permission"),
+        _get_experiment_id(),
+        _get_request_param("user_name"),
+        _get_request_param("permission"),
     )
     return jsonify({"message": "Experiment permission has been created."})
 
@@ -397,7 +398,7 @@ def create_experiment_permission():
 @catch_mlflow_exception
 def get_experiment_permission():
     experiment_id = _get_request_param("experiment_id")
-    username = _get_username()
+    username = _get_request_param("user_name")
     ep = store.get_experiment_permission(experiment_id, username)
     return make_response({"experiment_permission": ep.to_json()})
 
@@ -470,7 +471,8 @@ def callback():
         if not any(group["displayName"] == AppConfig.get_property("OIDC_GROUP_NAME") for group in group_data["value"]):
             return "User not in group", 401
         # set is_admin if user is in admin group
-        if any(group["displayName"] == AppConfig.get_property("OIDC_ADMIN_GROUP_NAME") for group in group_data["value"]):
+        if any(group["displayName"] == AppConfig.get_property("OIDC_ADMIN_GROUP_NAME") for group in
+               group_data["value"]):
             _set_is_admin(True)
         else:
             _set_is_admin(False)
@@ -532,12 +534,14 @@ def create_user():
         )
 
 
+@catch_mlflow_exception
 def create_access_token():
     new_token = _password_generation()
     store.update_user(_get_username(), new_token)
     return jsonify({"token": new_token})
 
 
+@catch_mlflow_exception
 def get_current_user():
     user = store.get_user(_get_username())
     user_json = user.to_json()
@@ -552,26 +556,29 @@ def get_current_user():
     return jsonify(user_json)
 
 
+@catch_mlflow_exception
 def update_username_password():
     new_password = _password_generation()
     store.update_user(_get_username(), new_password)
     return jsonify({"token": new_password})
 
 
+@catch_mlflow_exception
 def update_user_admin():
     is_admin = _get_request_param("is_admin")
     store.update_user(_get_username(), is_admin)
     return jsonify({"is_admin": is_admin})
 
 
+@catch_mlflow_exception
 def delete_user():
-    store.delete_user(_get_username())
+    store.delete_user(_get_request_param("user_name"))
     return jsonify({"message": f"User {_get_username()} has been deleted"})
 
 
 @catch_mlflow_exception
 def get_user():
-    username = _get_request_param("username")
+    username = _get_request_param("user_name")
     user = store.get_user(username)
     return jsonify({"user": user.to_json()})
 
@@ -584,6 +591,7 @@ def permissions():
     return redirect(url_for("list_users"))
 
 
+@catch_mlflow_exception
 def get_users():
     # check is admin
     # if not _get_is_admin():
@@ -592,6 +600,7 @@ def get_users():
     return jsonify({"users": users})
 
 
+@catch_mlflow_exception
 def get_experiments():
     list_experiments = mlflow_client.search_experiments()
     experiments = [
@@ -605,6 +614,7 @@ def get_experiments():
     return jsonify(experiments)
 
 
+@catch_mlflow_exception
 def get_models():
     registered_models = mlflow_client.search_registered_models()
     models = [
@@ -620,6 +630,7 @@ def get_models():
     return jsonify(models)
 
 
+@catch_mlflow_exception
 def get_user_experiments(username):
     # get list of experiments for the user
     list_experiments = store.list_experiment_permissions(username)
@@ -636,6 +647,7 @@ def get_user_experiments(username):
     return jsonify({"experiments": experiments_list})
 
 
+@catch_mlflow_exception
 def get_user_models(username):
     # get list of models for current user
     registered_models = store.list_registered_model_permissions(username)
@@ -646,6 +658,7 @@ def get_user_models(username):
     return jsonify({"models": models})
 
 
+@catch_mlflow_exception
 def get_experiment_users(experiment_id):
     # Convert experiment_id to string for comparison
     experiment_id = str(experiment_id)
@@ -664,6 +677,7 @@ def get_experiment_users(experiment_id):
     return jsonify({"usernames": usernames})
 
 
+@catch_mlflow_exception
 def get_model_users(model_name):
     # Get the list of all users
     list_users = store.list_users()
@@ -685,28 +699,29 @@ def _password_generation():
     return new_password
 
 
+@catch_mlflow_exception
 def update_experiment_permission():
-    request_data = request.get_json()
     store.update_experiment_permission(
-        _get_experiment_id(request_data),
-        request_data.get("user_name"),
-        request_data.get("new_permission"),
+        _get_experiment_id(),
+        _get_request_param("user_name"),
+        _get_request_param("new_permission"),
     )
     return jsonify({"message": "Experiment permission has been changed."})
 
 
+@catch_mlflow_exception
 def delete_experiment_permission():
-    request_data = request.get_json()
     store.delete_experiment_permission(
-        _get_experiment_id(request_data),
-        request_data.get("user_name"),
+        _get_experiment_id(),
+        _get_request_param("user_name"),
     )
     return jsonify({"message": "Experiment permission has been deleted."})
+
 
 @catch_mlflow_exception
 def create_registered_model_permission():
     name = _get_request_param("name")
-    username = _get_username()
+    username = _get_request_param("user_name")
     permission = _get_request_param("permission")
     rmp = store.create_registered_model_permission(name, username, permission)
     return make_response({"registered_model_permission": rmp.to_json()})
@@ -715,7 +730,7 @@ def create_registered_model_permission():
 @catch_mlflow_exception
 def get_registered_model_permission():
     name = _get_request_param("name")
-    username = _get_username()
+    username = _get_request_param("user_name")
     rmp = store.get_registered_model_permission(name, username)
     return make_response({"registered_model_permission": rmp.to_json()})
 
@@ -723,7 +738,7 @@ def get_registered_model_permission():
 @catch_mlflow_exception
 def update_registered_model_permission():
     name = _get_request_param("name")
-    username = _get_username()
+    username = _get_request_param("user_name")
     permission = _get_request_param("permission")
     store.update_registered_model_permission(name, username, permission)
     return make_response("Model permission has been changed")
@@ -732,7 +747,7 @@ def update_registered_model_permission():
 @catch_mlflow_exception
 def delete_registered_model_permission():
     name = _get_request_param("name")
-    username = _get_username()
+    username = _get_request_param("user_name")
     store.delete_registered_model_permission(name, username)
     return make_response("Model permission has been deleted")
 
@@ -741,7 +756,7 @@ def set_can_manage_experiment_permission(resp: Response):
     response_message = CreateExperiment.Response()
     parse_dict(resp.json, response_message)
     experiment_id = response_message.experiment_id
-    username = _get_username()
+    username = _get_request_param("user_name")
     store.create_experiment_permission(experiment_id, username, MANAGE.name)
 
 
@@ -749,5 +764,5 @@ def set_can_manage_registered_model_permission(resp: Response):
     response_message = CreateRegisteredModel.Response()
     parse_dict(resp.json, response_message)
     name = response_message.registered_model.name
-    username = _get_username()
+    username = _get_request_param("user_name")
     store.create_registered_model_permission(name, username, MANAGE.name)
