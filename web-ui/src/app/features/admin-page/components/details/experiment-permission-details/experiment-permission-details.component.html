@@ -1,7 +1,7 @@
 <div class="my-3">
   <div class="header-section">
     <h3>Experiment Access</h3>
-    <button mat-button>
+    <button mat-button (click)="addUser()">
       <mat-icon>add</mat-icon>
       <span>Add</span>
     </button>
@@ -10,7 +10,7 @@
   <ml-table
     [columnConfig]="userColumnConfig"
     [data]="userDataSource"
-    [isActionsActive]="true"
-    (editEvent)="handleUserEdit($event)"
+    [actions]="actions"
+    (action)="handleActions($event)"
   ></ml-table>
 </div>

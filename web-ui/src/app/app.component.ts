@@ -1,5 +1,8 @@
 import { Component, OnInit } from '@angular/core';
-import { AuthService, DataService } from './shared/services';
+import { AuthService } from './shared/services';
+import { UserDataService } from './shared/services';
+import { finalize } from 'rxjs';
+import { CurrentUserModel } from './shared/interfaces/user-data.interface';
 
 @Component({
   selector: 'app-root',
@@ -8,20 +11,24 @@ import { AuthService, DataService } from './shared/services';
 })
 export class AppComponent implements OnInit {
   title = 'mlflow-oidc-auth-front';
-
-  name: string = '';
+  loading = false;
+  user!: CurrentUserModel;
 
   constructor(
-    private readonly dataService: DataService,
+    private readonly userDataService: UserDataService,
     private readonly authService: AuthService,
   ) {
   }
 
   ngOnInit(): void {
-    this.dataService.getCurrentUser()
+    this.loading = false;
+    this.userDataService.getCurrentUser()
+      .pipe(
+        finalize(() => this.loading = false),
+      )
       .subscribe((userInfo) => {
         this.authService.setUserInfo(userInfo);
-        this.name = userInfo.display_name;
+        this.user = userInfo;
       });
   }
 }

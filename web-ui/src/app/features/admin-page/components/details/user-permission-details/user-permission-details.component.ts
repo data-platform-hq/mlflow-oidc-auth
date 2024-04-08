@@ -1,13 +1,15 @@
 import { Component, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
-import {
-  EditPermissionsModalComponent,
-  GrantPermissionModalComponent,
-  GrantPermissionModalData,
-} from '../../../../../shared/components';
-import { DataService } from '../../../../../shared/services';
-import { filter, switchMap } from 'rxjs';
+import { filter, forkJoin, switchMap } from 'rxjs';
 import { ActivatedRoute } from '@angular/router';
+
+import { GrantPermissionModalComponent } from 'src/app/shared/components';
+import { ExperimentsDataService, ModelsDataService, PermissionDataService } from 'src/app/shared/services';
+import { EXPERIMENT_COLUMN_CONFIG, MODEL_COLUMN_CONFIG } from './user-permission-details.config';
+import { EntityEnum } from 'src/app/core/configs/core';
+import {
+  GrantPermissionModalData,
+} from 'src/app/shared/components/modals/grant-permissoin-modal/grant-permission-modal.inteface';
 
 @Component({
   selector: 'ml-user-permission-details',
@@ -15,131 +17,77 @@ import { ActivatedRoute } from '@angular/router';
   styleUrls: ['./user-permission-details.component.scss'],
 })
 export class UserPermissionDetailsComponent implements OnInit {
-  userId: string | null = null;
-  modelColumnConfig = [
-    {
-      title: 'Modal name',
-      key: 'modal',
-    }, {
-      title: 'Permissions',
-      key: 'permissions',
-    },
-  ];
-  modelDataSource = [
-    {
-      modal: 'Model 1',
-      permissions: 'Read',
-    },
-    {
-      modal: 'Model 2',
-      permissions: 'Write',
-    },
-    {
-      modal: 'Model 3',
-      permissions: 'Read',
-    },
-  ];
+  userId: string = '';
+  experimentsColumnConfig = EXPERIMENT_COLUMN_CONFIG;
+  modelsColumnConfig = MODEL_COLUMN_CONFIG;
 
-  experimentColumnConfig = [
-    {
-      title: 'Experiment name',
-      key: 'experiment',
-    }, {
-      title: 'Permissions',
-      key: 'permissions',
-    },
-  ];
-  experimentDataSource = [
-    {
-      experiment: 'Experiment 1',
-      permissions: 'Read',
-    },
-    {
-      experiment: 'Experiment 2',
-      permissions: 'Write',
-    },
-  ]
-
+  experimentsDataSource: any[] = [];
+  modelsDataSource: any[] = [];
 
   constructor(
     private readonly dialog: MatDialog,
-    private readonly dataService: DataService,
+    private readonly expDataService: ExperimentsDataService,
+    private readonly modelDataService: ModelsDataService,
+    private readonly permissionDataService: PermissionDataService,
     private readonly route: ActivatedRoute,
   ) {
   }
 
   ngOnInit(): void {
-    this.userId = this.route.snapshot.paramMap.get('id');
-  }
+    this.userId = this.route.snapshot.paramMap.get('id') ?? '';
 
+    forkJoin([
+      this.expDataService.getExperimentsForUser(this.userId),
+      this.modelDataService.getModelsForUser(this.userId),
+    ])
+      .subscribe(([experiments, models]) => {
+        this.experimentsDataSource = experiments;
+        this.modelsDataSource = models;
+      });
 
-  handleUserEditForModel() {
-    this.dialog
-      .open(EditPermissionsModalComponent)
-      .afterClosed()
-      .subscribe((data) => {
-        console.log(data)
-      })
-  }
-
-  handleUserEditForExperiment() {
-    this.dialog
-      .open(EditPermissionsModalComponent)
-      .afterClosed()
-      .subscribe((data) => {
-        console.log(data)
-      })
-  }
-
-  add() {
-    this.dialog.open(GrantPermissionModalComponent)
-      .afterClosed()
-      .subscribe(console.log);
   }
 
   addModelPermissionToUser() {
-    this.dataService.getAllModels()
+    this.modelDataService.getAllModels()
       .pipe(
-        switchMap(({ models }) => this.dialog.open<GrantPermissionModalComponent, GrantPermissionModalData>(GrantPermissionModalComponent, {
+        switchMap((models) => this.dialog.open<GrantPermissionModalComponent, GrantPermissionModalData>(GrantPermissionModalComponent, {
           data: {
-            type: 'model',
-            entities: models,
-            userName: this.userId ? this.userId : '',
+            entityType: EntityEnum.MODEL,
+            entities: models.map(({ name }) => name),
+            userName: this.userId,
           }
-        })
-          .afterClosed()),
+        }).afterClosed()
+        ),
         filter(Boolean),
-      )
-      .subscribe((data) => {
-        const { entity, permission, user } = data;
-        this.dataService.createModelPermission({
-          user_name: user,
+        switchMap(({ entity, permission, user }) => this.permissionDataService.createModelPermission({
+          user_name: this.userId,
           model_name: entity,
           new_permission: permission,
-        }).subscribe();
-      });
+        })),
+      )
+      .subscribe();
   }
 
   addExperimentPermissionToUser() {
-    this.dataService.getAllExperiments()
+    this.expDataService.getAllExperiments()
       .pipe(
-        switchMap(({ experiments }) => this.dialog.open<GrantPermissionModalComponent, GrantPermissionModalData>(GrantPermissionModalComponent, {
+        switchMap((experiments) => this.dialog.open<GrantPermissionModalComponent, GrantPermissionModalData>(GrantPermissionModalComponent, {
           data: {
-            type: 'experiment',
-            entities: experiments,
-            userName: this.userId ? this.userId : '',
+            entityType: EntityEnum.EXPERIMENT,
+            entities: experiments.map(({ name }) => name),
+            userName: this.userId,
           }
-        })
-          .afterClosed()),
+        }).afterClosed()
+        ),
         filter(Boolean),
+        switchMap(({ entity, permission, user }) => {
+          return this.permissionDataService.createExperimentPermission({
+            user_name: this.userId,
+            experiment_name: entity,
+            new_permission: permission,
+          })
+        }),
       )
-      .subscribe((data) => {
-        const { entity, permission, user } = data;
-        this.dataService.createExperimentPermission({
-          user_name: user,
-          experiment_name: entity,
-          new_permission: permission,
-        }).subscribe();
-      });
+      .subscribe();
   }
 }

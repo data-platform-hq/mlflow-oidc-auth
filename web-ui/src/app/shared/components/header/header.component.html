@@ -6,7 +6,10 @@
       <a mat-button [routerLink]="['/home']">Home</a>
       <a mat-button [routerLink]="['/admin-panel']">Admin panel</a>
     </nav>
-    <button mat-button class="logout">Logout</button>
+    <button mat-button  [routerLink]="'/logout'" aria-label="logout" class="logout">
+      <mat-icon>exit_to_app</mat-icon>
+      <span>Logout</span>
+    </button>
   </div>
 
 </header>

@@ -1,33 +1,38 @@
-<div class="my-3">
-  <div class="header-section">
-    <h3>Model Access</h3>
-    <button mat-button (click)="addModelPermissionToUser()">
-      <mat-icon>add</mat-icon>
-      <span>Add</span>
-    </button>
-  </div>
+<mat-tab-group>
+  <!--  Experiments-->
+  <mat-tab label="Experiments">
+    <div class="my-3">
+      <div class="header-section">
+        <button mat-button (click)="addExperimentPermissionToUser()">
+          <mat-icon>add</mat-icon>
+          <span>Add</span>
+        </button>
+      </div>
 
-  <ml-table
-    [columnConfig]="modelColumnConfig"
-    [data]="modelDataSource"
-    [isActionsActive]="true"
-    (editEvent)="handleUserEditForModel()"
-  ></ml-table>
-</div>
+      <ml-table
+              [columnConfig]="experimentsColumnConfig"
+              [data]="experimentsDataSource"
+              *ngIf="experimentsDataSource.length"
+      ></ml-table>
+    </div>
+  </mat-tab>
 
-<div class="my-3">
-  <div class="header-section">
-    <h3>Experiment Access</h3>
-    <button mat-button (click)="addExperimentPermissionToUser()">
-      <mat-icon>add</mat-icon>
-      <span>Add</span>
-    </button>
-  </div>
+  <!--  Models-->
+  <mat-tab label="Models">
+    <div class="my-3">
+      <div class="header-section">
+        <button mat-button (click)="addModelPermissionToUser()">
+          <mat-icon>add</mat-icon>
+          <span>Add</span>
+        </button>
+      </div>
 
-  <ml-table
-    [columnConfig]="experimentColumnConfig"
-    [data]="experimentDataSource"
-    [isActionsActive]="true"
-    (editEvent)="handleUserEditForExperiment()"
-  ></ml-table>
-</div>
+      <ml-table
+              [columnConfig]="modelsColumnConfig"
+              [data]="modelsDataSource"
+              *ngIf="modelsDataSource.length"
+      ></ml-table>
+    </div>
+  </mat-tab>
+
+</mat-tab-group>
