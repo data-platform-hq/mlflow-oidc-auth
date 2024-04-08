@@ -471,8 +471,7 @@ def callback():
         if not any(group["displayName"] == AppConfig.get_property("OIDC_GROUP_NAME") for group in group_data["value"]):
             return "User not in group", 401
         # set is_admin if user is in admin group
-        if any(group["displayName"] == AppConfig.get_property("OIDC_ADMIN_GROUP_NAME") for group in
-               group_data["value"]):
+        if any(group["displayName"] == AppConfig.get_property("OIDC_ADMIN_GROUP_NAME") for group in group_data["value"]):
             _set_is_admin(True)
         else:
             _set_is_admin(False)
