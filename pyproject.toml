@@ -66,3 +66,6 @@ exclude = ["tests", "tests.*"]
 
 [tool.setuptools.dynamic]
 version = {attr = "mlflow_oidc_auth.version"}
+
+[tool.black]
+line-length = 128

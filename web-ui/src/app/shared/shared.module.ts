@@ -1,37 +1,36 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActionTableComponent, HeaderComponent, TableComponent } from './components';
+import {
+  AccessKeyModalComponent,
+  ConfirmModalComponent,
+  EditPermissionsModalComponent,
+  GrantPermissionModalComponent,
+  GrantUserPermissionsComponent,
+  HeaderComponent,
+  TableComponent,
+} from './components';
 import { MaterialModule } from './material/material.module';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
-import { TableSearchPipe } from './pipes/table-search.pipe';
-import { EditPermissionsModalComponent } from './components/edit-permissions-modal/edit-permissions-modal.component';
-import { GrantPermissinModalComponent } from './components/grant-permissin-modal/grant-permissin-modal.component';
-import { AccessKeyModalComponent } from './components/access-key-modal/access-key-modal.component';
+import { RouterLink, RouterLinkWithHref } from '@angular/router';
+import { HttpClientModule } from '@angular/common/http';
 
 const SHARED_COMPONENTS = [
-  TableComponent,
-  HeaderComponent,
-  ActionTableComponent,
-  TableSearchPipe,
-  HeaderComponent,
+  AccessKeyModalComponent,
+  ConfirmModalComponent,
   EditPermissionsModalComponent,
-];
-
-const SHARED_PIPES = [
-  TableSearchPipe
+  GrantPermissionModalComponent,
+  GrantUserPermissionsComponent,
+  HeaderComponent,
+  TableComponent,
 ];
 
 @NgModule({
   declarations: [
     ...SHARED_COMPONENTS,
-    ...SHARED_PIPES,
-    GrantPermissinModalComponent,
-    AccessKeyModalComponent,
   ],
   exports: [
     ...SHARED_COMPONENTS,
-    ...SHARED_PIPES,
 
     MaterialModule,
   ],
@@ -40,6 +39,10 @@ const SHARED_PIPES = [
     CommonModule,
     FormsModule,
     NgbModule,
+    RouterLinkWithHref,
+    HttpClientModule,
+    ReactiveFormsModule,
+    RouterLink,
   ],
 })
 export class SharedModule { }

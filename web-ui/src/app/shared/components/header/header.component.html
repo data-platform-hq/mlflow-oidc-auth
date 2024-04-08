@@ -1,8 +1,15 @@
 <header class="py-3">
 
-  <div class="col-12 d-flex justify-content-between align-items-center">
+  <div class="col-12 d-flex align-items-center">
     <span>Hello, {{name}}</span>
-    <button mat-button>Logout</button>
+    <nav class="mx-3">
+      <a mat-button [routerLink]="['/home']">Home</a>
+      <a mat-button [routerLink]="['/admin-panel']">Admin panel</a>
+    </nav>
+    <button mat-button  [routerLink]="'/logout'" aria-label="logout" class="logout">
+      <mat-icon>exit_to_app</mat-icon>
+      <span>Logout</span>
+    </button>
   </div>
 
 </header>

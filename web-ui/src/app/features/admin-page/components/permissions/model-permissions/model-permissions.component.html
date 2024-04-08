@@ -1,6 +1,7 @@
 <ml-table
   [columnConfig]="columnConfig"
   [data]="dataSource"
-  [isActionsActive]="true"
-  (editEvent)="handleModelEdit($event)"
+  *ngIf="dataSource.length"
+  [actions]="actions"
+  (action)="handleAction($event)"
 ></ml-table>

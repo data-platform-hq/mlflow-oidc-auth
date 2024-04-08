@@ -1,21 +1,38 @@
-<button mat-flat-button aria-label="add" color="primary">
-  Add
-</button>
+<mat-tab-group>
+  <!--  Experiments-->
+  <mat-tab label="Experiments">
+    <div class="my-3">
+      <div class="header-section">
+        <button mat-button (click)="addExperimentPermissionToUser()">
+          <mat-icon>add</mat-icon>
+          <span>Add</span>
+        </button>
+      </div>
 
-<ml-table
-  [columnConfig]="columnConfig"
-  [data]="dataSource"
-  [isActionsActive]="true"
-  (editEvent)="handleUserEdit($event)"
-></ml-table>
+      <ml-table
+              [columnConfig]="experimentsColumnConfig"
+              [data]="experimentsDataSource"
+              *ngIf="experimentsDataSource.length"
+      ></ml-table>
+    </div>
+  </mat-tab>
 
-<button mat-flat-button aria-label="add" color="primary">
-  Add
-</button>
+  <!--  Models-->
+  <mat-tab label="Models">
+    <div class="my-3">
+      <div class="header-section">
+        <button mat-button (click)="addModelPermissionToUser()">
+          <mat-icon>add</mat-icon>
+          <span>Add</span>
+        </button>
+      </div>
 
-<ml-table
-  [columnConfig]="columnConfig"
-  [data]="dataSource"
-  [isActionsActive]="true"
-  (editEvent)="handleUserEdit($event)"
-></ml-table>
+      <ml-table
+              [columnConfig]="modelsColumnConfig"
+              [data]="modelsDataSource"
+              *ngIf="modelsDataSource.length"
+      ></ml-table>
+    </div>
+  </mat-tab>
+
+</mat-tab-group>

@@ -1,6 +1,6 @@
 <ml-table
   [columnConfig]="columnConfig"
   [data]="dataSource"
-  [isActionsActive]="true"
-  (editEvent)="handleUserEdit($event)"
+  [actions]="actions"
+  (action)="handleItemAction($event)"
 ></ml-table>

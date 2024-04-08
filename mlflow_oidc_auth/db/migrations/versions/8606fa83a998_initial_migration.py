@@ -5,6 +5,7 @@ Revises:
 Create Date: 2023-07-07 23:30:50.921970
 
 """
+
 import sqlalchemy as sa
 from alembic import op
 
@@ -20,6 +21,7 @@ def upgrade() -> None:
         "users",
         sa.Column("id", sa.Integer(), nullable=False, primary_key=True),
         sa.Column("username", sa.String(length=255), nullable=True),
+        sa.Column("display_name", sa.String(length=255), nullable=True),
         sa.Column("password_hash", sa.String(length=255), nullable=True),
         sa.Column("is_admin", sa.Boolean(), nullable=True),
         sa.UniqueConstraint("username"),

@@ -1,10 +1,10 @@
 import mlflow
-from mlflow.server.auth.entities import (
+from mlflow_oidc_auth.entities import (
     ExperimentPermission,
     RegisteredModelPermission,
     User,
 )
-from mlflow.server.auth.routes import (
+from mlflow_oidc_auth.routes import (
     CREATE_EXPERIMENT_PERMISSION,
     CREATE_REGISTERED_MODEL_PERMISSION,
     CREATE_USER,
@@ -151,9 +151,7 @@ class AuthServiceClient:
         except mlflow.exceptions.RestException as e:
             raise e
 
-    def create_experiment_permission(
-        self, experiment_id: str, username: str, permission: str
-    ):
+    def create_experiment_permission(self, experiment_id: str, username: str, permission: str):
         """
         Create a permission on an experiment for a user.
 
@@ -168,9 +166,7 @@ class AuthServiceClient:
         if not username:
             raise ValueError("Username must not be empty.")
         if permission not in ["READ", "EDIT", "MANAGE", "NO_PERMISSIONS"]:
-            raise ValueError(
-                "Permission must be one of 'READ', 'EDIT', 'MANAGE', or 'NO_PERMISSIONS'."
-            )
+            raise ValueError("Permission must be one of 'READ', 'EDIT', 'MANAGE', or 'NO_PERMISSIONS'.")
 
         try:
             resp = self._request(
@@ -212,9 +208,7 @@ class AuthServiceClient:
 
         return ExperimentPermission.from_json(resp["experiment_permission"])
 
-    def update_experiment_permission(
-        self, experiment_id: str, username: str, permission: str
-    ):
+    def update_experiment_permission(self, experiment_id: str, username: str, permission: str):
         """
         Update an existing experiment permission for a user.
 
@@ -229,9 +223,7 @@ class AuthServiceClient:
         if not username:
             raise ValueError("Username must not be empty.")
         if permission not in ["READ", "EDIT", "MANAGE", "NO_PERMISSIONS"]:
-            raise ValueError(
-                "Permission must be one of 'READ', 'EDIT', 'MANAGE', or 'NO_PERMISSIONS'."
-            )
+            raise ValueError("Permission must be one of 'READ', 'EDIT', 'MANAGE', or 'NO_PERMISSIONS'.")
 
         try:
             self._request(
@@ -268,9 +260,7 @@ class AuthServiceClient:
         except mlflow.exceptions.RestException as e:
             raise e
 
-    def create_registered_model_permission(
-        self, name: str, username: str, permission: str
-    ):
+    def create_registered_model_permission(self, name: str, username: str, permission: str):
         """
         Create a permission on an registered model for a user.
 
@@ -285,9 +275,7 @@ class AuthServiceClient:
         if not username:
             raise ValueError("Username must not be empty.")
         if permission not in ["READ", "EDIT", "MANAGE", "NO_PERMISSIONS"]:
-            raise ValueError(
-                "Permission must be one of 'READ', 'EDIT', 'MANAGE', or 'NO_PERMISSIONS'."
-            )
+            raise ValueError("Permission must be one of 'READ', 'EDIT', 'MANAGE', or 'NO_PERMISSIONS'.")
 
         try:
             resp = self._request(
@@ -324,9 +312,7 @@ class AuthServiceClient:
 
         return RegisteredModelPermission.from_json(resp["registered_model_permission"])
 
-    def update_registered_model_permission(
-        self, name: str, username: str, permission: str
-    ):
+    def update_registered_model_permission(self, name: str, username: str, permission: str):
         """
         Update an existing registered model permission for a user.
 
@@ -341,9 +327,7 @@ class AuthServiceClient:
         if not username:
             raise ValueError("Username must not be empty.")
         if permission not in ["READ", "EDIT", "MANAGE", "NO_PERMISSIONS"]:
-            raise ValueError(
-                "Permission must be one of 'READ', 'EDIT', 'MANAGE', or 'NO_PERMISSIONS'."
-            )
+            raise ValueError("Permission must be one of 'READ', 'EDIT', 'MANAGE', or 'NO_PERMISSIONS'.")
 
         try:
             self._request(

@@ -1,13 +1,14 @@
 {
   "name": "mlflow-oidc-auth-front",
   "version": "0.0.0",
+  "license":"Apache-2.0",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
-    "build": "ng build",
+    "build": "ng build --base-href .",
     "clean": "rimraf ../mlflow_oidc_auth/ui",
     "release": "yarn clean && ng build --base-href .",
-    "watch": "ng build --watch --configuration development",
+    "watch": "yarn clean && ng build --watch --base-href . --configuration development",
     "test": "ng test"
   },
   "private": true,
