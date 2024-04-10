@@ -24,6 +24,9 @@ The plugin required the following environment variables but also supported `.env
 | OAUTHLIB_INSECURE_TRANSPORT | Development only. Allow to use insecure endpoints for OIDC |
 | LOG_LEVEL                   | Application log level |
 | OIDC_USERS_DB_URI | Database connection string |
+| MLFLOW_TRACKING_USERNAME | Credentials for internal communications via API |
+| MLFLOW_TRACKING_PASSWORD | Credentials for internal communications via API |
+| MLFLOW_TRACKING_URI | URI for internal communications via API |
 
 # Configuration examples
 
@@ -56,15 +59,20 @@ OIDC_ADMIN_GROUP_NAME = "mlflow_admins_group_name"
 > please note, that for getting group membership information, the application should have "GroupMember.Read.All" permission
 
 # Development
+
+Preconditions:
+
+The following tools should be installed for local development:
+
+* git
+* nodejs
+* python
+
 ```shell
 git clone https://github.com/data-platform-hq/mlflow-oidc-auth
 cd mlflow-oidc-auth
-python3 -m venv venv
-source venv/bin/activate
-pip install --editable .
-mlflow server --dev --app-name oidc-auth --host 0.0.0.0 --port 8080
+./scripts/run-dev-server.sh
 ```
-
 
 # License
 Apache 2 Licensed. For more information please see [LICENSE](./LICENSE)
