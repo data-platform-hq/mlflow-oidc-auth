@@ -3,7 +3,6 @@ import { PermissionEnum } from 'src/app/core/configs/permissions';
 export interface ModelModel {
   aliases: Record<string, unknown>;
   description: string;
-  latest_versions: any[];
   name: string;
   tags: Record<string, unknown>;
 }

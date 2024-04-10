@@ -122,7 +122,7 @@ def authenticate_request_basic_auth() -> Union[Authorization, Response]:
         _set_is_admin(True)
         _logger.debug("User %s authenticated", username)
         return True
-    if store.authenticate_user(username, password):
+    if store.authenticate_user(username.lower(), password):
         _set_username(username)
         _logger.debug("User %s authenticated", username)
         return True
@@ -331,7 +331,7 @@ def callback():
             _set_is_admin(False)
 
     # Store the user data in the session.
-    _set_username(email)
+    _set_username(email.lower())
     # Create user due to auth
     create_user()
     return redirect(url_for("oidc_ui"))
@@ -454,7 +454,6 @@ def get_models():
             "name": model.name,
             "tags": model.tags,
             "description": model.description,
-            "latest_versions": model.latest_versions,
             "aliases": model.aliases,
         }
         for model in registered_models
