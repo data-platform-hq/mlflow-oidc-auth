@@ -12,4 +12,8 @@ export class HeaderComponent implements OnInit {
 
   ngOnInit(): void {
   }
+
+  logout() {
+    window.location.href = '/logout';
+  }
 }
