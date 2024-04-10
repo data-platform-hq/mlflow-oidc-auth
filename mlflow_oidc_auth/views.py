@@ -454,7 +454,6 @@ def get_models():
             "name": model.name,
             "tags": model.tags,
             "description": model.description,
-            "latest_versions": model.latest_versions,
             "aliases": model.aliases,
         }
         for model in registered_models
