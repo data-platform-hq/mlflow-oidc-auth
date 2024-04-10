@@ -48,4 +48,8 @@ export class HomePageComponent implements OnInit {
         this.dialog.open<AccessKeyModalComponent, AccessKeyDialogData>(AccessKeyModalComponent, { data })
       });
   }
+
+  redirectToMLFlow() {
+    window.location.href = '/';
+  }
 }
