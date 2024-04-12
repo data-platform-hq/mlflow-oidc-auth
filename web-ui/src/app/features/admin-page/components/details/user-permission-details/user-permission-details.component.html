@@ -13,6 +13,8 @@
               [columnConfig]="experimentsColumnConfig"
               [data]="experimentsDataSource"
               *ngIf="experimentsDataSource.length"
+              [actions]="experimentsActions"
+              (action)="handleExperimentActions($event)"
       ></ml-table>
     </div>
   </mat-tab>
@@ -31,6 +33,8 @@
               [columnConfig]="modelsColumnConfig"
               [data]="modelsDataSource"
               *ngIf="modelsDataSource.length"
+              [actions]="modelsActions"
+              (action)="handleModelActions($event)"
       ></ml-table>
     </div>
   </mat-tab>

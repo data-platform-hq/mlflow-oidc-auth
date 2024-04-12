@@ -83,7 +83,7 @@ from mlflow_oidc_auth.sqlalchemy_store import SqlAlchemyStore
 
 # Create the OAuth2 client
 auth_client = WebApplicationClient(AppConfig.get_property("OIDC_CLIENT_ID"))
-mlflow_client = MlflowClient()
+mlflow_client = MlflowClient(tracking_uri=AppConfig.get_property("MLFLOW_TRACKING_URI"))
 store = SqlAlchemyStore()
 store.init_db((AppConfig.get_property("OIDC_USERS_DB_URI")))
 _logger = logging.getLogger(__name__)
@@ -120,7 +120,14 @@ def _get_request_param(param: str) -> str:
 
 
 def _is_unprotected_route(path: str) -> bool:
-    return path.startswith(("/static", "/favicon.ico", "/health", "/login", "/callback", "/oidc/static", "/oidc/ui"))
+    return path.startswith(
+        (
+            "/health",
+            "/login",
+            "/callback",
+            "/oidc/static",
+        )
+    )
 
 
 def _get_permission_from_store_or_default(store_permission_func: Callable[[], str]) -> Permission:
@@ -142,7 +149,15 @@ def authenticate_request_basic_auth() -> Union[Authorization, Response]:
     username = request.authorization.username
     password = request.authorization.password
     _logger.debug("Authenticating user %s", username)
-    if store.authenticate_user(username, password):
+    # check for internal call, if credentials are correct, return True
+    if username == AppConfig.get_property("MLFLOW_TRACKING_USERNAME") and password == AppConfig.get_property(
+        "MLFLOW_TRACKING_PASSWORD"
+    ):
+        _set_username(username)
+        _set_is_admin(True)
+        _logger.debug("User %s authenticated", username)
+        return True
+    if store.authenticate_user(username.lower(), password):
         _set_username(username)
         _logger.debug("User %s authenticated", username)
         return True
@@ -404,9 +419,9 @@ def get_experiment_permission():
 
 
 # TODO
-@catch_mlflow_exception
-def search_experiment():
-    return render_template("home.html", username=_get_username())
+# @catch_mlflow_exception
+# def search_experiment():
+#     return render_template("home.html", username=_get_username())
 
 
 def login():
@@ -486,7 +501,7 @@ def callback():
             _set_is_admin(False)
 
     # Store the user data in the session.
-    _set_username(email)
+    _set_username(email.lower())
     # Create user due to auth
     create_user()
     return redirect(url_for("oidc_ui"))
@@ -510,9 +525,9 @@ def oidc_ui(filename=None):
     return send_from_directory(ui_directory, filename)
 
 
-# TODO
-def search_model():
-    return render_template("home.html", username=_get_username())
+# # TODO
+# def search_model():
+#     return render_template("home.html", username=_get_username())
 
 
 def create_user():
@@ -582,10 +597,6 @@ def get_user():
     return jsonify({"user": user.to_json()})
 
 
-def oidc_home():
-    return render_template("home.html", username=_get_username())
-
-
 def permissions():
     return redirect(url_for("list_users"))
 
@@ -621,7 +632,6 @@ def get_models():
             "name": model.name,
             "tags": model.tags,
             "description": model.description,
-            "latest_versions": model.latest_versions,
             "aliases": model.aliases,
         }
         for model in registered_models
