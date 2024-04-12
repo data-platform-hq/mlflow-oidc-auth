@@ -197,8 +197,7 @@ def _get_is_admin():
 def _get_permission_from_experiment_id() -> Permission:
     experiment_id = _get_request_param("experiment_id")
     username = _get_request_param("user_name")
-    return _get_permission_from_store_or_default(
-        lambda: store.get_experiment_permission(experiment_id, username).permission)
+    return _get_permission_from_store_or_default(lambda: store.get_experiment_permission(experiment_id, username).permission)
 
 
 def _get_permission_from_experiment_name() -> Permission:
@@ -218,9 +217,7 @@ def _get_permission_from_experiment_name() -> Permission:
 def _get_permission_from_registered_model_name() -> Permission:
     model_name = _get_request_param("model_name")
     username = _get_request_param("user_name")
-    return _get_permission_from_store_or_default(
-        lambda: store.get_registered_model_permission(model_name, username).permission
-    )
+    return _get_permission_from_store_or_default(lambda: store.get_registered_model_permission(model_name, username).permission)
 
 
 def _set_can_manage_experiment_permission(resp: Response):
@@ -418,12 +415,6 @@ def get_experiment_permission():
     return make_response({"experiment_permission": ep.to_json()})
 
 
-# TODO
-# @catch_mlflow_exception
-# def search_experiment():
-#     return render_template("home.html", username=_get_username())
-
-
 def login():
     state = secrets.token_urlsafe(16)
     session["oauth_state"] = state
@@ -523,11 +514,6 @@ def oidc_ui(filename=None):
     elif not os.path.exists(os.path.join(ui_directory, filename)):
         filename = "index.html"
     return send_from_directory(ui_directory, filename)
-
-
-# # TODO
-# def search_model():
-#     return render_template("home.html", username=_get_username())
 
 
 def create_user():
