@@ -4,8 +4,7 @@ import re
 import requests
 import secrets
 import string
-from typing import Callable, Union
-
+from typing import Any, Callable, Dict, Optional, Union
 from mlflow.store.entities import PagedList
 from mlflow.entities.model_registry import RegisteredModel
 from mlflow.entities import Experiment
@@ -87,7 +86,7 @@ from mlflow.server.handlers import (
     get_endpoints,
 )
 
-from mlflow.tracking import MlflowClient
+from mlflow.utils.rest_utils import _REST_API_PATH_PREFIX
 from oauthlib.oauth2 import WebApplicationClient
 
 from mlflow_oidc_auth import routes
@@ -552,6 +551,31 @@ AFTER_REQUEST_HANDLERS = {
 }
 
 
+@catch_mlflow_exception
+def after_request_hook(resp: Response):
+    if 400 <= resp.status_code < 600:
+        return resp
+
+    if handler := AFTER_REQUEST_HANDLERS.get((request.path, request.method)):
+        handler(resp)
+    return resp
+
+
+def _is_proxy_artifact_path(path: str) -> bool:
+    return path.startswith(f"{_REST_API_PATH_PREFIX}/mlflow-artifacts/artifacts/")
+
+
+def _get_proxy_artifact_validator(method: str, view_args: Optional[Dict[str, Any]]) -> Optional[Callable[[], bool]]:
+    if view_args is None:
+        return validate_can_read_experiment_artifact_proxy  # List
+
+    return {
+        "GET": validate_can_read_experiment_artifact_proxy,  # Download
+        "PUT": validate_can_update_experiment_artifact_proxy,  # Upload
+        "DELETE": validate_can_delete_experiment_artifact_proxy,  # Delete
+    }.get(method)
+
+
 def before_request_hook():
     """Called before each request. If it did not return a response,
     the view function for the matched route is called and returns a response"""
@@ -572,6 +596,10 @@ def before_request_hook():
     if validator := BEFORE_REQUEST_VALIDATORS.get((request.path, request.method)):
         if not validator():
             return make_forbidden_response()
+    elif _is_proxy_artifact_path(request.path):
+        if validator := _get_proxy_artifact_validator(request.method, request.view_args):
+            if not validator():
+                return make_forbidden_response()
 
 
 def make_forbidden_response() -> Response:

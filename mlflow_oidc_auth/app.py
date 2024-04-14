@@ -56,6 +56,7 @@ app.add_url_rule(rule=routes.DELETE_REGISTERED_MODEL_PERMISSION, methods=["POST"
 
 # Add new hooks
 app.before_request(views.before_request_hook)
+app.after_request(views.after_request_hook)
 
 # Set up session
 Session(app)
