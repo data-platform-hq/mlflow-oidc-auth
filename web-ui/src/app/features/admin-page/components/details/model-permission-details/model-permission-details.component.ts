@@ -43,7 +43,7 @@ export class ModelPermissionDetailsComponent implements OnInit {
   }
 
   revokePermissionForUser(item: any) {
-    this.permissionDataService.deleteModelPermission({ model_name: this.modelId, user_name: item.username })
+    this.permissionDataService.deleteModelPermission({ name: this.modelId, user_name: item.username })
       .pipe(
         tap(() => this.snackService.openSnackBar('Permission revoked successfully')),
         switchMap(() => this.loadUsersForModel(this.modelId)),
@@ -86,8 +86,8 @@ export class ModelPermissionDetailsComponent implements OnInit {
           .afterClosed()),
         filter(Boolean),
         switchMap(({ user, permission }) => this.permissionDataService.createModelPermission({
-          model_name: this.modelId,
-          new_permission: permission,
+          name: this.modelId,
+          permission: permission,
           user_name: user,
         })),
         switchMap(() => this.loadUsersForModel(this.modelId)),

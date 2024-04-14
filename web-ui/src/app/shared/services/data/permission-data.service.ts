@@ -21,7 +21,7 @@ export class PermissionDataService {
     return this.http.post(API_URL.CREATE_EXPERIMENT_PERMISSION, body, { responseType: 'text' });
   }
 
-  updateExperimentPermission(body: { user_name: string, experiment_id: string, new_permission: string }) {
+  updateExperimentPermission(body: { user_name: string, experiment_id: string, permission: string }) {
     return this.http.post(API_URL.UPDATE_EXPERIMENT_PERMISSION, body, { responseType: 'text' });
   }
 
@@ -33,11 +33,11 @@ export class PermissionDataService {
     return this.http.post(API_URL.CREATE_MODEL_PERMISSION, body);
   }
 
-  updateModelPermission(body: { user_name: string, model_name: string, new_permission: string }) {
+  updateModelPermission(body: { user_name: string, name: string, permission: string }) {
     return this.http.post(API_URL.UPDATE_MODEL_PERMISSION, body, { responseType: 'text' });
   }
 
-  deleteModelPermission(body: { model_name: string, user_name: string }) {
+  deleteModelPermission(body: { name: string, user_name: string }) {
     return this.http.post(API_URL.DELETE_MODEL_PERMISSION, body, { responseType: 'text' });
   }
 

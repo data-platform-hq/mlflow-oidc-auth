@@ -36,9 +36,7 @@ class AppConfig:
     OIDC_REDIRECT_URI = os.environ.get("OIDC_REDIRECT_URI", None)
     OIDC_CLIENT_ID = os.environ.get("OIDC_CLIENT_ID", None)
     OIDC_CLIENT_SECRET = os.environ.get("OIDC_CLIENT_SECRET", None)
-    MLFLOW_TRACKING_URI = os.environ.get("MLFLOW_TRACKING_URI", "http://localhost:8080")
-    MLFLOW_TRACKING_USERNAME = os.environ.get("MLFLOW_TRACKING_USERNAME", secrets.token_urlsafe(32))
-    MLFLOW_TRACKING_PASSWORD = os.environ.get("MLFLOW_TRACKING_PASSWORD", secrets.token_urlsafe(72))
+
 
     @staticmethod
     def get_property(property_name):

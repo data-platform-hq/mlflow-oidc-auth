@@ -24,9 +24,6 @@ The plugin required the following environment variables but also supported `.env
 | OAUTHLIB_INSECURE_TRANSPORT | Development only. Allow to use insecure endpoints for OIDC |
 | LOG_LEVEL                   | Application log level |
 | OIDC_USERS_DB_URI | Database connection string |
-| MLFLOW_TRACKING_USERNAME | Credentials for internal communications via API |
-| MLFLOW_TRACKING_PASSWORD | Credentials for internal communications via API |
-| MLFLOW_TRACKING_URI | URI for internal communications via API |
 
 # Configuration examples
 
