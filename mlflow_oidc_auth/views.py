@@ -612,7 +612,7 @@ def before_request_hook():
 
 
 def make_forbidden_response() -> Response:
-    res = make_response("Permission denied")
+    res = make_response(jsonify({"message": "Permission denied"}))
     res.status_code = 403
     return res
 
@@ -782,9 +782,7 @@ def get_current_user():
     ]
     if not _get_is_admin():
         user_json["experiment_permissions"] = [
-            permission
-            for permission in user_json["experiment_permissions"]
-            if permission["permission"] != "NO_PERMISSIONS"
+            permission for permission in user_json["experiment_permissions"] if permission["permission"] != "NO_PERMISSIONS"
         ]
         user_json["registered_model_permissions"] = [
             registered_model_permission
@@ -969,7 +967,7 @@ def update_registered_model_permission():
     username = _get_request_param("user_name")
     permission = _get_request_param("permission")
     store.update_registered_model_permission(name, username, permission)
-    return make_response("Model permission has been changed")
+    return make_response(jsonify({"message" : "Model permission has been changed"}))
 
 
 @catch_mlflow_exception
@@ -977,4 +975,4 @@ def delete_registered_model_permission():
     name = _get_request_param("name")
     username = _get_request_param("user_name")
     store.delete_registered_model_permission(name, username)
-    return make_response("Model permission has been deleted")
+    return make_response(jsonify({"message" : "Model permission has been deleted"}))
