@@ -102,11 +102,20 @@ store.init_db((AppConfig.get_property("OIDC_USERS_DB_URI")))
 _logger = logging.getLogger(__name__)
 
 
-def _get_experiment_id(request_data: dict) -> str:
-    if "experiment_id" in request_data:
-        return request_data.get("experiment_id")
-    elif "experiment_name" in request_data:
-        return _get_tracking_store().get_experiment_by_name(request_data.get("experiment_name")).experiment_id
+def _get_experiment_id() -> str:
+    if request.method == "GET":
+        args = request.args
+    elif request.method in ("POST", "PATCH", "DELETE"):
+        args = request.json
+    else:
+        raise MlflowException(
+            f"Unsupported HTTP method '{request.method}'",
+            BAD_REQUEST,
+        )
+    if "experiment_id" in args:
+        return args["experiment_id"]
+    elif "experiment_name" in args:
+        return _get_tracking_store().get_experiment_by_name(args["experiment_name"]).experiment_id
     raise MlflowException(
         "Either 'experiment_id' or 'experiment_name' must be provided in the request data.",
         INVALID_PARAMETER_VALUE,
@@ -221,7 +230,7 @@ def _get_is_admin():
 
 
 def _get_permission_from_experiment_id() -> Permission:
-    experiment_id = _get_experiment_id(request.get_json())
+    experiment_id = _get_experiment_id()
     username = _get_username()
     return _get_permission_from_store_or_default(lambda: store.get_experiment_permission(experiment_id, username).permission)
 
@@ -620,7 +629,7 @@ def make_basic_auth_response() -> Response:
 @catch_mlflow_exception
 def create_experiment_permission():
     store.create_experiment_permission(
-        _get_experiment_id(request.get_json()),
+        _get_experiment_id(),
         _get_request_param("user_name"),
         _get_request_param("permission"),
     )
@@ -771,6 +780,17 @@ def get_current_user():
         }
         for permission in user.experiment_permissions
     ]
+    if not _get_is_admin():
+        user_json["experiment_permissions"] = [
+            permission
+            for permission in user_json["experiment_permissions"]
+            if permission["permission"] != "NO_PERMISSIONS"
+        ]
+        user_json["registered_model_permissions"] = [
+            registered_model_permission
+            for registered_model_permission in user_json["registered_model_permissions"]
+            if registered_model_permission["permission"] != "NO_PERMISSIONS"
+        ]
     return jsonify(user_json)
 
 
@@ -910,7 +930,7 @@ def _password_generation():
 @catch_mlflow_exception
 def update_experiment_permission():
     store.update_experiment_permission(
-        _get_experiment_id(request.get_json()),
+        _get_experiment_id(),
         _get_request_param("user_name"),
         _get_request_param("permission"),
     )
@@ -920,7 +940,7 @@ def update_experiment_permission():
 @catch_mlflow_exception
 def delete_experiment_permission():
     store.delete_experiment_permission(
-        _get_experiment_id(request.get_json()),
+        _get_experiment_id(),
         _get_request_param("user_name"),
     )
     return jsonify({"message": "Experiment permission has been deleted."})
