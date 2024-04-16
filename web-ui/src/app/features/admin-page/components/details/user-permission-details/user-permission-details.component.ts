@@ -70,8 +70,8 @@ export class UserPermissionDetailsComponent implements OnInit {
         filter(Boolean),
         switchMap(({ entity, permission }) => this.permissionDataService.createModelPermission({
           user_name: this.userId,
-          model_name: entity,
-          new_permission: permission,
+          name: entity,
+          permission: permission,
         })),
         tap(() => this.snackBarService.openSnackBar('Permission granted successfully')),
         switchMap(() => this.modelDataService.getModelsForUser(this.userId)),
@@ -95,7 +95,7 @@ export class UserPermissionDetailsComponent implements OnInit {
           return this.permissionDataService.createExperimentPermission({
             user_name: this.userId,
             experiment_name: entity,
-            new_permission: permission,
+            permission: permission,
           })
         }),
         tap(() => this.snackBarService.openSnackBar('Permission granted successfully')),
@@ -127,7 +127,7 @@ export class UserPermissionDetailsComponent implements OnInit {
   }
 
   revokeModelPermissionForUser({name}: any) {
-    this.permissionDataService.deleteModelPermission({model_name: name, user_name: this.userId})
+    this.permissionDataService.deleteModelPermission({name: name, user_name: this.userId})
       .pipe(
         tap(() => this.snackBarService.openSnackBar('Permission revoked successfully')),
         switchMap(() => this.modelDataService.getModelsForUser(this.userId)),

@@ -25,7 +25,7 @@ app.add_url_rule(rule=routes.UI, methods=["GET"], view_func=views.oidc_ui)
 app.add_url_rule(rule=routes.UI_ROOT, methods=["GET"], view_func=views.oidc_ui)
 
 # User token
-app.add_url_rule(rule=routes.CREATE_ACCESS_TOKEN, methods=["GET"], view_func=views.create_access_token)
+app.add_url_rule(rule=routes.GET_ACCESS_TOKEN, methods=["GET"], view_func=views.create_access_token)
 app.add_url_rule(rule=routes.GET_CURRENT_USER, methods=["GET"], view_func=views.get_current_user)
 
 # UI routes support
@@ -40,22 +40,23 @@ app.add_url_rule(rule=routes.GET_MODEL_USERS, methods=["GET"], view_func=views.g
 # User management
 app.add_url_rule(rule=routes.CREATE_USER, methods=["POST"], view_func=views.create_user)
 app.add_url_rule(rule=routes.GET_USER, methods=["GET"], view_func=views.get_user)
-app.add_url_rule(rule=routes.UPDATE_USER_PASSWORD, methods=["GET"], view_func=views.update_username_password)
-app.add_url_rule(rule=routes.UPDATE_USER_ADMIN, methods=["GET"], view_func=views.update_user_admin)
-app.add_url_rule(rule=routes.DELETE_USER, methods=["GET"], view_func=views.delete_user)
+app.add_url_rule(rule=routes.UPDATE_USER_PASSWORD, methods=["PATCH"], view_func=views.update_username_password)
+app.add_url_rule(rule=routes.UPDATE_USER_ADMIN, methods=["PATCH"], view_func=views.update_user_admin)
+app.add_url_rule(rule=routes.DELETE_USER, methods=["DELETE"], view_func=views.delete_user)
 
 # permission management
 app.add_url_rule(rule=routes.CREATE_EXPERIMENT_PERMISSION, methods=["POST"], view_func=views.create_experiment_permission)
 app.add_url_rule(rule=routes.GET_EXPERIMENT_PERMISSION, methods=["GET"], view_func=views.get_experiment_permission)
-app.add_url_rule(rule=routes.UPDATE_EXPERIMENT_PERMISSION, methods=["POST"], view_func=views.update_experiment_permission)
-app.add_url_rule(rule=routes.DELETE_EXPERIMENT_PERMISSION, methods=["POST"], view_func=views.delete_experiment_permission)
-app.add_url_rule(rule=routes.CREATE_REGISTERED_MODEL_PERMISSION, methods=["POST"], view_func=views.create_model_permission)
-app.add_url_rule(rule=routes.GET_REGISTERED_MODEL_PERMISSION, methods=["GET"], view_func=views.get_model_permission)
-app.add_url_rule(rule=routes.UPDATE_REGISTERED_MODEL_PERMISSION, methods=["POST"], view_func=views.update_model_permission)
-app.add_url_rule(rule=routes.DELETE_REGISTERED_MODEL_PERMISSION, methods=["POST"], view_func=views.delete_model_permission)
+app.add_url_rule(rule=routes.UPDATE_EXPERIMENT_PERMISSION, methods=["PATCH"], view_func=views.update_experiment_permission)
+app.add_url_rule(rule=routes.DELETE_EXPERIMENT_PERMISSION, methods=["DELETE"], view_func=views.delete_experiment_permission)
+app.add_url_rule(rule=routes.CREATE_REGISTERED_MODEL_PERMISSION, methods=["POST"], view_func=views.create_registered_model_permission)
+app.add_url_rule(rule=routes.GET_REGISTERED_MODEL_PERMISSION, methods=["GET"], view_func=views.get_registered_model_permission)
+app.add_url_rule(rule=routes.UPDATE_REGISTERED_MODEL_PERMISSION, methods=["PATCH"], view_func=views.update_registered_model_permission)
+app.add_url_rule(rule=routes.DELETE_REGISTERED_MODEL_PERMISSION, methods=["DELETE"], view_func=views.delete_registered_model_permission)
 
 # Add new hooks
 app.before_request(views.before_request_hook)
+app.after_request(views.after_request_hook)
 
 # Set up session
 Session(app)
