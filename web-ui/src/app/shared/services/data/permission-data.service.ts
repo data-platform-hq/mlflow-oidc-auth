@@ -21,24 +21,24 @@ export class PermissionDataService {
     return this.http.post(API_URL.CREATE_EXPERIMENT_PERMISSION, body, { responseType: 'text' });
   }
 
-  updateExperimentPermission(body: { user_name: string, experiment_id: string, new_permission: string }) {
-    return this.http.post(API_URL.UPDATE_EXPERIMENT_PERMISSION, body, { responseType: 'text' });
+  updateExperimentPermission(body: { experiment_id: string, user_name: string, permission: string }) {
+    return this.http.patch(API_URL.UPDATE_EXPERIMENT_PERMISSION, body, { responseType: 'text' });
   }
 
   deleteExperimentPermission(body: { experiment_id: string, user_name: string }) {
-    return this.http.post(API_URL.DELETE_EXPERIMENT_PERMISSION, body, { responseType: 'text' });
+    return this.http.delete(API_URL.DELETE_EXPERIMENT_PERMISSION, { body });
   }
 
   createModelPermission(body: CreateModelPermissionRequestBodyModel) {
     return this.http.post(API_URL.CREATE_MODEL_PERMISSION, body);
   }
 
-  updateModelPermission(body: { user_name: string, model_name: string, new_permission: string }) {
-    return this.http.post(API_URL.UPDATE_MODEL_PERMISSION, body, { responseType: 'text' });
+  updateModelPermission(body: { user_name: string, name: string, permission: string }) {
+    return this.http.patch(API_URL.UPDATE_MODEL_PERMISSION, body, { responseType: 'text' });
   }
 
-  deleteModelPermission(body: { model_name: string, user_name: string }) {
-    return this.http.post(API_URL.DELETE_MODEL_PERMISSION, body, { responseType: 'text' });
+  deleteModelPermission(body: { name: string, user_name: string }) {
+    return this.http.delete(API_URL.DELETE_MODEL_PERMISSION, { body });
   }
 
 }

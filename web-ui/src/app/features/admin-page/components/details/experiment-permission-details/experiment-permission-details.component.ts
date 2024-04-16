@@ -89,7 +89,7 @@ export class ExperimentPermissionDetailsComponent implements OnInit {
         filter(Boolean),
         switchMap(({ user, permission }) => this.permissionDataService.createExperimentPermission({
           experiment_id: this.experimentId,
-          new_permission: permission,
+          permission: permission,
           user_name: user,
         })),
         switchMap(() => this.loadUsersForExperiment(this.experimentId)),

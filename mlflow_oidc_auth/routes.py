@@ -10,7 +10,7 @@ UI = "/oidc/ui/<path:filename>"
 UI_ROOT = "/oidc/ui/"
 
 # create access token for current user
-CREATE_ACCESS_TOKEN = _get_rest_path("/mlflow/users/access-token")
+GET_ACCESS_TOKEN = _get_rest_path("/mlflow/users/access-token")
 # get infrmation about current user
 GET_CURRENT_USER = _get_rest_path("/mlflow/users/current")
 # list of experiments, models, users

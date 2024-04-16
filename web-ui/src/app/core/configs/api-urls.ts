@@ -6,10 +6,10 @@ export const API_URL = {
   MODELS_FOR_USER: '/api/2.0/mlflow/users/${userName}/registered-models',
   USERS_FOR_MODEL: '/api/2.0/mlflow/registered-models/${modelName}/users',
   CREATE_EXPERIMENT_PERMISSION: '/api/2.0/mlflow/experiments/permissions/create',
-  CREATE_MODEL_PERMISSION: '/api/2.0/mlflow/registered-models/permissions/create',
   UPDATE_EXPERIMENT_PERMISSION: '/api/2.0/mlflow/experiments/permissions/update',
-  UPDATE_MODEL_PERMISSION: '/api/2.0/mlflow/registered-models/permissions/update',
   DELETE_EXPERIMENT_PERMISSION: '/api/2.0/mlflow/experiments/permissions/delete',
+  CREATE_MODEL_PERMISSION: '/api/2.0/mlflow/registered-models/permissions/create',
+  UPDATE_MODEL_PERMISSION: '/api/2.0/mlflow/registered-models/permissions/update',
   DELETE_MODEL_PERMISSION: '/api/2.0/mlflow/registered-models/permissions/delete',
 
   GET_ALL_USERS: '/api/2.0/mlflow/users',

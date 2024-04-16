@@ -35,8 +35,8 @@ export class PermissionModalService {
       .pipe(
         filter(Boolean),
         switchMap(({ permission }) => this.permissionDataService.updateModelPermission({
-          model_name: modelName,
-          new_permission: permission,
+          name: modelName,
+          permission: permission,
           user_name: userName,
         })),
       )
@@ -57,7 +57,7 @@ export class PermissionModalService {
         filter(Boolean),
         switchMap(({ permission }) => this.permissionDataService.updateExperimentPermission({
           experiment_id: experimentName,
-          new_permission: permission,
+          permission: permission,
           user_name: userName,
         })),
       )
