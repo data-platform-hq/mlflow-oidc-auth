@@ -77,7 +77,7 @@ from mlflow.protos.service_pb2 import (
     UpdateExperiment,
     UpdateRun,
 )
-from mlflow_oidc_auth.permissions import Permission, get_permission, MANAGE
+from mlflow_oidc_auth.permissions import Permission, get_permission, MANAGE, NO_PERMISSIONS
 from mlflow.server.handlers import (
     _get_model_registry_store,
     _get_request_message,
@@ -171,24 +171,6 @@ def _get_permission_from_store_or_default(store_permission_func: Callable[[], st
     return get_permission(perm)
 
 
-# def authenticate_request() -> Union[Authorization, Response]:
-#     """Use configured authorization function to get request authorization."""
-#     auth_func = get_auth_func(auth_config.authorization_function)
-#     return auth_func()
-
-# @functools.lru_cache(maxsize=None)
-# def get_auth_func(authorization_function: str) -> Callable[[], Union[Authorization, Response]]:
-#     """
-#     Import and return the specified authorization function.
-
-#     Args:
-#         authorization_function: A string of the form "module.submodule:auth_func"
-#     """
-#     mod_name, fn_name = authorization_function.split(":", 1)
-#     module = importlib.import_module(mod_name)
-#     return getattr(module, fn_name)
-
-
 def authenticate_request_basic_auth() -> Union[Authorization, Response]:
     username = request.authorization.username
     password = request.authorization.password
@@ -211,22 +193,14 @@ def _set_username(username):
     return
 
 
-def _get_display_name():
-    return session.get("display_name")
+def _get_is_admin() -> bool:
+    return bool(store.get_user(_get_username()).is_admin)
 
-
-def _set_display_name(display_name):
-    session["display_name"] = display_name
-    return
-
-
-def _set_is_admin(_is_admin: bool = False):
-    session["is_admin"] = _is_admin
-    return
-
-
-def _get_is_admin():
-    return session.get("is_admin")
+def username_is_sender():
+    """Validate if the request username is the sender"""
+    username = _get_request_param("username")
+    sender = _get_username()
+    return username == sender
 
 
 def _get_permission_from_experiment_id() -> Permission:
@@ -466,6 +440,29 @@ def validate_can_manage_registered_model():
     return _get_permission_from_registered_model_name().can_manage
 
 
+def validate_can_read_user():
+    return username_is_sender()
+
+
+def validate_can_create_user():
+    # only admins can create user, but admins won't reach this validator
+    return False
+
+
+def validate_can_update_user_password():
+    return username_is_sender()
+
+
+def validate_can_update_user_admin():
+    # only admins can update, but admins won't reach this validator
+    return False
+
+
+def validate_can_delete_user():
+    # only admins can delete, but admins won't reach this validator
+    return False
+
+
 def get_before_request_handler(request_class):
     return BEFORE_REQUEST_HANDLERS.get(request_class)
 
@@ -532,18 +529,18 @@ BEFORE_REQUEST_VALIDATORS.update(
         (routes.UPDATE_REGISTERED_MODEL_PERMISSION, "PATCH"): validate_can_manage_registered_model,
         (routes.DELETE_REGISTERED_MODEL_PERMISSION, "DELETE"): validate_can_manage_registered_model,
         # (SIGNUP, "GET"): validate_can_create_user,
-        # (GET_USER, "GET"): validate_can_read_user,
-        # (CREATE_USER, "POST"): validate_can_create_user,
-        # (UPDATE_USER_PASSWORD, "PATCH"): validate_can_update_user_password,
-        # (UPDATE_USER_ADMIN, "PATCH"): validate_can_update_user_admin,
-        # (DELETE_USER, "DELETE"): validate_can_delete_user,
+        # (routes.GET_USER, "GET"): validate_can_read_user,
+        (routes.CREATE_USER, "POST"): validate_can_create_user,
+        # (routes.UPDATE_USER_PASSWORD, "PATCH"): validate_can_update_user_password,
+        (routes.UPDATE_USER_ADMIN, "PATCH"): validate_can_update_user_admin,
+        (routes.DELETE_USER, "DELETE"): validate_can_delete_user,
     }
 )
 
 AFTER_REQUEST_PATH_HANDLERS = {
     CreateExperiment: set_can_manage_experiment_permission,
     CreateRegisteredModel: set_can_manage_registered_model_permission,
-    # ???? DeleteRegisteredModel: delete_can_manage_registered_model_permission,
+    DeleteRegisteredModel: delete_can_manage_registered_model_permission,
     SearchExperiments: filter_search_experiments,
     SearchRegisteredModels: filter_search_registered_models,
 }
@@ -601,6 +598,9 @@ def before_request_hook():
                 username=None,
                 provide_display_name=AppConfig.get_property("OIDC_PROVIDER_DISPLAY_NAME"),
             )
+    # admins don't need to be authorized
+    if _get_is_admin():
+        return
     # authorization
     if validator := BEFORE_REQUEST_VALIDATORS.get((request.path, request.method)):
         if not validator():
@@ -688,8 +688,11 @@ def callback():
 
     # Process the user data
     user_data = user_response.json()
-    email = user_data.get("email", "Unknown")
-    _set_display_name(user_data.get("name", "Unknown"))
+    email = user_data.get("email", None)
+    if email is None:
+        return "No email provided", 401
+    display_name = user_data.get("name", "Unknown")
+    is_admin = False
 
     # check if user is in the group
     if AppConfig.get_property("OIDC_PROVIDER_TYPE") == "microsoft":
@@ -703,26 +706,27 @@ def callback():
             },
         )
         group_data = group_response.json()
-        if not any(group["displayName"] == AppConfig.get_property("OIDC_GROUP_NAME") for group in group_data["value"]):
+        if not any(
+            group["displayName"] == AppConfig.get_property("OIDC_GROUP_NAME")
+            or group["displayName"] == AppConfig.get_property("OIDC_ADMIN_GROUP_NAME")
+            for group in group_data["value"]
+        ):
             return "User not in group", 401
         # set is_admin if user is in admin group
         if any(group["displayName"] == AppConfig.get_property("OIDC_ADMIN_GROUP_NAME") for group in group_data["value"]):
-            _set_is_admin(True)
-        else:
-            _set_is_admin(False)
+            is_admin = True
     elif AppConfig.get_property("OIDC_PROVIDER_TYPE") == "oidc":
-        if AppConfig.get_property("OIDC_GROUP_NAME") not in user_data.get("groups", []):
+        if (AppConfig.get_property("OIDC_GROUP_NAME") not in user_data.get("groups", [])) or (
+            AppConfig.get_property("OIDC_ADMIN_GROUP_NAME") not in user_data.get("groups", [])
+        ):
             return "User not in group", 401
         # set is_admin if user is in admin group
         if AppConfig.get_property("OIDC_ADMIN_GROUP_NAME") in user_data.get("groups", []):
-            _set_is_admin(True)
-        else:
-            _set_is_admin(False)
+            is_admin = True
 
-    # Store the user data in the session.
-    _set_username(email.lower())
     # Create user due to auth
-    create_user()
+    create_user(username=email.lower(), display_name=display_name, is_admin=is_admin)
+    _set_username(email.lower())
     return redirect(url_for("oidc_ui"))
 
 
@@ -743,18 +747,17 @@ def oidc_ui(filename=None):
     return send_from_directory(ui_directory, filename)
 
 
-def create_user():
+def create_user(username: str, display_name: str, is_admin: bool = False):
     try:
-        user = store.get_user(_get_username())
+        user = store.get_user(username)
+        store.update_user(username, is_admin=is_admin)
         return (
             jsonify({"message": f"User {user.username} (ID: {user.id}) already exists"}),
             200,
         )
     except MlflowException:
         password = _password_generation()
-        user = store.create_user(
-            username=_get_username(), password=password, display_name=_get_display_name(), is_admin=_get_is_admin()
-        )
+        user = store.create_user(username=username, password=password, display_name=display_name, is_admin=is_admin)
         return (
             jsonify({"message": f"User {user.username} (ID: {user.id}) successfully created"}),
             201,
@@ -782,12 +785,12 @@ def get_current_user():
     ]
     if not _get_is_admin():
         user_json["experiment_permissions"] = [
-            permission for permission in user_json["experiment_permissions"] if permission["permission"] != "NO_PERMISSIONS"
+            permission for permission in user_json["experiment_permissions"] if permission["permission"] != NO_PERMISSIONS.name
         ]
         user_json["registered_model_permissions"] = [
             registered_model_permission
             for registered_model_permission in user_json["registered_model_permissions"]
-            if registered_model_permission["permission"] != "NO_PERMISSIONS"
+            if registered_model_permission["permission"] != get_permission(NO_PERMISSIONS.name)
         ]
     return jsonify(user_json)
 
@@ -967,7 +970,7 @@ def update_registered_model_permission():
     username = _get_request_param("user_name")
     permission = _get_request_param("permission")
     store.update_registered_model_permission(name, username, permission)
-    return make_response(jsonify({"message" : "Model permission has been changed"}))
+    return make_response(jsonify({"message": "Model permission has been changed"}))
 
 
 @catch_mlflow_exception
@@ -975,4 +978,4 @@ def delete_registered_model_permission():
     name = _get_request_param("name")
     username = _get_request_param("user_name")
     store.delete_registered_model_permission(name, username)
-    return make_response(jsonify({"message" : "Model permission has been deleted"}))
+    return make_response(jsonify({"message": "Model permission has been deleted"}))

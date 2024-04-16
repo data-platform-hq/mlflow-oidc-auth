@@ -9,7 +9,7 @@ description = "OIDC auth plugin for MLflow"
 readme = "README.md"
 keywords = ["mlflow", "oauth2", "oidc"]
 classifiers = [
-  "Development Status :: 3 - Alpha",
+  "Development Status :: 4 - Beta",
   "Intended Audience :: Developers",
   "Intended Audience :: End Users/Desktop",
   "Intended Audience :: Science/Research",
