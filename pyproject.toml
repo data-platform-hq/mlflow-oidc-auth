@@ -54,8 +54,9 @@ basic-auth = "mlflow_oidc_auth.client:AuthServiceClient"
 [tool.setuptools.package-data]
 mlflow_oidc_auth = [
   "db/migrations/alembic.ini",
-  "templates/*",
+  "menu.html",
   "static/*",
+  "templates/*",
   "ui/*",
 ]
 
