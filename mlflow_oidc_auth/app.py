@@ -13,6 +13,10 @@ template_dir = os.path.join(template_dir, "templates")
 app.config.from_object(AppConfig)
 app.secret_key = app.config["SECRET_KEY"].encode("utf8")
 app.template_folder = template_dir
+static_folder = app.static_folder
+
+# Add links to MLFlow UI
+app.view_functions["serve"] = views.index
 
 # OIDC routes
 app.add_url_rule(rule=routes.LOGIN, methods=["GET"], view_func=views.login)
@@ -49,10 +53,16 @@ app.add_url_rule(rule=routes.CREATE_EXPERIMENT_PERMISSION, methods=["POST"], vie
 app.add_url_rule(rule=routes.GET_EXPERIMENT_PERMISSION, methods=["GET"], view_func=views.get_experiment_permission)
 app.add_url_rule(rule=routes.UPDATE_EXPERIMENT_PERMISSION, methods=["PATCH"], view_func=views.update_experiment_permission)
 app.add_url_rule(rule=routes.DELETE_EXPERIMENT_PERMISSION, methods=["DELETE"], view_func=views.delete_experiment_permission)
-app.add_url_rule(rule=routes.CREATE_REGISTERED_MODEL_PERMISSION, methods=["POST"], view_func=views.create_registered_model_permission)
+app.add_url_rule(
+    rule=routes.CREATE_REGISTERED_MODEL_PERMISSION, methods=["POST"], view_func=views.create_registered_model_permission
+)
 app.add_url_rule(rule=routes.GET_REGISTERED_MODEL_PERMISSION, methods=["GET"], view_func=views.get_registered_model_permission)
-app.add_url_rule(rule=routes.UPDATE_REGISTERED_MODEL_PERMISSION, methods=["PATCH"], view_func=views.update_registered_model_permission)
-app.add_url_rule(rule=routes.DELETE_REGISTERED_MODEL_PERMISSION, methods=["DELETE"], view_func=views.delete_registered_model_permission)
+app.add_url_rule(
+    rule=routes.UPDATE_REGISTERED_MODEL_PERMISSION, methods=["PATCH"], view_func=views.update_registered_model_permission
+)
+app.add_url_rule(
+    rule=routes.DELETE_REGISTERED_MODEL_PERMISSION, methods=["DELETE"], view_func=views.delete_registered_model_permission
+)
 
 # Add new hooks
 app.before_request(views.before_request_hook)

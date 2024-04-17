@@ -196,6 +196,7 @@ def _set_username(username):
 def _get_is_admin() -> bool:
     return bool(store.get_user(_get_username()).is_admin)
 
+
 def username_is_sender():
     """Validate if the request username is the sender"""
     username = _get_request_param("username")
@@ -979,3 +980,19 @@ def delete_registered_model_permission():
     username = _get_request_param("user_name")
     store.delete_registered_model_permission(name, username)
     return make_response(jsonify({"message": "Model permission has been deleted"}))
+
+
+def index():
+    from mlflow_oidc_auth.app import static_folder
+
+    if os.path.exists(os.path.join(static_folder, "index.html")):
+        with open(os.path.join(static_folder, "index.html"), "r") as f:
+            html_content = f.read()
+            with open(os.path.join(os.path.dirname(__file__), "menu.html"), "r") as js_file:
+                js_injection = js_file.read()
+                modified_html_content = html_content.replace("</body>", f"{js_injection}\n</body>")
+                return modified_html_content
+    import textwrap
+
+    text = textwrap.dedent("Unable to display MLflow UI - landing page not found")
+    return Response(text, mimetype="text/plain")

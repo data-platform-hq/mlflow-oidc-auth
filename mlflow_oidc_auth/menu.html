@@ -1,0 +1,53 @@
+<script>
+    function makeRequest(url, callback) {
+        var xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === XMLHttpRequest.DONE) {
+                if (xhr.status === 200) {
+                    callback(null, JSON.parse(xhr.responseText));
+                } else {
+                    callback(xhr.status);
+                }
+            }
+        };
+        xhr.open("GET", url, true);
+        xhr.send();
+    }
+    document.addEventListener("DOMContentLoaded", function () {
+        // Function to add links after the Docs link
+        function addLinks(username, oidcLink, logoutLink) {
+            var docsLink = document.querySelector('.header-links a[href="https://www.mlflow.org/docs/latest/index.html"]');
+            if (!docsLink) {
+                console.error("Docs link not found.");
+                return;
+            }
+            var parentDiv = docsLink.parentElement;
+            function createLinkElement(text, link) {
+                var linkElement = document.createElement('a');
+                linkElement.href = link;
+                linkElement.classList.add('css-3cyd2n');
+                var divElement = document.createElement('div');
+                divElement.className = 'docs';
+                var spanElement = document.createElement('span');
+                spanElement.textContent = text;
+                divElement.appendChild(spanElement);
+                linkElement.appendChild(divElement);
+                return linkElement;
+            }
+            parentDiv.appendChild(createLinkElement(username, '#'));
+            parentDiv.appendChild(createLinkElement('Permissions', oidcLink));
+            parentDiv.appendChild(createLinkElement('Logout', logoutLink));
+        }
+        // Get username and add links after Docs
+        makeRequest("api/2.0/mlflow/users/current", function (error, response) {
+            if (error) {
+                console.error("Error fetching username:", error);
+                return;
+            }
+            var username = response.display_name;
+            var oidcLink = "/oidc/ui/";
+            var logoutLink = "/logout";
+            addLinks(username, oidcLink, logoutLink);
+        });
+    });
+</script>
