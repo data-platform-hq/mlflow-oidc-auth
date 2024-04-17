@@ -717,12 +717,14 @@ def callback():
         if any(group["displayName"] == AppConfig.get_property("OIDC_ADMIN_GROUP_NAME") for group in group_data["value"]):
             is_admin = True
     elif AppConfig.get_property("OIDC_PROVIDER_TYPE") == "oidc":
-        if (AppConfig.get_property("OIDC_GROUP_NAME") not in user_data.get("groups", [])) or (
-            AppConfig.get_property("OIDC_ADMIN_GROUP_NAME") not in user_data.get("groups", [])
+        if not any (
+            group == AppConfig.get_property("OIDC_GROUP_NAME")
+            or group == AppConfig.get_property("OIDC_ADMIN_GROUP_NAME")
+            for group in user_data.get(AppConfig.get_property("OIDC_GROUPS_ATTRIBUTE"), [])
         ):
             return "User not in group", 401
         # set is_admin if user is in admin group
-        if AppConfig.get_property("OIDC_ADMIN_GROUP_NAME") in user_data.get("groups", []):
+        if AppConfig.get_property("OIDC_ADMIN_GROUP_NAME") in user_data.get(AppConfig.get_property("OIDC_GROUPS_ATTRIBUTE"), []):
             is_admin = True
 
     # Create user due to auth

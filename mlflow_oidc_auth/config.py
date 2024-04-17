@@ -21,6 +21,7 @@ class AppConfig:
     OIDC_ADMIN_GROUP_NAME = os.environ.get("OIDC_ADMIN_GROUP_NAME", "mlflow-admin")
     OIDC_PROVIDER_DISPLAY_NAME = os.environ.get("OIDC_PROVIDER_DISPLAY_NAME", "Login with OIDC")
     OIDC_DISCOVERY_URL = os.environ.get("OIDC_DISCOVERY_URL", None)
+    OIDC_GROUPS_ATTRIBUTE = os.environ.get("OIDC_GROUPS_ATTRIBUTE", "groups")
     OIDC_SCOPE = os.environ.get("OIDC_SCOPE", "openid,email,profile")
     OIDC_PROVIDER_TYPE = os.environ.get("OIDC_PROVIDER_TYPE", "oidc") # can be 'oidc' (with groups in user info) or 'microsoft' (with dedicated groups retrieval endpoint)
     if OIDC_DISCOVERY_URL:
