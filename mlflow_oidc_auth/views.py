@@ -176,7 +176,7 @@ def authenticate_request_basic_auth() -> Union[Authorization, Response]:
     password = request.authorization.password
     _logger.debug("Authenticating user %s", username)
     if store.authenticate_user(username.lower(), password):
-        _set_username(username)
+        _set_username(username.lower())
         _logger.debug("User %s authenticated", username)
         return True
     else:
