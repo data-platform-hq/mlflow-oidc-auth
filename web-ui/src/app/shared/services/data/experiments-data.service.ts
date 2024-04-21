@@ -24,7 +24,6 @@ export class ExperimentsDataService {
   }
 
   getExperimentsForUser(userName: string) {
-    console.log(userName);
     const url = API_URL.EXPERIMENTS_FOR_USER.replace('${userName}', userName);
     return this.http.get<ExperimentsForUserModel>(url)
       .pipe(

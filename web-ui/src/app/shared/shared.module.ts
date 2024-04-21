@@ -14,6 +14,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { RouterLink, RouterLinkWithHref } from '@angular/router';
 import { HttpClientModule } from '@angular/common/http';
+import { BreadcrumbModule } from 'xng-breadcrumb';
 
 const SHARED_COMPONENTS = [
   AccessKeyModalComponent,
@@ -33,6 +34,7 @@ const SHARED_COMPONENTS = [
     ...SHARED_COMPONENTS,
 
     MaterialModule,
+    BreadcrumbModule,
   ],
   imports: [
     MaterialModule,
@@ -43,6 +45,7 @@ const SHARED_COMPONENTS = [
     HttpClientModule,
     ReactiveFormsModule,
     RouterLink,
+    BreadcrumbModule,
   ],
 })
 export class SharedModule { }

@@ -1,15 +1,30 @@
-<header class="py-3">
+<mat-toolbar color="primary">
 
-  <div class="col-12 d-flex align-items-center">
-    <span>Hello, {{name}}</span>
-    <nav class="mx-3">
-      <a mat-button [routerLink]="['/home']">Home</a>
-      <a mat-button [routerLink]="['/manage']">Manage Permissions</a>
-    </nav>
-    <button mat-button  [routerLink]="'/logout'" aria-label="logout" class="logout" (click)="logout()">
-      <mat-icon>exit_to_app</mat-icon>
-      <span>Logout</span>
+    <div class="container d-flex align-items-center">
+
+        <span class="pe-5">MLFlow Permission Manager</span>
+
+        <button mat-button [routerLink]="['/home']">
+            <mat-icon>home</mat-icon>
+            Home
+        </button>
+        <button mat-button [routerLink]="['/manage']">
+            <mat-icon>manage_accounts</mat-icon>
+            Manage Permissions
+        </button>
+        <span class="spacer"></span>
+
+        <button mat-icon-button [matMenuTriggerFor]="userMenu" class="account-menu">
+            <mat-icon>account_circle</mat-icon>
+        </button>
+    </div>
+
+</mat-toolbar>
+
+
+<mat-menu #userMenu="matMenu">
+    <button mat-menu-item (click)="logout()">
+        <mat-icon>exit_to_app</mat-icon>
+        <span>Logout</span>
     </button>
-  </div>
-
-</header>
+</mat-menu>

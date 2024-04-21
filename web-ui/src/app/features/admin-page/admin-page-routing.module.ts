@@ -8,6 +8,10 @@ import {
   UserPermissionDetailsComponent,
 } from './components';
 
+const getBreadcrumb = (route: string) => {
+  const [entity, id] = route.split('/')
+  return `${entity.charAt(0).toUpperCase() + entity.slice(1)} / ${id}`;
+};
 
 const routes: Routes = [
   {
@@ -17,18 +21,32 @@ const routes: Routes = [
       {
         path: 'permissions',
         component: PermissionsComponent,
+        data: {
+          breadcrumb: {
+            skip: true,
+          }
+        },
       },
       {
         path: 'user/:id',
         component: UserPermissionDetailsComponent,
+        data: {
+          breadcrumb:  getBreadcrumb,
+        },
       },
       {
         path: 'experiment/:id',
         component: ExperimentPermissionDetailsComponent,
+        data: {
+          breadcrumb: getBreadcrumb,
+        },
       },
       {
         path: 'model/:id',
         component: ModelPermissionDetailsComponent,
+        data: {
+          breadcrumb: getBreadcrumb,
+        },
       },
       {
         path: '**',
