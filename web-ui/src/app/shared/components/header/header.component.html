@@ -2,7 +2,7 @@
 
     <div class="container d-flex align-items-center">
 
-        <span class="pe-5">MLFlow Permission Manager</span>
+        <span class="pe-5 fs-16">MLFlow Permission Manager</span>
 
         <button mat-button [routerLink]="['/home']">
             <mat-icon>home</mat-icon>
@@ -14,17 +14,11 @@
         </button>
         <span class="spacer"></span>
 
-        <button mat-icon-button [matMenuTriggerFor]="userMenu" class="account-menu">
-            <mat-icon>account_circle</mat-icon>
+        <span class="pe-1 ms-auto fs-16">Hello, {{name}}</span>
+        <button mat-button (click)="logout()">
+            <mat-icon>exit_to_app</mat-icon>
+            <span>Logout</span>
         </button>
     </div>
 
 </mat-toolbar>
-
-
-<mat-menu #userMenu="matMenu">
-    <button mat-menu-item (click)="logout()">
-        <mat-icon>exit_to_app</mat-icon>
-        <span>Logout</span>
-    </button>
-</mat-menu>
