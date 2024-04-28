@@ -152,6 +152,7 @@ def _is_unprotected_route(path: str) -> bool:
             "/login",
             "/callback",
             "/oidc/static",
+            "/metrics",
         )
     )
 
