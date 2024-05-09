@@ -26,7 +26,7 @@ ui_preconfigure() {
 }
 
 wait_server_ready() {
-  for backoff in 0 1 2 4 8; do
+  for backoff in 0 1 1 2 3 5 8 13 21; do
     echo "Waiting for tracking server to be ready..."
     sleep $backoff
     if curl --fail --silent --show-error --output /dev/null $1; then

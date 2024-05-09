@@ -12,6 +12,8 @@ from mlflow_oidc_auth.entities import (
     ExperimentPermission,
     RegisteredModelPermission,
     User,
+    Group,
+    UserGroup,
 )
 
 Base = declarative_base()
@@ -68,4 +70,29 @@ class SqlRegisteredModelPermission(Base):
             name=self.name,
             user_id=self.user_id,
             permission=self.permission,
+        )
+
+class SqlGroup(Base):
+    __tablename__ = "groups"
+    id = Column(Integer(), primary_key=True)
+    group_name = Column(String(255), nullable=False)
+    __table_args__ = (UniqueConstraint("group_name"),)
+
+    def to_mlflow_entity(self):
+        return Group(
+            id_=self.id,
+            group_name=self.group_name,
+        )
+
+class SqlUserGroup(Base):
+    __tablename__ = "user_groups"
+    id = Column(Integer(), primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    group_id = Column(Integer, ForeignKey("groups.id"), nullable=False)
+    __table_args__ = (UniqueConstraint("user_id", "group_id", name="unique_user_group"),)
+    
+    def to_mlflow_entity(self):
+        return UserGroup(
+            user_id=self.user_id,
+            group_id=self.group_id,
         )

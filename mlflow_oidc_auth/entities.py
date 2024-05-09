@@ -170,3 +170,55 @@ class RegisteredModelPermission:
             user_id=dictionary["user_id"],
             permission=dictionary["permission"],
         )
+
+class Group:
+    def __init__(self, id_, group_name):
+        self._id = id_
+        self._group_name = group_name
+
+    @property
+    def id(self):
+        return self._id
+
+    @property
+    def group_name(self):
+        return self._group_name
+
+    def to_json(self):
+        return {
+            "id": self.id,
+            "group_name": self.group_name,
+        }
+
+    @classmethod
+    def from_json(cls, dictionary):
+        return cls(
+            id_=dictionary["id"],
+            group_name=dictionary["group_name"],
+        )
+
+class UserGroup:
+    def __init__(self, user_id, group_id):
+        self._user_id = user_id
+        self._group_id = group_id
+
+    @property
+    def user_id(self):
+        return self._user_id
+
+    @property
+    def group_id(self):
+        return self._group_id
+
+    def to_json(self):
+        return {
+            "user_id": self.user_id,
+            "group_id": self.group_id,
+        }
+
+    @classmethod
+    def from_json(cls, dictionary):
+        return cls(
+            user_id=dictionary["user_id"],
+            group_id=dictionary["group_id"],
+        )

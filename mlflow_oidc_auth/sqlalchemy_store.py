@@ -15,6 +15,8 @@ from mlflow_oidc_auth.db.models import (
     SqlExperimentPermission,
     SqlRegisteredModelPermission,
     SqlUser,
+    SqlGroup,
+    SqlUserGroup,
 )
 from mlflow_oidc_auth.entities import (
     ExperimentPermission,
@@ -233,3 +235,139 @@ class SqlAlchemyStore:
         with self.ManagedSessionMaker() as session:
             perms = session.query(SqlExperimentPermission).filter(SqlExperimentPermission.experiment_id == experiment_id).all()
             return [p.to_mlflow_entity() for p in perms]
+
+    def populate_groups(self, group_names: List[str]):
+        with self.ManagedSessionMaker() as session:
+            for group_name in group_names:
+                group = session.query(SqlGroup).filter(SqlGroup.group_name == group_name).first()
+                if group is None:
+                    group = SqlGroup(group_name=group_name)
+                    session.add(group)
+            session.flush()
+
+    def get_groups(self) -> List[str]:
+        with self.ManagedSessionMaker() as session:
+            groups = session.query(SqlGroup).all()
+            return [g.group_name for g in groups]
+
+    def get_group_users(self, group_name: str) -> List[str]:
+        with self.ManagedSessionMaker() as session:
+            group = session.query(SqlGroup).filter(SqlGroup.group_name == group_name).one()
+            user_groups = session.query(SqlUserGroup).filter(SqlUserGroup.group_id == group.id).all()
+            users = session.query(SqlUser).filter(SqlUser.id.in_([ug.user_id for ug in user_groups])).all()
+            return [u.username for u in users]
+
+    def add_user_to_group(self, username: str, group_name: str):
+        with self.ManagedSessionMaker() as session:
+            user = self._get_user(session, username)
+            group = session.query(SqlGroup).filter(SqlGroup.group_name == group_name).one()
+            user_group = SqlUserGroup(user_id=user.id, group_id=group.id)
+            session.add(user_group)
+            session.flush()
+
+    def remove_user_from_group(self, username: str, group_name: str):
+        with self.ManagedSessionMaker() as session:
+            user = self._get_user(session, username)
+            group = session.query(SqlGroup).filter(SqlGroup.group_name == group_name).one()
+            user_group = (
+                session.query(SqlUserGroup).filter(SqlUserGroup.user_id == user.id, SqlUserGroup.group_id == group.id).one()
+            )
+            session.delete(user_group)
+            session.flush()
+
+    def get_groups_for_user(self, username: str) -> List[str]:
+        with self.ManagedSessionMaker() as session:
+            user = self._get_user(session, username)
+            user_groups = session.query(SqlUserGroup).filter(SqlUserGroup.user_id == user.id).all()
+            return [ug.group.group_name for ug in user_groups]
+
+    # assign user to groups and remove from other groups
+    def set_user_groups(self, username: str, group_names: List[str]):
+        with self.ManagedSessionMaker() as session:
+            user = self._get_user(session, username)
+            user_groups = session.query(SqlUserGroup).filter(SqlUserGroup.user_id == user.id).all()
+            for ug in user_groups:
+                session.delete(ug)
+            for group_name in group_names:
+                group = session.query(SqlGroup).filter(SqlGroup.group_name == group_name).one()
+                user_group = SqlUserGroup(user_id=user.id, group_id=group.id)
+                session.add(user_group)
+            session.flush()
+
+    def get_group_experiments(self, group_name: str) -> List[str]:
+        with self.ManagedSessionMaker() as session:
+            group = session.query(SqlGroup).filter(SqlGroup.group_name == group_name).one()
+            perms = session.query(SqlExperimentPermission).filter(SqlExperimentPermission.group_id == group.id).all()
+            return [p.experiment_id for p in perms]
+
+    def create_group_experiment_permission(self, group_name: str, experiment_id: str, permission: str):
+        _validate_permission(permission)
+        with self.ManagedSessionMaker() as session:
+            group = session.query(SqlGroup).filter(SqlGroup.group_name == group_name).one()
+            perm = SqlExperimentPermission(experiment_id=experiment_id, group_id=group.id, permission=permission)
+            session.add(perm)
+            session.flush()
+            return perm.to_mlflow_entity()
+
+    def delete_group_experiment_permission(self, group_name: str, experiment_id: str):
+        with self.ManagedSessionMaker() as session:
+            group = session.query(SqlGroup).filter(SqlGroup.group_name == group_name).one()
+            perm = (
+                session.query(SqlExperimentPermission)
+                .filter(SqlExperimentPermission.experiment_id == experiment_id, SqlExperimentPermission.group_id == group.id)
+                .one()
+            )
+            session.delete(perm)
+            session.flush()
+
+    def update_group_experiment_permission(self, group_name: str, experiment_id: str, permission: str):
+        _validate_permission(permission)
+        with self.ManagedSessionMaker() as session:
+            group = session.query(SqlGroup).filter(SqlGroup.group_name == group_name).one()
+            perm = (
+                session.query(SqlExperimentPermission)
+                .filter(SqlExperimentPermission.experiment_id == experiment_id, SqlExperimentPermission.group_id == group.id)
+                .one()
+            )
+            perm.permission = permission
+            session.flush()
+            return perm.to_mlflow_entity()
+
+    def get_group_models(self, group_name: str) -> List[str]:
+        with self.ManagedSessionMaker() as session:
+            group = session.query(SqlGroup).filter(SqlGroup.group_name == group_name).one()
+            perms = session.query(SqlRegisteredModelPermission).filter(SqlRegisteredModelPermission.group_id == group.id).all()
+            return [p.name for p in perms]
+
+    def create_group_model_permission(self, group_name: str, name: str, permission: str):
+        _validate_permission(permission)
+        with self.ManagedSessionMaker() as session:
+            group = session.query(SqlGroup).filter(SqlGroup.group_name == group_name).one()
+            perm = SqlRegisteredModelPermission(name=name, group_id=group.id, permission=permission)
+            session.add(perm)
+            session.flush()
+            return perm.to_mlflow_entity()
+
+    def delete_group_model_permission(self, group_name: str, name: str):
+        with self.ManagedSessionMaker() as session:
+            group = session.query(SqlGroup).filter(SqlGroup.group_name == group_name).one()
+            perm = (
+                session.query(SqlRegisteredModelPermission)
+                .filter(SqlRegisteredModelPermission.name == name, SqlRegisteredModelPermission.group_id == group.id)
+                .one()
+            )
+            session.delete(perm)
+            session.flush()
+
+    def update_group_model_permission(self, group_name: str, name: str, permission: str):
+        _validate_permission(permission)
+        with self.ManagedSessionMaker() as session:
+            group = session.query(SqlGroup).filter(SqlGroup.group_name == group_name).one()
+            perm = (
+                session.query(SqlRegisteredModelPermission)
+                .filter(SqlRegisteredModelPermission.name == name, SqlRegisteredModelPermission.group_id == group.id)
+                .one()
+            )
+            perm.permission = permission
+            session.flush()
+            return perm.to_mlflow_entity()

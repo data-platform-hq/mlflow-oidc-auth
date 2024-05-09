@@ -695,6 +695,7 @@ def callback():
         return "No email provided", 401
     display_name = user_data.get("name", "Unknown")
     is_admin = False
+    user_groups = []
 
     # check if user is in the group
     if AppConfig.get_property("OIDC_PROVIDER_TYPE") == "microsoft":
@@ -708,6 +709,8 @@ def callback():
             },
         )
         group_data = group_response.json()
+        print(group_data)
+        # user_groups
         if not any(
             group["displayName"] == AppConfig.get_property("OIDC_GROUP_NAME")
             or group["displayName"] == AppConfig.get_property("OIDC_ADMIN_GROUP_NAME")
@@ -718,18 +721,23 @@ def callback():
         if any(group["displayName"] == AppConfig.get_property("OIDC_ADMIN_GROUP_NAME") for group in group_data["value"]):
             is_admin = True
     elif AppConfig.get_property("OIDC_PROVIDER_TYPE") == "oidc":
-        if not any (
-            group == AppConfig.get_property("OIDC_GROUP_NAME")
-            or group == AppConfig.get_property("OIDC_ADMIN_GROUP_NAME")
+        user_groups.extend(user_data.get(AppConfig.get_property("OIDC_GROUPS_ATTRIBUTE"), []))
+        if not any(
+            group == AppConfig.get_property("OIDC_GROUP_NAME") or group == AppConfig.get_property("OIDC_ADMIN_GROUP_NAME")
             for group in user_data.get(AppConfig.get_property("OIDC_GROUPS_ATTRIBUTE"), [])
         ):
             return "User not in group", 401
         # set is_admin if user is in admin group
-        if AppConfig.get_property("OIDC_ADMIN_GROUP_NAME") in user_data.get(AppConfig.get_property("OIDC_GROUPS_ATTRIBUTE"), []):
+        if AppConfig.get_property("OIDC_ADMIN_GROUP_NAME") in user_data.get(
+            AppConfig.get_property("OIDC_GROUPS_ATTRIBUTE"), []
+        ):
             is_admin = True
 
     # Create user due to auth
     create_user(username=email.lower(), display_name=display_name, is_admin=is_admin)
+    store.populate_groups(group_names=user_groups)
+    # set user groups
+    store.set_user_groups(email.lower(), user_groups)
     _set_username(email.lower())
     return redirect(url_for("oidc_ui"))
 
@@ -983,6 +991,86 @@ def delete_registered_model_permission():
     username = _get_request_param("user_name")
     store.delete_registered_model_permission(name, username)
     return make_response(jsonify({"message": "Model permission has been deleted"}))
+
+
+@catch_mlflow_exception
+def get_groups():
+    groups = store.get_groups()
+    return jsonify({"groups": groups})
+
+
+@catch_mlflow_exception
+def get_group_users(group_name):
+    users = store.get_group_users(group_name)
+    return jsonify({"users": users})
+
+
+@catch_mlflow_exception
+def get_group_experiments(group_name):
+    experiments = store.get_group_experiments(group_name)
+    return jsonify({"experiments": experiments})
+
+
+@catch_mlflow_exception
+def create_group_experiment_permission():
+    group_name = _get_request_param("group_name")
+    experiment_id = _get_request_param("experiment_id")
+    permission = _get_request_param("permission")
+    is_regex = _get_request_param("is_regex")
+    store.create_group_experiment_permission(group_name, experiment_id, permission, is_regex)
+    return jsonify({"message": "Group experiment permission has been created."})
+
+
+@catch_mlflow_exception
+def delete_group_experiment_permission():
+    group_name = _get_request_param("group_name")
+    experiment_id = _get_request_param("experiment_id")
+    store.delete_group_experiment_permission(group_name, experiment_id)
+    return jsonify({"message": "Group experiment permission has been deleted."})
+
+
+@catch_mlflow_exception
+def update_group_experiment_permission():
+    group_name = _get_request_param("group_name")
+    experiment_id = _get_request_param("experiment_id")
+    permission = _get_request_param("permission")
+    is_regex = _get_request_param("is_regex")
+    store.update_group_experiment_permission(group_name, experiment_id, permission, is_regex)
+    return jsonify({"message": "Group experiment permission has been updated."})
+
+
+@catch_mlflow_exception
+def get_group_models(group_name):
+    models = store.get_group_models(group_name)
+    return jsonify({"models": models})
+
+
+@catch_mlflow_exception
+def create_group_model_permission():
+    group_name = _get_request_param("group_name")
+    model_name = _get_request_param("model_name")
+    permission = _get_request_param("permission")
+    is_regex = _get_request_param("is_regex")
+    store.create_group_model_permission(group_name, model_name, permission, is_regex)
+    return jsonify({"message": "Group model permission has been created."})
+
+
+@catch_mlflow_exception
+def delete_group_model_permission():
+    group_name = _get_request_param("group_name")
+    model_name = _get_request_param("model_name")
+    store.delete_group_model_permission(group_name, model_name)
+    return jsonify({"message": "Group model permission has been deleted."})
+
+
+@catch_mlflow_exception
+def update_group_model_permission():
+    group_name = _get_request_param("group_name")
+    model_name = _get_request_param("model_name")
+    permission = _get_request_param("permission")
+    is_regex = _get_request_param("is_regex")
+    store.update_group_model_permission(group_name, model_name, permission, is_regex)
+    return jsonify({"message": "Group model permission has been updated."})
 
 
 def index():
