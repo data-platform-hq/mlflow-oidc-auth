@@ -674,7 +674,6 @@ def callback():
     # Get the access token from the authorization code
     token_url, headers, body = auth_client.prepare_token_request(
         AppConfig.get_property("OIDC_TOKEN_URL"),
-        authorization_response=request.url,
         redirect_url=AppConfig.get_property("OIDC_REDIRECT_URI"),
         code=_get_request_param("code"),
         client_secret=AppConfig.get_property("OIDC_CLIENT_SECRET"),
