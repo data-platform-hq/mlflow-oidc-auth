@@ -99,7 +99,26 @@ from mlflow_oidc_auth.sqlalchemy_store import SqlAlchemyStore
 auth_client = WebApplicationClient(AppConfig.get_property("OIDC_CLIENT_ID"))
 store = SqlAlchemyStore()
 store.init_db((AppConfig.get_property("OIDC_USERS_DB_URI")))
+
+# Configure the logger
 _logger = logging.getLogger(__name__)
+_logger.setLevel(logging.INFO)
+
+# Create a file handler
+file_handler = logging.FileHandler('oidc-auth.log')
+file_handler.setLevel(logging.INFO)
+
+# Create a formatter and set it for the handler
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+file_handler.setFormatter(formatter)
+
+# Add the handler to the logger
+_logger.addHandler(file_handler)
+
+# Retrieve properties from AppConfig
+oidc_group_names = AppConfig.get_property("OIDC_GROUP_NAME")  # This should be a list
+oidc_admin_group_name = AppConfig.get_property("OIDC_ADMIN_GROUP_NAME")
+oidc_groups_attribute = AppConfig.get_property("OIDC_GROUPS_ATTRIBUTE")
 
 
 def _get_experiment_id() -> str:
@@ -718,15 +737,30 @@ def callback():
         if any(group["displayName"] == AppConfig.get_property("OIDC_ADMIN_GROUP_NAME") for group in group_data["value"]):
             is_admin = True
     elif AppConfig.get_property("OIDC_PROVIDER_TYPE") == "oidc":
-        if not any (
-            group == AppConfig.get_property("OIDC_GROUP_NAME")
-            or group == AppConfig.get_property("OIDC_ADMIN_GROUP_NAME")
-            for group in user_data.get(AppConfig.get_property("OIDC_GROUPS_ATTRIBUTE"), [])
-        ):
-            return "User not in group", 401
-        # set is_admin if user is in admin group
-        if AppConfig.get_property("OIDC_ADMIN_GROUP_NAME") in user_data.get(AppConfig.get_property("OIDC_GROUPS_ATTRIBUTE"), []):
-            is_admin = True
+        
+        # Retrieve user groups from user_data
+        user_groups = user_data.get(oidc_groups_attribute, [])
+        _logger.info("User Groups: %s", user_groups)
+
+        # Check if the user belongs to any of the specified OIDC groups
+        user_in_group = any(group in user_groups for group in oidc_group_names) or oidc_admin_group_name in user_groups
+#        breakpoint()
+
+        if not user_in_group:
+             _logger.warning("User not in any required groups")
+             return "User not in group", 401
+
+        # Check if the user is in the admin group
+        is_admin = oidc_admin_group_name in user_groups
+        if is_admin:
+            _logger.info("User is an admin")
+        else:
+            _logger.info("User is not an admin")
+
+        # Continue with the rest of your logic
+        _logger.info("User authenticated successfully")
+    else:
+        _logger.error("OIDC provider type is not set to 'oidc'")
 
     # Create user due to auth
     create_user(username=email.lower(), display_name=display_name, is_admin=is_admin)
