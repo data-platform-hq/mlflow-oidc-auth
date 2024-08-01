@@ -8,6 +8,7 @@ class User:
         display_name,
         experiment_permissions=None,
         registered_model_permissions=None,
+        groups=None,
     ):
         self._id = id_
         self._username = username
@@ -16,6 +17,7 @@ class User:
         self._experiment_permissions = experiment_permissions
         self._registered_model_permissions = registered_model_permissions
         self._display_name = display_name
+        self._groups = groups
 
     @property
     def id(self):
@@ -61,6 +63,14 @@ class User:
     def display_name(self, display_name):
         self._display_name = display_name
 
+    @property
+    def groups(self):
+        return self._groups
+    
+    @groups.setter
+    def groups(self, groups):
+        self._groups = groups
+
     def to_json(self):
         return {
             "id": self.id,
@@ -69,6 +79,7 @@ class User:
             "display_name": self.display_name,
             "experiment_permissions": [p.to_json() for p in self.experiment_permissions],
             "registered_model_permissions": [p.to_json() for p in self.registered_model_permissions],
+            "groups": [g.to_json() for g in self.groups],
         }
 
     @classmethod
@@ -83,6 +94,7 @@ class User:
             registered_model_permissions=[
                 RegisteredModelPermission.from_json(p) for p in dictionary["registered_model_permissions"]
             ],
+            groups=[Group.from_json(g) for g in dictionary["groups"]],
         )
 
 
@@ -128,6 +140,47 @@ class ExperimentPermission:
             permission=dictionary["permission"],
         )
 
+class ExperimentGroupPermission:
+    def __init__(
+        self,
+        experiment_id,
+        group_id,
+        permission,
+    ):
+        self._experiment_id = experiment_id
+        self._group_id = group_id
+        self._permission = permission
+
+    @property
+    def experiment_id(self):
+        return self._experiment_id
+
+    @property
+    def group_id(self):
+        return self._group_id
+
+    @property
+    def permission(self):
+        return self._permission
+
+    @permission.setter
+    def permission(self, permission):
+        self._permission = permission
+
+    def to_json(self):
+        return {
+            "experiment_id": self.experiment_id,
+            "group_id": self.group_id,
+            "permission": self.permission,
+        }
+
+    @classmethod
+    def from_json(cls, dictionary):
+        return cls(
+            experiment_id=dictionary["experiment_id"],
+            group_id=dictionary["group_id"],
+            permission=dictionary["permission"],
+        )
 
 class RegisteredModelPermission:
     def __init__(
@@ -168,6 +221,48 @@ class RegisteredModelPermission:
         return cls(
             name=dictionary["name"],
             user_id=dictionary["user_id"],
+            permission=dictionary["permission"],
+        )
+
+class RegisteredModelGroupPermission:
+    def __init__(
+        self,
+        name,
+        group_id,
+        permission,
+    ):
+        self._name = name
+        self._group_id = group_id
+        self._permission = permission
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def group_id(self):
+        return self._group_id
+
+    @property
+    def permission(self):
+        return self._permission
+
+    @permission.setter
+    def permission(self, permission):
+        self._permission = permission
+
+    def to_json(self):
+        return {
+            "name": self.name,
+            "group_id": self.group_id,
+            "permission": self.permission,
+        }
+
+    @classmethod
+    def from_json(cls, dictionary):
+        return cls(
+            name=dictionary["name"],
+            group_id=dictionary["group_id"],
             permission=dictionary["permission"],
         )
 
