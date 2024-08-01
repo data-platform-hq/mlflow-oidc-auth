@@ -10,9 +10,7 @@ from sqlalchemy.orm import declarative_base, relationship
 
 from mlflow_oidc_auth.entities import (
     ExperimentPermission,
-    ExperimentGroupPermission,
     RegisteredModelPermission,
-    RegisteredModelGroupPermission,
     User,
     Group,
     UserGroup,
@@ -110,7 +108,7 @@ class SqlExperimentGroupPermission(Base):
     __table_args__ = (UniqueConstraint("experiment_id", "group_id", name="unique_experiment_group"),)
 
     def to_mlflow_entity(self):
-        return ExperimentGroupPermission(
+        return ExperimentPermission(
             experiment_id=self.experiment_id,
             group_id=self.group_id,
             permission=self.permission,
@@ -125,7 +123,7 @@ class SqlRegisteredModelGroupPermission(Base):
     __table_args__ = (UniqueConstraint("name", "group_id", name="unique_name_group"),)
 
     def to_mlflow_entity(self):
-        return RegisteredModelGroupPermission(
+        return RegisteredModelPermission(
             name=self.name,
             group_id=self.group_id,
             permission=self.permission,

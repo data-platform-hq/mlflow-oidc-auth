@@ -157,7 +157,7 @@ def _is_unprotected_route(path: str) -> bool:
     )
 
 
-def _get_permission_from_store_or_default(store_permission_func: Callable[[], str]) -> Permission:
+def _get_permission_from_store_or_default_1(store_permission_func: Callable[[], str]) -> Permission:
     """
     Attempts to get permission from store,
     and returns default permission if no record is found.
@@ -171,6 +171,30 @@ def _get_permission_from_store_or_default(store_permission_func: Callable[[], st
             raise
     return get_permission(perm)
 
+
+def _get_permission_from_store_or_default(store_permission_user_func: Callable[[], str], store_permission_group_func: Callable[[], str]) -> Permission:
+    """
+    Attempts to get permission from store,
+    and returns default permission if no record is found.
+    user permission takes precedence over group permission
+    """
+    try:
+        perm = store_permission_user_func()
+        _logger.debug("User permission found")
+    except MlflowException as e:
+        if e.error_code == ErrorCode.Name(RESOURCE_DOES_NOT_EXIST):
+            try:
+                perm = store_permission_group_func()
+                _logger.debug("Group permission found")
+            except MlflowException as e:
+                if e.error_code == ErrorCode.Name(RESOURCE_DOES_NOT_EXIST):
+                    perm = AppConfig.get_property("DEFAULT_MLFLOW_PERMISSION")
+                    _logger.debug("Default permission used")
+                else:
+                    raise
+        else:
+            raise
+    return get_permission(perm)
 
 def authenticate_request_basic_auth() -> Union[Authorization, Response]:
     username = request.authorization.username
@@ -208,7 +232,10 @@ def username_is_sender():
 def _get_permission_from_experiment_id() -> Permission:
     experiment_id = _get_experiment_id()
     username = _get_username()
-    return _get_permission_from_store_or_default(lambda: store.get_experiment_permission(experiment_id, username).permission)
+    return _get_permission_from_store_or_default(
+        lambda: store.get_experiment_permission(experiment_id, username).permission,
+        lambda: store.get_user_groups_experiment_permission(experiment_id, username).permission
+        )
 
 
 _EXPERIMENT_ID_PATTERN = re.compile(r"^(\d+)/")
@@ -225,7 +252,8 @@ def _get_permission_from_experiment_id_artifact_proxy() -> Permission:
     if experiment_id := _get_experiment_id_from_view_args():
         username = _get_username()
         return _get_permission_from_store_or_default(
-            lambda: store.get_experiment_permission(experiment_id, username).permission
+            lambda: store.get_experiment_permission(experiment_id, username).permission,
+            lambda: store.get_user_groups_experiment_permission(experiment_id, username).permission
         )
     return get_permission(AppConfig.get_property("DEFAULT_MLFLOW_PERMISSION"))
 
@@ -240,7 +268,8 @@ def _get_permission_from_experiment_name() -> Permission:
         )
     username = _get_username()
     return _get_permission_from_store_or_default(
-        lambda: store.get_experiment_permission(store_exp.experiment_id, username).permission
+        lambda: store.get_experiment_permission(store_exp.experiment_id, username).permission,
+        lambda: store.get_user_groups_experiment_permission(store_exp.experiment_id, username).permission
     )
 
 
@@ -251,13 +280,19 @@ def _get_permission_from_run_id() -> Permission:
     run = _get_tracking_store().get_run(run_id)
     experiment_id = run.info.experiment_id
     username = _get_username()
-    return _get_permission_from_store_or_default(lambda: store.get_experiment_permission(experiment_id, username).permission)
+    return _get_permission_from_store_or_default(
+        lambda: store.get_experiment_permission(experiment_id, username).permission,
+        lambda: store.get_user_groups_experiment_permission(experiment_id, username).permission
+        )
 
 
 def _get_permission_from_registered_model_name() -> Permission:
     model_name = _get_request_param("name")
     username = _get_username()
-    return _get_permission_from_store_or_default(lambda: store.get_registered_model_permission(model_name, username).permission)
+    return _get_permission_from_store_or_default(
+        lambda: store.get_registered_model_permission(model_name, username).permission,
+        lambda: store.get_user_groups_registered_model_permission(model_name, username).permission
+    )
 
 
 def set_can_manage_experiment_permission(resp: Response):
@@ -332,7 +367,9 @@ def filter_search_registered_models(resp: Response):
     # fetch permissions
     username = _get_username()
     perms = store.list_registered_model_permissions(username)
-    can_read = {p.name: get_permission(p.permission).can_read for p in perms}
+    perms_group = store.list_user_groups_registered_model_permissions(username)
+    can_read = {p.name: get_permission(p.permission).can_read for p in perms_group}
+    can_read.update({p.name: get_permission(p.permission).can_read for p in perms})
     default_can_read = get_permission(AppConfig.get_property("DEFAULT_MLFLOW_PERMISSION")).can_read
 
     # filter out unreadable

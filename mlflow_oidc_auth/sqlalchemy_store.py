@@ -25,7 +25,7 @@ from mlflow_oidc_auth.entities import (
     RegisteredModelPermission,
     User,
 )
-from mlflow_oidc_auth.permissions import _validate_permission
+from mlflow_oidc_auth.permissions import _validate_permission, compare_permissions
 from mlflow.store.db.utils import (
     _get_managed_session_maker,
     create_sqlalchemy_engine_with_retry,
@@ -152,9 +152,47 @@ class SqlAlchemyStore:
                 INVALID_STATE,
             )
 
+    def _get_experiment_group_permission(self, session, experiment_id: str, group_name: str) -> SqlExperimentGroupPermission:
+        try:
+            group = session.query(SqlGroup).filter(SqlGroup.group_name == group_name).one()
+            return (
+                session.query(SqlExperimentGroupPermission)
+                .filter(
+                    SqlExperimentGroupPermission.experiment_id == experiment_id,
+                    SqlExperimentGroupPermission.group_id == group.id,
+                )
+                .one()
+            )
+        except NoResultFound:
+            return None
+        except MultipleResultsFound:
+            raise MlflowException(
+                f"Found multiple experiment permissions with experiment_id={experiment_id} " f"and group_name={group_name}",
+                INVALID_STATE,
+            )
+
     def get_experiment_permission(self, experiment_id: str, username: str) -> ExperimentPermission:
         with self.ManagedSessionMaker() as session:
             return self._get_experiment_permission(session, experiment_id, username).to_mlflow_entity()
+
+    def get_user_groups_experiment_permission(self, experiment_id: str, username: str) -> ExperimentPermission:
+        with self.ManagedSessionMaker() as session:
+            user_groups = self.get_groups_for_user(username)
+            user_perms: ExperimentPermission
+            for ug in user_groups:
+                perms = self._get_experiment_group_permission(session, experiment_id, ug)
+                try:
+                    if perms.permission.priority > user_perms.permission.priority:
+                        user_perms = perms
+                except AttributeError:
+                    user_perms = perms
+            try:
+                return user_perms.to_mlflow_entity()
+            except AttributeError:
+                raise MlflowException(
+                f"Experiment permission with experiment_id={experiment_id} and " f"username={username} not found",
+                RESOURCE_DOES_NOT_EXIST,
+            )
 
     def list_experiment_permissions(self, username: str) -> List[ExperimentPermission]:
         with self.ManagedSessionMaker() as session:
@@ -228,15 +266,58 @@ class SqlAlchemyStore:
                 f"Found multiple registered model permissions with name={name} " f"and username={username}",
                 INVALID_STATE,
             )
+    def _get_registered_model_group_permission(self, session, name: str, group_name: str) -> SqlRegisteredModelGroupPermission:
+        try:
+            group = session.query(SqlGroup).filter(SqlGroup.group_name == group_name).one()
+            return (
+                session.query(SqlRegisteredModelGroupPermission)
+                .filter(
+                    SqlRegisteredModelGroupPermission.name == name,
+                    SqlRegisteredModelGroupPermission.group_id == group.id,
+                )
+                .one()
+            )
+        except NoResultFound:
+            return None
+        except MultipleResultsFound:
+            raise MlflowException(
+                f"Found multiple registered model permissions with name={name} " f"and group_name={group_name}",
+                INVALID_STATE,
+            )
 
     def get_registered_model_permission(self, name: str, username: str) -> RegisteredModelPermission:
         with self.ManagedSessionMaker() as session:
             return self._get_registered_model_permission(session, name, username).to_mlflow_entity()
 
+    def get_user_groups_registered_model_permission(self, name: str, username: str) -> RegisteredModelPermission:
+        with self.ManagedSessionMaker() as session:
+            user_groups = self.get_groups_for_user(username)
+            user_perms: RegisteredModelPermission
+            for ug in user_groups:
+                perms = self._get_registered_model_group_permission(session, name, ug)
+                try:
+                    if perms.permission.priority > user_perms.permission.priority:
+                        user_perms = perms
+                except AttributeError:
+                    user_perms = perms
+            try:
+                return user_perms.to_mlflow_entity()
+            except AttributeError:
+                raise MlflowException(
+                f"Registered model permission with name={name} and " f"username={username} not found",
+                RESOURCE_DOES_NOT_EXIST,
+            )
     def list_registered_model_permissions(self, username: str) -> List[RegisteredModelPermission]:
         with self.ManagedSessionMaker() as session:
             user = self._get_user(session, username=username)
             perms = session.query(SqlRegisteredModelPermission).filter(SqlRegisteredModelPermission.user_id == user.id).all()
+            return [p.to_mlflow_entity() for p in perms]
+
+    def list_user_groups_registered_model_permissions(self, username: str) -> List[RegisteredModelPermission]:
+        with self.ManagedSessionMaker() as session:
+            user = self._get_user(session, username=username)
+            user_groups = session.query(SqlUserGroup).filter(SqlUserGroup.user_id == user.id).all()
+            perms = session.query(SqlRegisteredModelGroupPermission).filter(SqlRegisteredModelGroupPermission.group_id.in_([ug.group_id for ug in user_groups])).all()
             return [p.to_mlflow_entity() for p in perms]
 
     def update_registered_model_permission(self, name: str, username: str, permission: str) -> RegisteredModelPermission:

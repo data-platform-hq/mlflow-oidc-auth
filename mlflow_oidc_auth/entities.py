@@ -102,12 +102,14 @@ class ExperimentPermission:
     def __init__(
         self,
         experiment_id,
-        user_id,
         permission,
+        user_id=None,
+        group_id=None,
     ):
         self._experiment_id = experiment_id
         self._user_id = user_id
         self._permission = permission
+        self._group_id = group_id
 
     @property
     def experiment_id(self):
@@ -125,73 +127,43 @@ class ExperimentPermission:
     def permission(self, permission):
         self._permission = permission
 
-    def to_json(self):
-        return {
-            "experiment_id": self.experiment_id,
-            "user_id": self.user_id,
-            "permission": self.permission,
-        }
-
-    @classmethod
-    def from_json(cls, dictionary):
-        return cls(
-            experiment_id=dictionary["experiment_id"],
-            user_id=dictionary["user_id"],
-            permission=dictionary["permission"],
-        )
-
-class ExperimentGroupPermission:
-    def __init__(
-        self,
-        experiment_id,
-        group_id,
-        permission,
-    ):
-        self._experiment_id = experiment_id
-        self._group_id = group_id
-        self._permission = permission
-
-    @property
-    def experiment_id(self):
-        return self._experiment_id
-
     @property
     def group_id(self):
         return self._group_id
 
-    @property
-    def permission(self):
-        return self._permission
-
-    @permission.setter
-    def permission(self, permission):
-        self._permission = permission
+    @group_id.setter
+    def group_id(self, group_id):
+        self._group_id = group_id
 
     def to_json(self):
         return {
             "experiment_id": self.experiment_id,
-            "group_id": self.group_id,
             "permission": self.permission,
+            "user_id": self.user_id,
+            "group_id": self.group_id,
         }
 
     @classmethod
     def from_json(cls, dictionary):
         return cls(
             experiment_id=dictionary["experiment_id"],
-            group_id=dictionary["group_id"],
             permission=dictionary["permission"],
+            user_id=dictionary["user_id"],
+            group_id=dictionary.get("group_id"),
         )
 
 class RegisteredModelPermission:
     def __init__(
         self,
         name,
-        user_id,
         permission,
+        user_id=None,
+        group_id=None,
     ):
         self._name = name
         self._user_id = user_id
         self._permission = permission
+        self._group_id = group_id
 
     @property
     def name(self):
@@ -209,11 +181,20 @@ class RegisteredModelPermission:
     def permission(self, permission):
         self._permission = permission
 
+    @property
+    def group_id(self):
+        return self._group_id
+
+    @group_id.setter
+    def group_id(self, group_id):
+        self._group_id = group_id
+
     def to_json(self):
         return {
             "name": self.name,
             "user_id": self.user_id,
             "permission": self.permission,
+            "group_id": self.group_id,
         }
 
     @classmethod
@@ -222,48 +203,7 @@ class RegisteredModelPermission:
             name=dictionary["name"],
             user_id=dictionary["user_id"],
             permission=dictionary["permission"],
-        )
-
-class RegisteredModelGroupPermission:
-    def __init__(
-        self,
-        name,
-        group_id,
-        permission,
-    ):
-        self._name = name
-        self._group_id = group_id
-        self._permission = permission
-
-    @property
-    def name(self):
-        return self._name
-
-    @property
-    def group_id(self):
-        return self._group_id
-
-    @property
-    def permission(self):
-        return self._permission
-
-    @permission.setter
-    def permission(self, permission):
-        self._permission = permission
-
-    def to_json(self):
-        return {
-            "name": self.name,
-            "group_id": self.group_id,
-            "permission": self.permission,
-        }
-
-    @classmethod
-    def from_json(cls, dictionary):
-        return cls(
-            name=dictionary["name"],
-            group_id=dictionary["group_id"],
-            permission=dictionary["permission"],
+            group_id=dictionary.get("group_id"),
         )
 
 class Group:
