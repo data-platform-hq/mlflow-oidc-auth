@@ -1,4 +1,3 @@
-import logging
 import os
 import re
 import requests
@@ -95,12 +94,12 @@ from mlflow_oidc_auth import routes
 from mlflow_oidc_auth.config import AppConfig
 from mlflow_oidc_auth.sqlalchemy_store import SqlAlchemyStore
 
+from mlflow.server import app
+
 # Create the OAuth2 client
 auth_client = WebApplicationClient(AppConfig.get_property("OIDC_CLIENT_ID"))
 store = SqlAlchemyStore()
 store.init_db((AppConfig.get_property("OIDC_USERS_DB_URI")))
-_logger = logging.getLogger(__name__)
-
 
 def _get_experiment_id() -> str:
     if request.method == "GET":
@@ -157,21 +156,6 @@ def _is_unprotected_route(path: str) -> bool:
     )
 
 
-def _get_permission_from_store_or_default_1(store_permission_func: Callable[[], str]) -> Permission:
-    """
-    Attempts to get permission from store,
-    and returns default permission if no record is found.
-    """
-    try:
-        perm = store_permission_func()
-    except MlflowException as e:
-        if e.error_code == ErrorCode.Name(RESOURCE_DOES_NOT_EXIST):
-            perm = AppConfig.get_property("DEFAULT_MLFLOW_PERMISSION")
-        else:
-            raise
-    return get_permission(perm)
-
-
 def _get_permission_from_store_or_default(store_permission_user_func: Callable[[], str], store_permission_group_func: Callable[[], str]) -> Permission:
     """
     Attempts to get permission from store,
@@ -180,16 +164,16 @@ def _get_permission_from_store_or_default(store_permission_user_func: Callable[[
     """
     try:
         perm = store_permission_user_func()
-        _logger.debug("User permission found")
+        app.logger.debug("User permission found")
     except MlflowException as e:
         if e.error_code == ErrorCode.Name(RESOURCE_DOES_NOT_EXIST):
             try:
                 perm = store_permission_group_func()
-                _logger.debug("Group permission found")
+                app.logger.debug("Group permission found")
             except MlflowException as e:
                 if e.error_code == ErrorCode.Name(RESOURCE_DOES_NOT_EXIST):
                     perm = AppConfig.get_property("DEFAULT_MLFLOW_PERMISSION")
-                    _logger.debug("Default permission used")
+                    app.logger.debug("Default permission used")
                 else:
                     raise
         else:
@@ -199,13 +183,13 @@ def _get_permission_from_store_or_default(store_permission_user_func: Callable[[
 def authenticate_request_basic_auth() -> Union[Authorization, Response]:
     username = request.authorization.username
     password = request.authorization.password
-    _logger.debug("Authenticating user %s", username)
+    app.logger.debug("Authenticating user %s", username)
     if store.authenticate_user(username.lower(), password):
         _set_username(username.lower())
-        _logger.debug("User %s authenticated", username)
+        app.logger.debug("User %s authenticated", username)
         return True
     else:
-        _logger.debug("User %s not authenticated", username)
+        app.logger.debug("User %s not authenticated", username)
         return False
 
 
@@ -748,7 +732,7 @@ def callback():
             },
         )
         group_data = group_response.json()
-        print(group_data)
+        app.logger.debug(group_data)
         # user_groups
         if not any(
             group["displayName"] == AppConfig.get_property("OIDC_GROUP_NAME")

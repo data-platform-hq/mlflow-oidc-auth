@@ -1,21 +1,18 @@
-import logging
 import os
 import secrets
 import requests
 import secrets
 
 from dotenv import load_dotenv
-from mlflow_oidc_auth.app import app
+from mlflow.server import app
 
 load_dotenv()  # take environment variables from .env.
-
+app.logger.setLevel(os.environ.get("LOG_LEVEL", "INFO"))
 
 class AppConfig:
     DEFAULT_MLFLOW_PERMISSION = os.environ.get("DEFAULT_MLFLOW_PERMISSION", "MANAGE")
     SECRET_KEY = os.environ.get("SECRET_KEY", secrets.token_hex(16))
     SESSION_TYPE = "cachelib"
-    LEVEL = logging.DEBUG if os.environ.get("DEBUG") else logging.INFO
-    LOG_LEVEL = os.environ.get("LOG_LEVEL", LEVEL)
     OIDC_USERS_DB_URI = os.environ.get("OIDC_USERS_DB_URI", "sqlite:///auth.db")
     OIDC_GROUP_NAME = os.environ.get("OIDC_GROUP_NAME", "mlflow")
     OIDC_ADMIN_GROUP_NAME = os.environ.get("OIDC_ADMIN_GROUP_NAME", "mlflow-admin")
@@ -41,4 +38,6 @@ class AppConfig:
 
     @staticmethod
     def get_property(property_name):
+        app.logger.debug(f"Getting property {property_name}")
         return getattr(AppConfig, property_name, None)
+
