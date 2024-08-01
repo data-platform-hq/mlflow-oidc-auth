@@ -173,6 +173,13 @@ class SqlAlchemyStore:
             perms = session.query(SqlExperimentGroupPermission).filter(SqlExperimentGroupPermission.group_id == group_id).all()
             return [p.to_mlflow_entity() for p in perms]
 
+    def list_user_groups_experiment_permissions(self, username: str) -> List[ExperimentPermission]:
+        with self.ManagedSessionMaker() as session:
+            user = self._get_user(session, username=username)
+            user_groups = session.query(SqlUserGroup).filter(SqlUserGroup.user_id == user.id).all()
+            perms = session.query(SqlExperimentGroupPermission).filter(SqlExperimentGroupPermission.group_id.in_([ug.group_id for ug in user_groups])).all()
+            return [p.to_mlflow_entity() for p in perms]
+
     def update_experiment_permission(self, experiment_id: str, username: str, permission: str) -> ExperimentPermission:
         _validate_permission(permission)
         with self.ManagedSessionMaker() as session:

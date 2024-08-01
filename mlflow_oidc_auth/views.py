@@ -286,7 +286,9 @@ def filter_search_experiments(resp: Response):
     # fetch permissions
     username = _get_username()
     perms = store.list_experiment_permissions(username)
-    can_read = {p.experiment_id: get_permission(p.permission).can_read for p in perms}
+    perms_group = store.list_user_groups_experiment_permissions(username)
+    can_read = {p.experiment_id: get_permission(p.permission).can_read for p in perms_group}
+    can_read.update({p.experiment_id: get_permission(p.permission).can_read for p in perms})
     default_can_read = get_permission(AppConfig.get_property("DEFAULT_MLFLOW_PERMISSION")).can_read
 
     # filter out unreadable
