@@ -13,7 +13,9 @@ from mlflow.protos.databricks_pb2 import (
 from mlflow_oidc_auth.db import utils as dbutils
 from mlflow_oidc_auth.db.models import (
     SqlExperimentPermission,
+    SqlExperimentGroupPermission,
     SqlRegisteredModelPermission,
+    SqlRegisteredModelGroupPermission,
     SqlUser,
     SqlGroup,
     SqlUserGroup,
@@ -160,6 +162,17 @@ class SqlAlchemyStore:
             perms = session.query(SqlExperimentPermission).filter(SqlExperimentPermission.user_id == user.id).all()
             return [p.to_mlflow_entity() for p in perms]
 
+    def list_group_experiment_permissions(self, group_name: str) -> List[ExperimentPermission]:
+        with self.ManagedSessionMaker() as session:
+            group = session.query(SqlGroup).filter(SqlGroup.group_name == group_name).one()
+            perms = session.query(SqlExperimentPermission).filter(SqlExperimentPermission.group_id == group.id).all()
+            return [p.to_mlflow_entity() for p in perms]
+
+    def list_group_id_experiment_permissions(self, group_id: int) -> List[ExperimentPermission]:
+        with self.ManagedSessionMaker() as session:
+            perms = session.query(SqlExperimentGroupPermission).filter(SqlExperimentGroupPermission.group_id == group_id).all()
+            return [p.to_mlflow_entity() for p in perms]
+
     def update_experiment_permission(self, experiment_id: str, username: str, permission: str) -> ExperimentPermission:
         _validate_permission(permission)
         with self.ManagedSessionMaker() as session:
@@ -278,8 +291,15 @@ class SqlAlchemyStore:
     def get_groups_for_user(self, username: str) -> List[str]:
         with self.ManagedSessionMaker() as session:
             user = self._get_user(session, username)
-            user_groups = session.query(SqlUserGroup).filter(SqlUserGroup.user_id == user.id).all()
-            return [ug.group.group_name for ug in user_groups]
+            user_groups_ids = session.query(SqlUserGroup).filter(SqlUserGroup.user_id == user.id).all()
+            user_groups = session.query(SqlGroup).filter(SqlGroup.id.in_([ug.group_id for ug in user_groups_ids])).all()
+            return [ug.group_name for ug in user_groups]
+
+    def get_groups_ids_for_user(self, username: str) -> List[int]:
+        with self.ManagedSessionMaker() as session:
+            user = self._get_user(session, username)
+            user_groups_ids = session.query(SqlUserGroup).filter(SqlUserGroup.user_id == user.id).all()
+            return [ug.group_id for ug in user_groups_ids]
 
     # assign user to groups and remove from other groups
     def set_user_groups(self, username: str, group_names: List[str]):

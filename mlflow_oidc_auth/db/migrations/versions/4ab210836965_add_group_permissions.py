@@ -22,7 +22,6 @@ def upgrade() -> None:
         "registered_model_group_permissions",
         sa.Column("id", sa.Integer(), nullable=False, primary_key=True),
         sa.Column("name", sa.String(length=255), nullable=False),
-        sa.Column("is_regexp", sa.Boolean(), nullable=False),
         sa.Column("group_id", sa.Integer(), nullable=False),
         sa.Column("permission", sa.String(length=255), nullable=True),
         sa.ForeignKeyConstraint(["group_id"], ["groups.id"], name="fk_group_id"),
@@ -31,12 +30,11 @@ def upgrade() -> None:
     op.create_table(
         "experiment_group_permissions",
         sa.Column("id", sa.Integer(), nullable=False, primary_key=True),
-        sa.Column("experiment_name", sa.String(length=255), nullable=False),
-        sa.Column("is_regexp", sa.Boolean(), nullable=False),
+        sa.Column("experiment_id", sa.String(length=255), nullable=False),
         sa.Column("group_id", sa.Integer(), nullable=False),
         sa.Column("permission", sa.String(length=255), nullable=True),
         sa.ForeignKeyConstraint(["group_id"], ["groups.id"], name="fk_group_id"),
-        sa.UniqueConstraint("experiment_name", "group_id", name="unique_experiment_group"),
+        sa.UniqueConstraint("experiment_id", "group_id", name="unique_experiment_group"),
     )
 
 
