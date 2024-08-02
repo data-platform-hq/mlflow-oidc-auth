@@ -3,6 +3,7 @@ export const API_URL = {
   EXPERIMENTS_FOR_USER: '/api/2.0/mlflow/users/${userName}/experiments',
   USERS_FOR_EXPERIMENT: '/api/2.0/mlflow/experiments/${experimentName}/users',
   ALL_MODELS: '/api/2.0/mlflow/registered-models',
+  ALL_GROUPS: '/api/2.0/mlflow/groups',
   MODELS_FOR_USER: '/api/2.0/mlflow/users/${userName}/registered-models',
   USERS_FOR_MODEL: '/api/2.0/mlflow/registered-models/${modelName}/users',
   CREATE_EXPERIMENT_PERMISSION: '/api/2.0/mlflow/experiments/permissions/create',

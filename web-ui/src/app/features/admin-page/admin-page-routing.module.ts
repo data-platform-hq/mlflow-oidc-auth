@@ -3,6 +3,7 @@ import { RouterModule, Routes } from '@angular/router';
 import {
   AdminPageComponent,
   ExperimentPermissionDetailsComponent,
+  GroupPermissionDetailsComponent,
   ModelPermissionDetailsComponent,
   PermissionsComponent,
   UserPermissionDetailsComponent,
@@ -44,6 +45,13 @@ const routes: Routes = [
       {
         path: 'model/:id',
         component: ModelPermissionDetailsComponent,
+        data: {
+          breadcrumb: getBreadcrumb,
+        },
+      },
+      {
+        path: 'group/:id',
+        component: GroupPermissionDetailsComponent,
         data: {
           breadcrumb: getBreadcrumb,
         },
