@@ -1041,30 +1041,25 @@ def get_group_experiments(group_name):
     ])
 
 @catch_mlflow_exception
-def create_group_experiment_permission():
-    group_name = _get_request_param("group_name")
+def create_group_experiment_permission(group_name):
     experiment_id = _get_request_param("experiment_id")
     permission = _get_request_param("permission")
-    is_regex = _get_request_param("is_regex")
-    store.create_group_experiment_permission(group_name, experiment_id, permission, is_regex)
+    store.create_group_experiment_permission(group_name, experiment_id, permission)
     return jsonify({"message": "Group experiment permission has been created."})
 
 
 @catch_mlflow_exception
-def delete_group_experiment_permission():
-    group_name = _get_request_param("group_name")
+def delete_group_experiment_permission(group_name):
     experiment_id = _get_request_param("experiment_id")
     store.delete_group_experiment_permission(group_name, experiment_id)
     return jsonify({"message": "Group experiment permission has been deleted."})
 
 
 @catch_mlflow_exception
-def update_group_experiment_permission():
-    group_name = _get_request_param("group_name")
+def update_group_experiment_permission(group_name):
     experiment_id = _get_request_param("experiment_id")
     permission = _get_request_param("permission")
-    is_regex = _get_request_param("is_regex")
-    store.update_group_experiment_permission(group_name, experiment_id, permission, is_regex)
+    store.update_group_experiment_permission(group_name, experiment_id, permission)
     return jsonify({"message": "Group experiment permission has been updated."})
 
 
@@ -1075,30 +1070,25 @@ def get_group_models(group_name):
 
 
 @catch_mlflow_exception
-def create_group_model_permission():
-    group_name = _get_request_param("group_name")
+def create_group_model_permission(group_name):
     model_name = _get_request_param("model_name")
     permission = _get_request_param("permission")
-    is_regex = _get_request_param("is_regex")
-    store.create_group_model_permission(group_name, model_name, permission, is_regex)
+    store.create_group_model_permission(group_name, model_name, permission)
     return jsonify({"message": "Group model permission has been created."})
 
 
 @catch_mlflow_exception
-def delete_group_model_permission():
-    group_name = _get_request_param("group_name")
+def delete_group_model_permission(group_name):
     model_name = _get_request_param("model_name")
     store.delete_group_model_permission(group_name, model_name)
     return jsonify({"message": "Group model permission has been deleted."})
 
 
 @catch_mlflow_exception
-def update_group_model_permission():
-    group_name = _get_request_param("group_name")
+def update_group_model_permission(group_name):
     model_name = _get_request_param("model_name")
     permission = _get_request_param("permission")
-    is_regex = _get_request_param("is_regex")
-    store.update_group_model_permission(group_name, model_name, permission, is_regex)
+    store.update_group_model_permission(group_name, model_name, permission)
     return jsonify({"message": "Group model permission has been updated."})
 
 
