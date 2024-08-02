@@ -86,7 +86,7 @@ export class UserPermissionDetailsComponent implements OnInit {
           data: {
             entityType: EntityEnum.EXPERIMENT,
             entities: experiments.map(({ name }) => name),
-            userName: this.userId,
+            permissionAssignedTo: this.userId,
           }
         }).afterClosed()
         ),

@@ -1,7 +1,7 @@
 import { EntityEnum } from 'src/app/core/configs/core';
 
 export interface GrantPermissionModalData {
-  userName: string;
+  permissionAssignedTo: string;
   entityType: EntityEnum;
   entities: string[];
 }

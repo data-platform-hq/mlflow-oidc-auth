@@ -22,7 +22,7 @@ export class GrantPermissionModalComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.title = `Grant ${this.data.entityType} permissions for ${this.data.userName}`;
+    this.title = `Grant ${this.data.entityType} permissions for ${this.data.permissionAssignedTo}`;
     this.form = this.fb.group({
       permission: [PermissionEnum.READ, Validators.required],
       entity: [null, Validators.required],

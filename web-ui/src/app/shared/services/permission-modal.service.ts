@@ -8,6 +8,8 @@ import { PermissionEnum } from '../../core/configs/permissions';
 import { PermissionDataService } from './data/permission-data.service';
 import { GrantPermissionModalData } from '../components/modals/grant-permissoin-modal/grant-permission-modal.inteface';
 import { ModelsDataService } from './data/models-data.service';
+import { ExperimentsDataService } from './data/experiments-data.service';
+import { ExperimentModel } from '../interfaces/experiments-data.interface';
 
 @Injectable({
   providedIn: 'root',
@@ -18,6 +20,7 @@ export class PermissionModalService {
     private readonly dialog: MatDialog,
     private readonly permissionDataService: PermissionDataService,
     private readonly modelDataService: ModelsDataService,
+    private readonly experimentsDataService: ExperimentsDataService,
   ) {
   }
 
@@ -63,17 +66,27 @@ export class PermissionModalService {
       )
   }
 
-  openGrantModelPermissionModal(userName: string) {
+  openGrantModelPermissionModal(permissionAssignedTo: string) {
     return this.modelDataService.getAllModels()
       .pipe(
         switchMap((models) => this.dialog.open<GrantPermissionModalComponent, GrantPermissionModalData>(GrantPermissionModalComponent, {
             data: {
               entityType: EntityEnum.MODEL,
               entities: models.map(({ name }) => name),
-              userName,
+              permissionAssignedTo,
             },
           }).afterClosed(),
         ),
       )
+  }
+
+  openGrantExperimentPermissionModal(experiments: ExperimentModel[], permissionAssignedTo: string) {
+    return this.dialog.open<GrantPermissionModalComponent, GrantPermissionModalData>(GrantPermissionModalComponent, {
+      data: {
+        entityType: EntityEnum.EXPERIMENT,
+        entities: experiments.map(({ name }) => name),
+        permissionAssignedTo,
+      },
+    })
   }
 }

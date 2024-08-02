@@ -3,32 +3,42 @@
     <mat-tab label="Experiments">
         <div class="my-3">
             <div class="header-section">
-                <button mat-button>
+                <button mat-button (click)="openModalAddExperimentPermissionToGroup()">
                     <mat-icon>add</mat-icon>
                     <span>Add</span>
                 </button>
             </div>
         </div>
+
+        <ml-table
+                [columnConfig]="experimentColumnConfig"
+                [data]="experimentDataSource"
+                [actions]="experimentActions"
+                (action)="handleGroupActions($event)"
+        ></ml-table>
+
     </mat-tab>
 
     <!--  Models-->
-<!--    <mat-tab label="Models">-->
-<!--        <div class="my-3">-->
-<!--            <div class="header-section">-->
-<!--                <button mat-button (click)="addModelPermissionToUser()">-->
-<!--                    <mat-icon>add</mat-icon>-->
-<!--                    <span>Add</span>-->
-<!--                </button>-->
-<!--            </div>-->
+    <mat-tab label="Models">
+        <div class="my-3">
+            <div class="my-3">
+                <div class="header-section">
+                    <button mat-button (click)="addModelPermissionToGroup()">
+                        <mat-icon>add</mat-icon>
+                        <span>Add</span>
+                    </button>
+                </div>
+            </div>
 
-<!--            <ml-table-->
-<!--                    [columnConfig]="modelsColumnConfig"-->
-<!--                    [data]="modelsDataSource"-->
-<!--                    *ngIf="modelsDataSource.length"-->
-<!--                    [actions]="modelsActions"-->
-<!--                    (action)="handleModelActions($event)"-->
-<!--            ></ml-table>-->
-<!--        </div>-->
-<!--    </mat-tab>-->
+
+            <ml-table
+                    [columnConfig]="modelColumnConfig"
+                    [data]="modelDataSource"
+                    [actions]="modelActions"
+                    (action)="handleGroupActions($event)"
+            ></ml-table>
+        </div>
+    </mat-tab>
 
 </mat-tab-group>

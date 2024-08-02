@@ -41,4 +41,21 @@ export class PermissionDataService {
     return this.http.delete(API_URL.DELETE_MODEL_PERMISSION, { body });
   }
 
+  addExperimentPermissionToGroup(groupName: string, experiment_id: string,permission: string) {
+    return this.http.post(
+      API_URL.CREATE_GROUP_EXPERIMENT_PERMISSION.replace('${groupName}', groupName),
+      {
+        experiment_id,
+        permission,
+      });
+  }
+
+  // addModelPermissionToGroup(modelName: string, groupName: string, permission: string) {
+  //   return this.http.post(
+  //     API_URL.CREATE_GROUP_MODEL_PERMISSION.replace('${modelName}', modelName),
+  //     {
+  //     model_name
+  // permission
+  //     });
+  // }
 }
