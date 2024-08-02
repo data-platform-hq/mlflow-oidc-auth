@@ -1031,8 +1031,14 @@ def get_group_users(group_name):
 @catch_mlflow_exception
 def get_group_experiments(group_name):
     experiments = store.get_group_experiments(group_name)
-    return jsonify({"experiments": experiments})
-
+    return jsonify([
+        {
+            "id": experiment.experiment_id,
+            "name": _get_tracking_store().get_experiment(experiment.experiment_id).name,
+            "permission": experiment.permission,
+        }
+        for experiment in experiments
+    ])
 
 @catch_mlflow_exception
 def create_group_experiment_permission():
@@ -1065,7 +1071,7 @@ def update_group_experiment_permission():
 @catch_mlflow_exception
 def get_group_models(group_name):
     models = store.get_group_models(group_name)
-    return jsonify({"models": models})
+    return jsonify([{"name": model.name, "permission": model.permission} for model in models])
 
 
 @catch_mlflow_exception
