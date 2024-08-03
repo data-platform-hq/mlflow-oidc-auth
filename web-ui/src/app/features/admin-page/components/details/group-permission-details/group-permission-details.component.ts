@@ -79,9 +79,9 @@ export class GroupPermissionDetailsComponent implements OnInit {
     this.permissionModalService.openGrantModelPermissionModal(this.groupName)
       .pipe(
         filter(Boolean),
-        switchMap((newPermission) => this.permissionDataService.addExperimentPermissionToGroup(this.groupName, newPermission.entity.id, newPermission.permission)),
-        switchMap(() => this.groupDataService.getAllExperimentsForGroup(this.groupName)),
+        switchMap((newPermission) => this.permissionDataService.addModelPermissionToGroup(newPermission.entity.name, this.groupName, newPermission.permission)),
+        switchMap(() => this.groupDataService.getAllRegisteredModelsForGroup(this.groupName)),
       )
-      .subscribe((experiments) => this.experimentDataSource = experiments);
+      .subscribe((models) => this.modelDataSource = models);
   }
 }

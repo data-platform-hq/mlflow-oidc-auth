@@ -50,12 +50,12 @@ export class PermissionDataService {
       });
   }
 
-  // addModelPermissionToGroup(modelName: string, groupName: string, permission: string) {
-  //   return this.http.post(
-  //     API_URL.CREATE_GROUP_MODEL_PERMISSION.replace('${modelName}', modelName),
-  //     {
-  //     model_name
-  // permission
-  //     });
-  // }
+  addModelPermissionToGroup(modelName: string, groupName: string, permission: string) {
+    return this.http.post(
+      API_URL.CREATE_GROUP_MODEL_PERMISSION.replace('${groupName}', groupName),
+      {
+        model_name: modelName,
+        permission,
+      });
+  }
 }
