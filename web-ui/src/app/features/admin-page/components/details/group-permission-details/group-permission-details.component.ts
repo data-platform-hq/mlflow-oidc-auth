@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
+import { filter, switchMap } from 'rxjs';
 
 import {
   TableActionEvent,
@@ -14,9 +15,8 @@ import {
   MODELS_COLUMN_CONFIG,
 } from './group-permission-details.config';
 import { ExperimentModel, ModelModel } from 'src/app/shared/interfaces/groups-data.interface';
-import { ExperimentsDataService, PermissionDataService } from '../../../../../shared/services';
-import { PermissionModalService } from '../../../../../shared/services/permission-modal.service';
-import { switchMap } from 'rxjs';
+import { ExperimentsDataService, ModelsDataService, PermissionDataService } from 'src/app/shared/services';
+import { PermissionModalService } from 'src/app/shared/services/permission-modal.service';
 
 @Component({
   selector: 'ml-group-permission-details',
@@ -40,6 +40,7 @@ export class GroupPermissionDetailsComponent implements OnInit {
     private readonly permissionDataService: PermissionDataService,
     private readonly permissionModalService: PermissionModalService,
     private readonly experimentsDataService: ExperimentsDataService,
+    private readonly modelDataService: ModelsDataService,
   ) { }
 
   ngOnInit(): void {
@@ -65,6 +66,22 @@ export class GroupPermissionDetailsComponent implements OnInit {
 
   openModalAddExperimentPermissionToGroup() {
     this.experimentsDataService.getAllExperiments()
-    .subscribe((experiments) => this.permissionModalService.openGrantExperimentPermissionModal(experiments, this.groupName));
+      .pipe(
+        switchMap((experiments) => this.permissionModalService.openGrantExperimentPermissionModal(experiments, this.groupName)),
+        filter(Boolean),
+        switchMap((newPermission) => this.permissionDataService.addExperimentPermissionToGroup(this.groupName, newPermission.entity.id, newPermission.permission)),
+        switchMap(() => this.groupDataService.getAllExperimentsForGroup(this.groupName)),
+      )
+      .subscribe((experiments) => this.experimentDataSource = experiments);
+  }
+
+  openModalAddModelPermissionToGroup() {
+    this.permissionModalService.openGrantModelPermissionModal(this.groupName)
+      .pipe(
+        filter(Boolean),
+        switchMap((newPermission) => this.permissionDataService.addExperimentPermissionToGroup(this.groupName, newPermission.entity.id, newPermission.permission)),
+        switchMap(() => this.groupDataService.getAllExperimentsForGroup(this.groupName)),
+      )
+      .subscribe((experiments) => this.experimentDataSource = experiments);
   }
 }

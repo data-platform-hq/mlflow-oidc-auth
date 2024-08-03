@@ -85,7 +85,7 @@ export class UserPermissionDetailsComponent implements OnInit {
         switchMap((experiments) => this.dialog.open<GrantPermissionModalComponent, GrantPermissionModalData>(GrantPermissionModalComponent, {
           data: {
             entityType: EntityEnum.EXPERIMENT,
-            entities: experiments.map(({ name }) => name),
+            entities: experiments,
             permissionAssignedTo: this.userId,
           }
         }).afterClosed()

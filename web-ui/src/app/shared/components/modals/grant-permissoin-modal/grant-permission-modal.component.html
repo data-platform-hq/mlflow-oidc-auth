@@ -3,9 +3,9 @@
   <div class="d-flex flex-column">
     <mat-form-field>
       <mat-label>{{data.entityType | titlecase}}</mat-label>
-      <select matNativeControl formControlName="entity">
+      <select matNativeControl formControlName="entity" [compareWith]="compareEntities">
         <ng-container *ngFor="let entity of data.entities">
-          <option value="{{entity}}">{{entity}}</option>
+          <option [ngValue]="entity">{{entity.name}}</option>
         </ng-container>
       </select>
     </mat-form-field>

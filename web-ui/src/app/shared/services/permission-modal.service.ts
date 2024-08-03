@@ -72,7 +72,7 @@ export class PermissionModalService {
         switchMap((models) => this.dialog.open<GrantPermissionModalComponent, GrantPermissionModalData>(GrantPermissionModalComponent, {
             data: {
               entityType: EntityEnum.MODEL,
-              entities: models.map(({ name }) => name),
+              entities: models.map((model, index) => ({ id: index + model.name, name: model.name })),
               permissionAssignedTo,
             },
           }).afterClosed(),
@@ -84,9 +84,9 @@ export class PermissionModalService {
     return this.dialog.open<GrantPermissionModalComponent, GrantPermissionModalData>(GrantPermissionModalComponent, {
       data: {
         entityType: EntityEnum.EXPERIMENT,
-        entities: experiments.map(({ name }) => name),
+        entities: experiments,
         permissionAssignedTo,
       },
-    })
+    }).afterClosed();
   }
 }
