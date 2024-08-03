@@ -412,7 +412,7 @@ class SqlAlchemyStore:
         _validate_permission(permission)
         with self.ManagedSessionMaker() as session:
             group = session.query(SqlGroup).filter(SqlGroup.group_name == group_name).one()
-            perm = SqlExperimentPermission(experiment_id=experiment_id, group_id=group.id, permission=permission)
+            perm = SqlExperimentGroupPermission(experiment_id=experiment_id, group_id=group.id, permission=permission)
             session.add(perm)
             session.flush()
             return perm.to_mlflow_entity()
@@ -421,8 +421,8 @@ class SqlAlchemyStore:
         with self.ManagedSessionMaker() as session:
             group = session.query(SqlGroup).filter(SqlGroup.group_name == group_name).one()
             perm = (
-                session.query(SqlExperimentPermission)
-                .filter(SqlExperimentPermission.experiment_id == experiment_id, SqlExperimentPermission.group_id == group.id)
+                session.query(SqlExperimentGroupPermission)
+                .filter(SqlExperimentGroupPermission.experiment_id == experiment_id, SqlExperimentGroupPermission.group_id == group.id)
                 .one()
             )
             session.delete(perm)
@@ -433,8 +433,8 @@ class SqlAlchemyStore:
         with self.ManagedSessionMaker() as session:
             group = session.query(SqlGroup).filter(SqlGroup.group_name == group_name).one()
             perm = (
-                session.query(SqlExperimentPermission)
-                .filter(SqlExperimentPermission.experiment_id == experiment_id, SqlExperimentPermission.group_id == group.id)
+                session.query(SqlExperimentGroupPermission)
+                .filter(SqlExperimentGroupPermission.experiment_id == experiment_id, SqlExperimentGroupPermission.group_id == group.id)
                 .one()
             )
             perm.permission = permission
@@ -451,7 +451,7 @@ class SqlAlchemyStore:
         _validate_permission(permission)
         with self.ManagedSessionMaker() as session:
             group = session.query(SqlGroup).filter(SqlGroup.group_name == group_name).one()
-            perm = SqlRegisteredModelPermission(name=name, group_id=group.id, permission=permission)
+            perm = SqlRegisteredModelGroupPermission(name=name, group_id=group.id, permission=permission)
             session.add(perm)
             session.flush()
             return perm.to_mlflow_entity()
@@ -460,8 +460,8 @@ class SqlAlchemyStore:
         with self.ManagedSessionMaker() as session:
             group = session.query(SqlGroup).filter(SqlGroup.group_name == group_name).one()
             perm = (
-                session.query(SqlRegisteredModelPermission)
-                .filter(SqlRegisteredModelPermission.name == name, SqlRegisteredModelPermission.group_id == group.id)
+                session.query(SqlRegisteredModelGroupPermission)
+                .filter(SqlRegisteredModelGroupPermission.name == name, SqlRegisteredModelGroupPermission.group_id == group.id)
                 .one()
             )
             session.delete(perm)
@@ -472,8 +472,8 @@ class SqlAlchemyStore:
         with self.ManagedSessionMaker() as session:
             group = session.query(SqlGroup).filter(SqlGroup.group_name == group_name).one()
             perm = (
-                session.query(SqlRegisteredModelPermission)
-                .filter(SqlRegisteredModelPermission.name == name, SqlRegisteredModelPermission.group_id == group.id)
+                session.query(SqlRegisteredModelGroupPermission)
+                .filter(SqlRegisteredModelGroupPermission.name == name, SqlRegisteredModelGroupPermission.group_id == group.id)
                 .one()
             )
             perm.permission = permission
