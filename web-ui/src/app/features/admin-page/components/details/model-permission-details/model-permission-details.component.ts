@@ -2,14 +2,13 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { filter, map, switchMap, tap } from 'rxjs';
 
-import { GrantUserPermissionsComponent, GrantUserPermissionsModel } from 'src/app//shared/components';
 import { MatDialog } from '@angular/material/dialog';
 import { TableActionEvent, TableActionModel } from 'src/app/shared/components/table/table.interface';
-import { ModelsDataService, PermissionDataService, SnackBarService, UserDataService } from 'src/app//shared/services';
+import { ModelsDataService, PermissionDataService, SnackBarService, UserDataService } from 'src/app/shared/services';
 import { COLUMN_CONFIG, TABLE_ACTIONS } from './model-permission-details.config';
 import { TableActionEnum } from 'src/app/shared/components/table/table.config';
 import { PermissionModalService } from 'src/app/shared/services/permission-modal.service';
-import { EntityEnum } from '../../../../../core/configs/core';
+import { EntityEnum } from 'src/app/core/configs/core';
 
 
 @Component({
@@ -38,9 +37,8 @@ export class ModelPermissionDetailsComponent implements OnInit {
   ngOnInit(): void {
     this.modelId = this.route.snapshot.paramMap.get('id') ?? '';
 
-    this.loadUsersForModel(this.modelId).subscribe((users) => {
-      this.userDataSource = users;
-    });
+    this.loadUsersForModel(this.modelId)
+      .subscribe((users) => this.userDataSource = users);
   }
 
   revokePermissionForUser(item: any) {

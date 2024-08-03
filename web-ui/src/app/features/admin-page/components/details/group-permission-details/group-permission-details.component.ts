@@ -63,10 +63,9 @@ export class GroupPermissionDetailsComponent implements OnInit {
   openModalAddExperimentPermissionToGroup() {
     this.experimentsDataService.getAllExperiments()
       .pipe(
-        map((experiments) => experiments.map((experiment, index) => ({
-          ...experiment,
-          id: `${index}-${experiment.name}`,
-        }))),
+        map((experiments) => experiments
+          .filter((experiment) => !this.experimentDataSource.some((exp) => exp.name === experiment.name))
+        ),
         switchMap((experiments) => this.permissionModalService.openGrantPermissionModal(EntityEnum.EXPERIMENT, experiments, this.groupName)),
         filter(Boolean),
         switchMap((newPermission) => this.permissionDataService.addExperimentPermissionToGroup(this.groupName, newPermission.entity.id, newPermission.permission)),

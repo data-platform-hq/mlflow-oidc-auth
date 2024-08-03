@@ -5,6 +5,7 @@ import {
   CreateModelPermissionRequestBodyModel,
 } from 'src/app/shared/interfaces/permission-data.interface';
 import { API_URL } from 'src/app/core/configs/api-urls';
+import { PermissionEnum } from '../../../core/configs/permissions';
 
 
 @Injectable({
@@ -41,7 +42,7 @@ export class PermissionDataService {
     return this.http.delete(API_URL.DELETE_MODEL_PERMISSION, { body });
   }
 
-  addExperimentPermissionToGroup(groupName: string, experiment_id: string,permission: string) {
+  addExperimentPermissionToGroup(groupName: string, experiment_id: string, permission: PermissionEnum) {
     return this.http.post(
       API_URL.CREATE_GROUP_EXPERIMENT_PERMISSION.replace('${groupName}', groupName),
       {
