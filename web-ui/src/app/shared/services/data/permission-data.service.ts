@@ -58,4 +58,43 @@ export class PermissionDataService {
         permission,
       });
   }
+
+  removeExperimentPermissionFromGroup(groupName: string, experiment_id: string) {
+    return this.http.delete(
+      API_URL.DELETE_GROUP_EXPERIMENT_PERMISSION.replace('${groupName}', groupName),
+      {
+        body: {
+          experiment_id
+        }
+      });
+  }
+
+  removeModelPermissionFromGroup(modelName: string, groupName: string) {
+    return this.http.delete(
+      API_URL.DELETE_GROUP_MODEL_PERMISSION.replace('${groupName}', groupName),
+      {
+        body: {
+          model_name: modelName
+        }
+      });
+  }
+
+  updateExperimentPermissionForGroup(groupName: string, experiment_id: string, permission: string) {
+    return this.http.patch(
+      API_URL.UPDATE_GROUP_EXPERIMENT_PERMISSION.replace('${groupName}', groupName),
+      {
+        experiment_id,
+        permission
+      });
+  }
+
+  updateModelPermissionForGroup(modelName: string, groupName: string, permission: string) {
+    return this.http.patch(
+      API_URL.UPDATE_GROUP_MODEL_PERMISSION.replace('${groupName}', groupName),
+      {
+        model_name: modelName,
+        permission
+      });
+  }
+
 }

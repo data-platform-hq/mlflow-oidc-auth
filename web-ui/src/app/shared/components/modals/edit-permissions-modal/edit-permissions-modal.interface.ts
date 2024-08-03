@@ -4,6 +4,6 @@ import { PermissionEnum } from 'src/app/core/configs/permissions';
 export interface PermissionsDialogData {
   entityType: EntityEnum;
   entityName: string;
-  userName: string;
+  forEntity: string;
   permission: PermissionEnum;
 }

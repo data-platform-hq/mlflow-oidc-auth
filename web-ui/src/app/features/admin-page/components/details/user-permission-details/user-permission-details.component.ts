@@ -70,7 +70,7 @@ export class UserPermissionDetailsComponent implements OnInit {
         filter(Boolean),
         switchMap(({ entity, permission }) => this.permissionDataService.createModelPermission({
           user_name: this.userId,
-          name: entity,
+          name: entity.name,
           permission: permission,
         })),
         tap(() => this.snackBarService.openSnackBar('Permission granted successfully')),
@@ -94,7 +94,7 @@ export class UserPermissionDetailsComponent implements OnInit {
         switchMap(({ entity, permission }) => {
           return this.permissionDataService.createExperimentPermission({
             user_name: this.userId,
-            experiment_name: entity,
+            experiment_name: entity.name,
             permission: permission,
           })
         }),
@@ -148,8 +148,14 @@ export class UserPermissionDetailsComponent implements OnInit {
   }
 
   handleEditUserPermissionForModel({ name, permissions }: any) {
-    this.permissionModalService.openEditUserPermissionsForModelModal(name, this.userId, permissions)
+    this.permissionModalService.openEditPermissionsForModelModal(name, this.userId, permissions)
       .pipe(
+        filter(Boolean),
+        switchMap(({ permission }) => this.permissionDataService.updateModelPermission({
+          name,
+          permission: permission,
+          user_name: this.userId,
+        })),
         tap(() => this.snackBarService.openSnackBar('Permissions updated successfully')),
         switchMap(() => this.modelDataService.getModelsForUser(this.userId)),
       )
@@ -157,8 +163,14 @@ export class UserPermissionDetailsComponent implements OnInit {
   }
 
   handleEditUserPermissionForExperiment({ id, permissions }: any) {
-    this.permissionModalService.openEditUserPermissionsForExperimentModal(id, this.userId, permissions)
+    this.permissionModalService.openEditPermissionsForExperimentModal(id, this.userId, permissions)
       .pipe(
+        filter(Boolean),
+        switchMap(({ permission }) => this.permissionDataService.updateExperimentPermission({
+          experiment_id: id,
+          permission: permission,
+          user_name: this.userId,
+        })),
         tap(() => this.snackBarService.openSnackBar('Permissions updated successfully')),
         switchMap(() => this.expDataService.getExperimentsForUser(this.userId)),
       )

@@ -52,7 +52,7 @@ export class ModelPermissionDetailsComponent implements OnInit {
   }
 
   editPermissionForUser({ username, permission }: any) {
-    this.permissionModalService.openEditUserPermissionsForModelModal(this.modelId, username, permission)
+    this.permissionModalService.openEditPermissionsForModelModal(this.modelId, username, permission)
       .pipe(
         tap(() => this.snackService.openSnackBar('Permission updated')),
         switchMap(() => this.loadUsersForModel(this.modelId)),

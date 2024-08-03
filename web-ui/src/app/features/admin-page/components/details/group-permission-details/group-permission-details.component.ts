@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { filter, switchMap } from 'rxjs';
+import { filter, switchMap, tap } from 'rxjs';
 
 import {
   TableActionEvent,
@@ -15,8 +15,9 @@ import {
   MODELS_COLUMN_CONFIG,
 } from './group-permission-details.config';
 import { ExperimentModel, ModelModel } from 'src/app/shared/interfaces/groups-data.interface';
-import { ExperimentsDataService, ModelsDataService, PermissionDataService } from 'src/app/shared/services';
+import { ExperimentsDataService, PermissionDataService, SnackBarService } from 'src/app/shared/services';
 import { PermissionModalService } from 'src/app/shared/services/permission-modal.service';
+import { TableActionEnum } from 'src/app/shared/components/table/table.config';
 
 @Component({
   selector: 'ml-group-permission-details',
@@ -40,7 +41,7 @@ export class GroupPermissionDetailsComponent implements OnInit {
     private readonly permissionDataService: PermissionDataService,
     private readonly permissionModalService: PermissionModalService,
     private readonly experimentsDataService: ExperimentsDataService,
-    private readonly modelDataService: ModelsDataService,
+    private readonly snackBarService: SnackBarService,
   ) { }
 
   ngOnInit(): void {
@@ -52,24 +53,13 @@ export class GroupPermissionDetailsComponent implements OnInit {
       .subscribe((models) => this.modelDataSource = models);
   }
 
-  handleGroupActions($event: TableActionEvent<any>) {
-
-  }
-
-  addExperimentPermissionToGroup() {
-    // this.permissionDataService.addExperimentPermissionToGroup(this.groupName, )
-  }
-
-  addModelPermissionToGroup() {
-
-  }
-
   openModalAddExperimentPermissionToGroup() {
     this.experimentsDataService.getAllExperiments()
       .pipe(
         switchMap((experiments) => this.permissionModalService.openGrantExperimentPermissionModal(experiments, this.groupName)),
         filter(Boolean),
         switchMap((newPermission) => this.permissionDataService.addExperimentPermissionToGroup(this.groupName, newPermission.entity.id, newPermission.permission)),
+        tap(() => this.snackBarService.openSnackBar('Permission granted successfully')),
         switchMap(() => this.groupDataService.getAllExperimentsForGroup(this.groupName)),
       )
       .subscribe((experiments) => this.experimentDataSource = experiments);
@@ -80,6 +70,72 @@ export class GroupPermissionDetailsComponent implements OnInit {
       .pipe(
         filter(Boolean),
         switchMap((newPermission) => this.permissionDataService.addModelPermissionToGroup(newPermission.entity.name, this.groupName, newPermission.permission)),
+        tap(() => this.snackBarService.openSnackBar('Permission granted successfully')),
+        switchMap(() => this.groupDataService.getAllRegisteredModelsForGroup(this.groupName)),
+      )
+      .subscribe((models) => this.modelDataSource = models);
+  }
+
+  handleExperimentActions(event: TableActionEvent<ExperimentModel>) {
+    const actionMapping: { [key: string]: (experiment: ExperimentModel) => void } = {
+      [TableActionEnum.EDIT]: this.handleEditExperimentPermissionForGroup.bind(this),
+      [TableActionEnum.REVOKE]: this.revokeExperimentPermissionForGroup.bind(this),
+    }
+
+    const selectedAction = actionMapping[event.action.action];
+    if (selectedAction) {
+      selectedAction(event.item);
+    }
+  }
+
+  handleEditExperimentPermissionForGroup(experiment: ExperimentModel) {
+    this.permissionModalService.openEditPermissionsForExperimentModal(experiment.name, this.groupName, experiment.permission)
+      .pipe(
+        filter(Boolean),
+        switchMap(({ permission }) => this.permissionDataService.updateExperimentPermissionForGroup(this.groupName, experiment.id, permission)),
+        tap(() => this.snackBarService.openSnackBar('Permission updated successfully')),
+        switchMap(() => this.groupDataService.getAllExperimentsForGroup(this.groupName)),
+      )
+      .subscribe((experiments) => this.experimentDataSource = experiments);
+  }
+
+  revokeExperimentPermissionForGroup(experiment: ExperimentModel) {
+    this.permissionDataService.removeExperimentPermissionFromGroup(this.groupName, experiment.id)
+      .pipe(
+        tap(() => this.snackBarService.openSnackBar('Permission revoked successfully')),
+        switchMap(() => this.groupDataService.getAllExperimentsForGroup(this.groupName)),
+      )
+      .subscribe((experiments) => this.experimentDataSource = experiments);
+  }
+
+  handleModelActions(event: TableActionEvent<ModelModel>) {
+    const actionMapping: { [key: string]: (model: ModelModel) => void } = {
+      [TableActionEnum.EDIT]: this.handleEditModelPermissionForGroup.bind(this),
+      [TableActionEnum.REVOKE]: this.revokeModelPermissionForGroup.bind(this),
+    }
+
+    const selectedAction = actionMapping[event.action.action];
+    if (selectedAction) {
+      selectedAction(event.item);
+    }
+  }
+
+  handleEditModelPermissionForGroup(model: ModelModel) {
+    this.permissionModalService.openEditPermissionsForModelModal(model.name, this.groupName, model.permission)
+      .pipe(
+        filter(Boolean),
+        switchMap(({ permission }) => this.permissionDataService.updateModelPermissionForGroup(model.name, this.groupName, permission)),
+        tap(() => this.snackBarService.openSnackBar('Permission updated successfully')),
+        switchMap(() => this.groupDataService.getAllRegisteredModelsForGroup(this.groupName)),
+      )
+      .subscribe((models) => this.modelDataSource = models);
+
+  }
+
+  revokeModelPermissionForGroup(model: ModelModel) {
+    this.permissionDataService.removeModelPermissionFromGroup(model.name, this.groupName)
+      .pipe(
+        tap(() => this.snackBarService.openSnackBar('Permission revoked successfully')),
         switchMap(() => this.groupDataService.getAllRegisteredModelsForGroup(this.groupName)),
       )
       .subscribe((models) => this.modelDataSource = models);

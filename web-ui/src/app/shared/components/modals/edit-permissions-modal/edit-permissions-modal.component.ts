@@ -23,7 +23,7 @@ export class EditPermissionsModalComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.title = `Edit ${this.data.entityName} permissions for ${this.data.userName}`;
+    this.title = `Edit ${this.data.entityName} permissions for ${this.data.forEntity}`;
     this.form = this.fb.group({
       permission: [this.data.permission, Validators.required],
     })

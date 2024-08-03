@@ -1,14 +1,12 @@
 import { Injectable } from '@angular/core';
 import { EditPermissionsModalComponent, GrantPermissionModalComponent } from '../components';
 import { PermissionsDialogData } from '../components/modals/edit-permissions-modal/edit-permissions-modal.interface';
-import { filter, switchMap } from 'rxjs';
+import { switchMap } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
 import { EntityEnum } from '../../core/configs/core';
 import { PermissionEnum } from '../../core/configs/permissions';
-import { PermissionDataService } from './data/permission-data.service';
 import { GrantPermissionModalData } from '../components/modals/grant-permissoin-modal/grant-permission-modal.inteface';
 import { ModelsDataService } from './data/models-data.service';
-import { ExperimentsDataService } from './data/experiments-data.service';
 import { ExperimentModel } from '../interfaces/experiments-data.interface';
 
 @Injectable({
@@ -18,15 +16,13 @@ export class PermissionModalService {
 
   constructor(
     private readonly dialog: MatDialog,
-    private readonly permissionDataService: PermissionDataService,
     private readonly modelDataService: ModelsDataService,
-    private readonly experimentsDataService: ExperimentsDataService,
   ) {
   }
 
-  openEditUserPermissionsForModelModal(modelName: string, userName: string, currentPermission: PermissionEnum) {
+  openEditPermissionsForModelModal(modelName: string, forEntity: string, currentPermission: PermissionEnum) {
     const data: PermissionsDialogData = {
-      userName: userName,
+      forEntity,
       entityName: modelName,
       entityType: EntityEnum.MODEL,
       permission: currentPermission,
@@ -34,20 +30,12 @@ export class PermissionModalService {
 
     return this.dialog
       .open<EditPermissionsModalComponent, PermissionsDialogData>(EditPermissionsModalComponent, { data })
-      .afterClosed()
-      .pipe(
-        filter(Boolean),
-        switchMap(({ permission }) => this.permissionDataService.updateModelPermission({
-          name: modelName,
-          permission: permission,
-          user_name: userName,
-        })),
-      )
+      .afterClosed();
   }
 
-  openEditUserPermissionsForExperimentModal(experimentName: string, userName: string, currentPermission: PermissionEnum) {
+  openEditPermissionsForExperimentModal(experimentName: string, forEntity: string, currentPermission: PermissionEnum) {
     const data: PermissionsDialogData = {
-      userName: userName,
+      forEntity,
       entityName: experimentName,
       entityType: EntityEnum.EXPERIMENT,
       permission: currentPermission,
@@ -55,15 +43,7 @@ export class PermissionModalService {
 
     return this.dialog
       .open<EditPermissionsModalComponent, PermissionsDialogData>(EditPermissionsModalComponent, { data })
-      .afterClosed()
-      .pipe(
-        filter(Boolean),
-        switchMap(({ permission }) => this.permissionDataService.updateExperimentPermission({
-          experiment_id: experimentName,
-          permission: permission,
-          user_name: userName,
-        })),
-      )
+      .afterClosed();
   }
 
   openGrantModelPermissionModal(permissionAssignedTo: string) {

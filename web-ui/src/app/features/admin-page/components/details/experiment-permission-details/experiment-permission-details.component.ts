@@ -48,7 +48,7 @@ export class ExperimentPermissionDetailsComponent implements OnInit {
   }
 
   handleUserEdit(event: { permission: PermissionEnum; username: string }) {
-    this.permissionModalService.openEditUserPermissionsForExperimentModal(this.experimentId, event.username, event.permission)
+    this.permissionModalService.openEditPermissionsForExperimentModal(this.experimentId, event.username, event.permission)
       .pipe(
         tap(() => this.snackBarService.openSnackBar('Permissions updated successfully')),
         switchMap(() => this.experimentDataService.getUsersForExperiment(this.experimentId)),

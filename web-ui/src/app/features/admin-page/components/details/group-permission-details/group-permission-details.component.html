@@ -14,7 +14,7 @@
                 [columnConfig]="experimentColumnConfig"
                 [data]="experimentDataSource"
                 [actions]="experimentActions"
-                (action)="handleGroupActions($event)"
+                (action)="handleExperimentActions($event)"
         ></ml-table>
 
     </mat-tab>
@@ -36,7 +36,7 @@
                     [columnConfig]="modelColumnConfig"
                     [data]="modelDataSource"
                     [actions]="modelActions"
-                    (action)="handleGroupActions($event)"
+                    (action)="handleModelActions($event)"
             ></ml-table>
         </div>
     </mat-tab>

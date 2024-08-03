@@ -7,10 +7,10 @@ export interface GroupsDataModel {
 export interface ExperimentModel {
   id: string;
   name: string;
-  permissions: PermissionEnum;
+  permission: PermissionEnum;
 }
 
 export interface ModelModel {
   name: string;
-  permissions: PermissionEnum;
+  permission: PermissionEnum;
 }
