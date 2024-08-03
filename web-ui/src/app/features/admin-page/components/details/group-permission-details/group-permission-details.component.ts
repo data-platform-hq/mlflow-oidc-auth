@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { filter, switchMap, tap } from 'rxjs';
+import { filter, map, switchMap, tap } from 'rxjs';
 
 import {
   TableActionEvent,
@@ -15,7 +15,12 @@ import {
   MODELS_COLUMN_CONFIG,
 } from './group-permission-details.config';
 import { ExperimentModel, ModelModel } from 'src/app/shared/interfaces/groups-data.interface';
-import { ExperimentsDataService, PermissionDataService, SnackBarService } from 'src/app/shared/services';
+import {
+  ExperimentsDataService,
+  ModelsDataService,
+  PermissionDataService,
+  SnackBarService,
+} from 'src/app/shared/services';
 import { PermissionModalService } from 'src/app/shared/services/permission-modal.service';
 import { TableActionEnum } from 'src/app/shared/components/table/table.config';
 import { EntityEnum } from 'src/app/core/configs/core';
@@ -43,6 +48,7 @@ export class GroupPermissionDetailsComponent implements OnInit {
     private readonly permissionModalService: PermissionModalService,
     private readonly experimentsDataService: ExperimentsDataService,
     private readonly snackBarService: SnackBarService,
+    private readonly modelDataService: ModelsDataService,
   ) { }
 
   ngOnInit(): void {
@@ -57,6 +63,10 @@ export class GroupPermissionDetailsComponent implements OnInit {
   openModalAddExperimentPermissionToGroup() {
     this.experimentsDataService.getAllExperiments()
       .pipe(
+        map((experiments) => experiments.map((experiment, index) => ({
+          ...experiment,
+          id: `${index}-${experiment.name}`,
+        }))),
         switchMap((experiments) => this.permissionModalService.openGrantPermissionModal(EntityEnum.EXPERIMENT, experiments, this.groupName)),
         filter(Boolean),
         switchMap((newPermission) => this.permissionDataService.addExperimentPermissionToGroup(this.groupName, newPermission.entity.id, newPermission.permission)),
@@ -67,8 +77,12 @@ export class GroupPermissionDetailsComponent implements OnInit {
   }
 
   openModalAddModelPermissionToGroup() {
-    this.permissionModalService.openGrantModelPermissionModal(this.groupName)
+    this.modelDataService.getAllModels()
       .pipe(
+        map((models) => models
+          .filter((model) => !this.modelDataSource.some((m) => m.name === model.name))
+          .map((model, index) => ({ ...model, id: `${index}-${model.name}` }))),
+        switchMap((models) => this.permissionModalService.openGrantPermissionModal(EntityEnum.MODEL, models, this.groupName)),
         filter(Boolean),
         switchMap((newPermission) => this.permissionDataService.addModelPermissionToGroup(newPermission.entity.name, this.groupName, newPermission.permission)),
         tap(() => this.snackBarService.openSnackBar('Permission granted successfully')),

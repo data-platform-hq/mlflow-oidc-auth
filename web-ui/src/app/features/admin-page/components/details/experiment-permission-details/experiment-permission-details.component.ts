@@ -10,7 +10,7 @@ import {
   UserDataService,
 } from 'src/app/shared/services';
 import { TableActionEvent, TableActionModel } from 'src/app/shared/components/table/table.interface';
-import { filter, switchMap, tap } from 'rxjs';
+import { filter, map, switchMap, tap } from 'rxjs';
 import { TableActionEnum } from 'src/app/shared/components/table/table.config';
 import { COLUMN_CONFIG, TABLE_ACTIONS } from './experiment-permission-details.config';
 import { PermissionEnum } from 'src/app/core/configs/permissions';
@@ -86,7 +86,8 @@ export class ExperimentPermissionDetailsComponent implements OnInit {
   addUser() {
     this.userDataService.getAllUsers()
       .pipe(
-        switchMap(({ users }) => this.dialog.open<GrantUserPermissionsComponent, GrantUserPermissionsModel>(GrantUserPermissionsComponent,
+        map(({ users }) => users.filter((user) => !this.userDataSource.some((u) => u.username === user))),
+        switchMap((users) => this.dialog.open<GrantUserPermissionsComponent, GrantUserPermissionsModel>(GrantUserPermissionsComponent,
           { data: { users } })
           .afterClosed()),
         filter(Boolean),

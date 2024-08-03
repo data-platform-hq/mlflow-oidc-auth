@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { filter, switchMap, tap } from 'rxjs';
+import { filter, map, switchMap, tap } from 'rxjs';
 
 import { GrantUserPermissionsComponent, GrantUserPermissionsModel } from 'src/app//shared/components';
 import { MatDialog } from '@angular/material/dialog';
@@ -9,6 +9,7 @@ import { ModelsDataService, PermissionDataService, SnackBarService, UserDataServ
 import { COLUMN_CONFIG, TABLE_ACTIONS } from './model-permission-details.config';
 import { TableActionEnum } from 'src/app/shared/components/table/table.config';
 import { PermissionModalService } from 'src/app/shared/services/permission-modal.service';
+import { EntityEnum } from '../../../../../core/configs/core';
 
 
 @Component({
@@ -87,14 +88,17 @@ export class ModelPermissionDetailsComponent implements OnInit {
   addUser() {
     this.userDataService.getAllUsers()
       .pipe(
-        switchMap(({ users }) => this.dialog.open<GrantUserPermissionsComponent, GrantUserPermissionsModel>(GrantUserPermissionsComponent,
-          { data: { users } })
-          .afterClosed()),
+        map(({ users }) => users.filter((user) => !this.userDataSource.some((u) => u.username === user))),
+        switchMap((users) => this.permissionModalService.openGrantPermissionModal(
+          EntityEnum.MODEL,
+          users.map((user, index) => ({ id: index + user, name: user })),
+          this.modelId),
+        ),
         filter(Boolean),
-        switchMap(({ user, permission }) => this.permissionDataService.createModelPermission({
+        switchMap(({ entity, permission }) => this.permissionDataService.createModelPermission({
           name: this.modelId,
           permission: permission,
-          user_name: user,
+          user_name: entity.name,
         })),
         switchMap(() => this.loadUsersForModel(this.modelId)),
       )

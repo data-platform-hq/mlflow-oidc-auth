@@ -1,5 +1,4 @@
 import { Injectable } from '@angular/core';
-import { map, switchMap } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
 
 import { EntityEnum } from 'src/app/core/configs/core';
@@ -14,7 +13,6 @@ import {
   GrantPermissionModalResult,
   WithNameAndId,
 } from '../components/modals/grant-permissoin-modal/grant-permission-modal.inteface';
-import { ModelsDataService } from './data/models-data.service';
 
 @Injectable({
   providedIn: 'root',
@@ -23,7 +21,6 @@ export class PermissionModalService {
 
   constructor(
     private readonly dialog: MatDialog,
-    private readonly modelDataService: ModelsDataService,
   ) {
   }
 
@@ -50,14 +47,5 @@ export class PermissionModalService {
           targetName,
         },
       }).afterClosed();
-  }
-
-
-  openGrantModelPermissionModal(targetName: string) {
-    return this.modelDataService.getAllModels()
-      .pipe(
-        map((models) => models.map((model, index) => ({ ...model, id: `${index}-${model.name}` }))),
-        switchMap(models => this.openGrantPermissionModal(EntityEnum.MODEL, models, targetName)),
-      )
   }
 }

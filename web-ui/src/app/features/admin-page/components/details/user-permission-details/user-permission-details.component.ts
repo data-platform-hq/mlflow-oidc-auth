@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { filter, forkJoin, switchMap, tap } from 'rxjs';
+import { filter, forkJoin, map, switchMap, tap } from 'rxjs';
 import { ActivatedRoute } from '@angular/router';
 import {
   ExperimentsDataService,
@@ -58,8 +58,11 @@ export class UserPermissionDetailsComponent implements OnInit {
   }
 
   addModelPermissionToUser() {
-    this.permissionModalService.openGrantModelPermissionModal(this.userId)
+    return this.modelDataService.getAllModels()
       .pipe(
+        map((models) => models.map((model, index) => ({ ...model, id: `${index}-${model.name}` }))),
+        map((models) => models.filter((model) => !this.modelsDataSource.some((m) => m.name === model.name))),
+        switchMap((models) => this.permissionModalService.openGrantPermissionModal(EntityEnum.MODEL, models, this.userId)),
         filter(Boolean),
         switchMap(({ entity, permission }) => this.permissionDataService.createModelPermission({
           user_name: this.userId,
@@ -75,6 +78,7 @@ export class UserPermissionDetailsComponent implements OnInit {
   addExperimentPermissionToUser() {
     this.expDataService.getAllExperiments()
       .pipe(
+        map((experiments) => experiments.filter((experiment) => !this.experimentsDataSource.some((exp) => exp.id === experiment.id))),
         switchMap((experiments) => this.permissionModalService.openGrantPermissionModal(EntityEnum.EXPERIMENT, experiments, this.userId)),
         filter(Boolean),
         switchMap(({ entity, permission }) => {
