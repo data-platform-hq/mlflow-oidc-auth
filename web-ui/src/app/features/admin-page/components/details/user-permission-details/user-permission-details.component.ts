@@ -139,8 +139,8 @@ export class UserPermissionDetailsComponent implements OnInit {
     }
   }
 
-  handleEditUserPermissionForModel({ name, permissions }: ModelPermissionModel) {
-    this.permissionModalService.openEditPermissionsModal(name, this.userId, permissions)
+  handleEditUserPermissionForModel({ name, permission }: ModelPermissionModel) {
+    this.permissionModalService.openEditPermissionsModal(name, this.userId, permission)
       .pipe(
         filter(Boolean),
         switchMap((permission) => this.permissionDataService.updateModelPermission({

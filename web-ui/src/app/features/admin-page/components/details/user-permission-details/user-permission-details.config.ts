@@ -2,12 +2,12 @@ import { TABLE_ACTION_CONFIG } from 'src/app/shared/components/table/table.confi
 
 export const MODEL_COLUMN_CONFIG = [
   { title: 'Model name', key: 'name' },
-  { title: 'Permissions', key: 'permissions' },
+  { title: 'Permissions', key: 'permission' },
 ];
 
 export const EXPERIMENT_COLUMN_CONFIG = [
   { title: 'Experiment Name', key: 'name' },
-  { title: 'Permission', key: 'permissions' },
+  { title: 'Permission', key: 'permission' },
 ];
 
 export const EXPERIMENT_ACTIONS = [
