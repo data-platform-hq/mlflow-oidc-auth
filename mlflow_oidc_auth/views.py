@@ -911,7 +911,7 @@ def get_user_experiments(username):
             {
                 "name": experiment.name,
                 "id": experiments.experiment_id,
-                "permissions": experiments.permission,
+                "permission": experiments.permission,
             }
         )
     return jsonify({"experiments": experiments_list})
@@ -923,7 +923,7 @@ def get_user_models(username):
     registered_models = store.list_registered_model_permissions(username)
     models = []
     for model in registered_models:
-        models.append({"name": model.name, "permissions": model.permission})
+        models.append({"name": model.name, "permission": model.permission})
     # return as json
     return jsonify({"models": models})
 
