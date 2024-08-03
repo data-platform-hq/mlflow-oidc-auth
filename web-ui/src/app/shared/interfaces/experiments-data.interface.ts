@@ -10,7 +10,7 @@ export interface ExperimentsForUserModel {
   experiments: ExperimentForUserModel[]
 }
 
-interface ExperimentForUserModel {
+export interface ExperimentForUserModel {
   id: string,
   name: string,
   permissions: PermissionEnum,

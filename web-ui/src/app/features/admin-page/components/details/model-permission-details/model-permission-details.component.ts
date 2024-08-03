@@ -2,14 +2,13 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { filter, map, switchMap, tap } from 'rxjs';
 
-import { MatDialog } from '@angular/material/dialog';
 import { TableActionEvent, TableActionModel } from 'src/app/shared/components/table/table.interface';
 import { ModelsDataService, PermissionDataService, SnackBarService, UserDataService } from 'src/app/shared/services';
 import { COLUMN_CONFIG, TABLE_ACTIONS } from './model-permission-details.config';
 import { TableActionEnum } from 'src/app/shared/components/table/table.config';
 import { PermissionModalService } from 'src/app/shared/services/permission-modal.service';
 import { EntityEnum } from 'src/app/core/configs/core';
-
+import { ModelUserListModel } from 'src/app/shared/interfaces/models-data.interface';
 
 @Component({
   selector: 'ml-model-permission-details',
@@ -18,13 +17,12 @@ import { EntityEnum } from 'src/app/core/configs/core';
 })
 export class ModelPermissionDetailsComponent implements OnInit {
   modelId!: string;
-  userDataSource: any[] = [];
+  userDataSource: ModelUserListModel[] = [];
 
   userColumnConfig = COLUMN_CONFIG;
   actions: TableActionModel[] = TABLE_ACTIONS;
 
   constructor(
-    private readonly dialog: MatDialog,
     private readonly route: ActivatedRoute,
     private readonly modelDataService: ModelsDataService,
     private readonly permissionDataService: PermissionDataService,
@@ -41,7 +39,7 @@ export class ModelPermissionDetailsComponent implements OnInit {
       .subscribe((users) => this.userDataSource = users);
   }
 
-  revokePermissionForUser(item: any) {
+  revokePermissionForUser(item: ModelUserListModel) {
     this.permissionDataService.deleteModelPermission({ name: this.modelId, user_name: item.username })
       .pipe(
         tap(() => this.snackService.openSnackBar('Permission revoked successfully')),
@@ -50,7 +48,7 @@ export class ModelPermissionDetailsComponent implements OnInit {
       .subscribe((users) => this.userDataSource = users);
   }
 
-  editPermissionForUser({ username, permission }: any) {
+  editPermissionForUser({ username, permission }: ModelUserListModel) {
     this.permissionModalService.openEditPermissionsModal(this.modelId, username, permission)
       .pipe(
         filter(Boolean),
@@ -67,8 +65,8 @@ export class ModelPermissionDetailsComponent implements OnInit {
       });
   }
 
-  handleActions({ action, item }: TableActionEvent<{ model: string; id: string }>) {
-    const actionMapping: { [key: string]: any } = {
+  handleActions({ action, item }: TableActionEvent<ModelUserListModel>) {
+    const actionMapping: { [key: string]: (item: ModelUserListModel) => void } = {
       [TableActionEnum.REVOKE]: this.revokePermissionForUser.bind(this),
       [TableActionEnum.EDIT]: this.editPermissionForUser.bind(this),
     };

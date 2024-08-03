@@ -17,6 +17,8 @@ import { EntityEnum } from 'src/app/core/configs/core';
 import { TableActionEvent, TableActionModel } from 'src/app/shared/components/table/table.interface';
 import { PermissionModalService } from 'src/app/shared/services/permission-modal.service';
 import { TableActionEnum } from 'src/app/shared/components/table/table.config';
+import { ModelPermissionModel } from 'src/app/shared/interfaces/models-data.interface';
+import { ExperimentForUserModel } from 'src/app/shared/interfaces/experiments-data.interface';
 
 @Component({
   selector: 'ml-user-permission-details',
@@ -28,8 +30,8 @@ export class UserPermissionDetailsComponent implements OnInit {
   experimentsColumnConfig = EXPERIMENT_COLUMN_CONFIG;
   modelsColumnConfig = MODEL_COLUMN_CONFIG;
 
-  experimentsDataSource: any[] = [];
-  modelsDataSource: any[] = [];
+  experimentsDataSource: ExperimentForUserModel[] = [];
+  modelsDataSource: ModelPermissionModel[] = [];
   experimentsActions: TableActionModel[] = EXPERIMENT_ACTIONS;
   modelsActions: TableActionModel[] = MODEL_ACTIONS;
 
@@ -94,8 +96,8 @@ export class UserPermissionDetailsComponent implements OnInit {
       .subscribe((experiments) => this.experimentsDataSource = experiments);
   }
 
-  handleExperimentActions(event: TableActionEvent<any>) {
-    const actionMapping: { [key: string]: any } = {
+  handleExperimentActions(event: TableActionEvent<ExperimentForUserModel>) {
+    const actionMapping: { [key: string]: (experiment: ExperimentForUserModel) => void } = {
       [TableActionEnum.EDIT]: this.handleEditUserPermissionForExperiment.bind(this),
       [TableActionEnum.REVOKE]: this.revokeExperimentPermissionForUser.bind(this),
     }
@@ -116,7 +118,7 @@ export class UserPermissionDetailsComponent implements OnInit {
 
   }
 
-  revokeModelPermissionForUser({name}: any) {
+  revokeModelPermissionForUser({name}: ModelPermissionModel) {
     this.permissionDataService.deleteModelPermission({name: name, user_name: this.userId})
       .pipe(
         tap(() => this.snackBarService.openSnackBar('Permission revoked successfully')),
@@ -125,8 +127,8 @@ export class UserPermissionDetailsComponent implements OnInit {
       .subscribe((models) => this.modelsDataSource = models);
   }
 
-  handleModelActions({ action, item }: TableActionEvent<any>) {
-    const actionMapping: { [key: string]: any } = {
+  handleModelActions({ action, item }: TableActionEvent<ModelPermissionModel>) {
+    const actionMapping: { [key: string]: (model: ModelPermissionModel) => void } = {
       [TableActionEnum.EDIT]: this.handleEditUserPermissionForModel.bind(this),
       [TableActionEnum.REVOKE]: this.revokeModelPermissionForUser.bind(this),
     }
@@ -137,7 +139,7 @@ export class UserPermissionDetailsComponent implements OnInit {
     }
   }
 
-  handleEditUserPermissionForModel({ name, permissions }: any) {
+  handleEditUserPermissionForModel({ name, permissions }: ModelPermissionModel) {
     this.permissionModalService.openEditPermissionsModal(name, this.userId, permissions)
       .pipe(
         filter(Boolean),
@@ -152,7 +154,7 @@ export class UserPermissionDetailsComponent implements OnInit {
       .subscribe((models) => this.modelsDataSource = models);
   }
 
-  handleEditUserPermissionForExperiment({ id, permissions }: any) {
+  handleEditUserPermissionForExperiment({ id, permissions }: ExperimentForUserModel) {
     this.permissionModalService.openEditPermissionsModal(id, this.userId, permissions)
       .pipe(
         filter(Boolean),

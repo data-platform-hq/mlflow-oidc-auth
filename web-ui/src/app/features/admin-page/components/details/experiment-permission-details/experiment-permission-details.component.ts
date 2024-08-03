@@ -16,6 +16,11 @@ import { COLUMN_CONFIG, TABLE_ACTIONS } from './experiment-permission-details.co
 import { PermissionEnum } from 'src/app/core/configs/permissions';
 import { PermissionModalService } from 'src/app/shared/services/permission-modal.service';
 
+interface ExperimentModel {
+  permission: PermissionEnum;
+  username: string;
+}
+
 @Component({
   selector: 'ml-experiment-permission-details',
   templateUrl: './experiment-permission-details.component.html',
@@ -25,7 +30,7 @@ export class ExperimentPermissionDetailsComponent implements OnInit {
   experimentId!: string;
   userColumnConfig = COLUMN_CONFIG;
   actions: TableActionModel[] = TABLE_ACTIONS;
-  userDataSource: { permission: string, username: string }[] = [];
+  userDataSource: ExperimentModel[] = [];
 
   constructor(
     private readonly dialog: MatDialog,
@@ -44,7 +49,7 @@ export class ExperimentPermissionDetailsComponent implements OnInit {
       .subscribe((users) => this.userDataSource = users);
   }
 
-  handleUserEdit(event: { permission: PermissionEnum; username: string }) {
+  handleUserEdit(event: ExperimentModel) {
     this.permissionModalService.openEditPermissionsModal(this.experimentId, event.username, event.permission)
       .pipe(
         filter(Boolean),
@@ -61,8 +66,10 @@ export class ExperimentPermissionDetailsComponent implements OnInit {
       });
   }
 
-  handleActions($event: TableActionEvent<{ permission: string; username: string }>) {
-    const actionMapping: { [key: string]: any } = {
+  handleActions($event: TableActionEvent<ExperimentModel>) {
+    const actionMapping: {
+      [key: string]: (event: ExperimentModel) => void
+    } = {
       [TableActionEnum.EDIT]: this.handleUserEdit.bind(this),
       [TableActionEnum.REVOKE]: this.revokePermissionForUser.bind(this),
     }
@@ -73,7 +80,7 @@ export class ExperimentPermissionDetailsComponent implements OnInit {
     }
   }
 
-  revokePermissionForUser(item: any) {
+  revokePermissionForUser(item: ExperimentModel) {
     this.permissionDataService.deleteExperimentPermission(
       { experiment_id: this.experimentId, user_name: item.username })
       .pipe(
