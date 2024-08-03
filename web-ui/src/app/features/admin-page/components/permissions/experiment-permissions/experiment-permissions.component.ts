@@ -6,6 +6,7 @@ import { TableActionEvent, TableActionModel } from 'src/app/shared/components/ta
 import { TableActionEnum } from 'src/app/shared/components/table/table.config';
 import { COLUMN_CONFIG, TABLE_ACTIONS } from './experiment-permissions.config';
 import { ExperimentModel } from 'src/app/shared/interfaces/experiments-data.interface';
+import { AdminPageRoutesEnum } from '../../../config';
 
 
 @Component({
@@ -30,7 +31,7 @@ export class ExperimentPermissionsComponent implements OnInit {
   }
 
   handleActions(event: TableActionEvent<ExperimentModel>) {
-    const actionMapping: { [key: string]: any } = {
+    const actionMapping: { [key: string]: (experiment: ExperimentModel) => void } = {
       [TableActionEnum.EDIT]: this.handleExperimentEdit.bind(this),
     }
 
@@ -41,6 +42,6 @@ export class ExperimentPermissionsComponent implements OnInit {
   }
 
   handleExperimentEdit({ id }: ExperimentModel) {
-    this.router.navigate(['../experiment/' + id], { relativeTo: this.route })
+    this.router.navigate([`../${AdminPageRoutesEnum.EXPERIMENT}/` + id], { relativeTo: this.route })
   }
 }

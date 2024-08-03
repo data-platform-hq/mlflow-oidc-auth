@@ -1,13 +1,20 @@
 import { Injectable } from '@angular/core';
-import { EditPermissionsModalComponent, GrantPermissionModalComponent } from '../components';
-import { PermissionsDialogData } from '../components/modals/edit-permissions-modal/edit-permissions-modal.interface';
-import { switchMap } from 'rxjs';
+import { map, switchMap } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
-import { EntityEnum } from '../../core/configs/core';
-import { PermissionEnum } from '../../core/configs/permissions';
-import { GrantPermissionModalData } from '../components/modals/grant-permissoin-modal/grant-permission-modal.inteface';
+
+import { EntityEnum } from 'src/app/core/configs/core';
+import { PermissionEnum } from 'src/app/core/configs/permissions';
+import { EditPermissionsModalComponent, GrantPermissionModalComponent } from '../components';
+import {
+  PermissionDialogResultModel,
+  PermissionsDialogData,
+} from '../components/modals/edit-permissions-modal/edit-permissions-modal.interface';
+import {
+  GrantPermissionModalData,
+  GrantPermissionModalResult,
+  WithNameAndId,
+} from '../components/modals/grant-permissoin-modal/grant-permission-modal.inteface';
 import { ModelsDataService } from './data/models-data.service';
-import { ExperimentModel } from '../interfaces/experiments-data.interface';
 
 @Injectable({
   providedIn: 'root',
@@ -20,53 +27,37 @@ export class PermissionModalService {
   ) {
   }
 
-  openEditPermissionsForModelModal(modelName: string, forEntity: string, currentPermission: PermissionEnum) {
-    const data: PermissionsDialogData = {
-      forEntity,
-      entityName: modelName,
-      entityType: EntityEnum.MODEL,
-      permission: currentPermission,
+  openEditPermissionsModal(entity: string, targetEntity: string, currentPermission: PermissionEnum) {
+    const dialogData: PermissionsDialogData = {
+      targetEntity,
+      entity,
+      currentPermission,
     };
 
-    return this.dialog
-      .open<EditPermissionsModalComponent, PermissionsDialogData>(EditPermissionsModalComponent, { data })
-      .afterClosed();
+    return this.dialog.open<EditPermissionsModalComponent, PermissionsDialogData, PermissionDialogResultModel>(
+      EditPermissionsModalComponent,
+      { data: dialogData },
+    ).afterClosed();
   }
 
-  openEditPermissionsForExperimentModal(experimentName: string, forEntity: string, currentPermission: PermissionEnum) {
-    const data: PermissionsDialogData = {
-      forEntity,
-      entityName: experimentName,
-      entityType: EntityEnum.EXPERIMENT,
-      permission: currentPermission,
-    };
-
-    return this.dialog
-      .open<EditPermissionsModalComponent, PermissionsDialogData>(EditPermissionsModalComponent, { data })
-      .afterClosed();
+  openGrantPermissionModal(entityType = EntityEnum.EXPERIMENT, entities: WithNameAndId[], targetName: string) {
+    return this.dialog.open<GrantPermissionModalComponent, GrantPermissionModalData, GrantPermissionModalResult>(
+      GrantPermissionModalComponent,
+      {
+        data: {
+          entityType,
+          entities,
+          targetName,
+        },
+      }).afterClosed();
   }
 
-  openGrantModelPermissionModal(permissionAssignedTo: string) {
+
+  openGrantModelPermissionModal(targetName: string) {
     return this.modelDataService.getAllModels()
       .pipe(
-        switchMap((models) => this.dialog.open<GrantPermissionModalComponent, GrantPermissionModalData>(GrantPermissionModalComponent, {
-            data: {
-              entityType: EntityEnum.MODEL,
-              entities: models.map((model, index) => ({ id: index + model.name, name: model.name })),
-              permissionAssignedTo,
-            },
-          }).afterClosed(),
-        ),
+        map((models) => models.map((model, index) => ({ ...model, id: `${index}-${model.name}` }))),
+        switchMap(models => this.openGrantPermissionModal(EntityEnum.MODEL, models, targetName)),
       )
-  }
-
-  openGrantExperimentPermissionModal(experiments: ExperimentModel[], permissionAssignedTo: string) {
-    return this.dialog.open<GrantPermissionModalComponent, GrantPermissionModalData>(GrantPermissionModalComponent, {
-      data: {
-        entityType: EntityEnum.EXPERIMENT,
-        entities: experiments,
-        permissionAssignedTo,
-      },
-    }).afterClosed();
   }
 }

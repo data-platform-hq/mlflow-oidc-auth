@@ -5,6 +5,7 @@ import { UserDataService } from 'src/app/shared/services';
 import { TableActionEvent, TableActionModel } from 'src/app/shared/components/table/table.interface';
 import { TableActionEnum } from 'src/app/shared/components/table/table.config';
 import { USER_ACTIONS, USER_COLUMN_CONFIG } from './user-permissions.config';
+import { AdminPageRoutesEnum } from '../../../config';
 
 interface UserModel {
   user: string,
@@ -44,6 +45,6 @@ export class UserPermissionsComponent implements OnInit {
   }
 
   handleUserEdit({ user }: UserModel): void {
-    this.router.navigate(['../user/' + user], { relativeTo: this.route })
+    this.router.navigate([`../${AdminPageRoutesEnum.USER}/` + user], { relativeTo: this.route })
   }
 }

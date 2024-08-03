@@ -14,7 +14,7 @@ import { filter, switchMap, tap } from 'rxjs';
 import { TableActionEnum } from 'src/app/shared/components/table/table.config';
 import { COLUMN_CONFIG, TABLE_ACTIONS } from './experiment-permission-details.config';
 import { PermissionEnum } from 'src/app/core/configs/permissions';
-import { PermissionModalService } from '../../../../../shared/services/permission-modal.service';
+import { PermissionModalService } from 'src/app/shared/services/permission-modal.service';
 
 @Component({
   selector: 'ml-experiment-permission-details',
@@ -40,16 +40,19 @@ export class ExperimentPermissionDetailsComponent implements OnInit {
   ngOnInit(): void {
     this.experimentId = this.route.snapshot.paramMap.get('id') ?? '';
 
-    this.experimentDataService
-      .getUsersForExperiment(this.experimentId)
-      .subscribe((users) => {
-        this.userDataSource = users;
-      });
+    this.experimentDataService.getUsersForExperiment(this.experimentId)
+      .subscribe((users) => this.userDataSource = users);
   }
 
   handleUserEdit(event: { permission: PermissionEnum; username: string }) {
-    this.permissionModalService.openEditPermissionsForExperimentModal(this.experimentId, event.username, event.permission)
+    this.permissionModalService.openEditPermissionsModal(this.experimentId, event.username, event.permission)
       .pipe(
+        filter(Boolean),
+        switchMap((permission) => this.permissionDataService.updateExperimentPermission({
+          experiment_id: this.experimentId,
+          permission,
+          user_name: event.username,
+        })),
         tap(() => this.snackBarService.openSnackBar('Permissions updated successfully')),
         switchMap(() => this.experimentDataService.getUsersForExperiment(this.experimentId)),
       )

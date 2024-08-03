@@ -8,7 +8,7 @@ import { TableActionEvent, TableActionModel } from 'src/app/shared/components/ta
 import { ModelsDataService, PermissionDataService, SnackBarService, UserDataService } from 'src/app//shared/services';
 import { COLUMN_CONFIG, TABLE_ACTIONS } from './model-permission-details.config';
 import { TableActionEnum } from 'src/app/shared/components/table/table.config';
-import { PermissionModalService } from '../../../../../shared/services/permission-modal.service';
+import { PermissionModalService } from 'src/app/shared/services/permission-modal.service';
 
 
 @Component({
@@ -52,8 +52,14 @@ export class ModelPermissionDetailsComponent implements OnInit {
   }
 
   editPermissionForUser({ username, permission }: any) {
-    this.permissionModalService.openEditPermissionsForModelModal(this.modelId, username, permission)
+    this.permissionModalService.openEditPermissionsModal(this.modelId, username, permission)
       .pipe(
+        filter(Boolean),
+        switchMap((permission) => this.permissionDataService.updateModelPermission({
+          name: this.modelId,
+          permission,
+          user_name: username,
+        })),
         tap(() => this.snackService.openSnackBar('Permission updated')),
         switchMap(() => this.loadUsersForModel(this.modelId)),
       )

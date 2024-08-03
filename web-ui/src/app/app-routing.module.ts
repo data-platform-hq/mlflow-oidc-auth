@@ -1,10 +1,6 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
-
-enum RoutePath {
-  Home = 'home',
-  Manage = 'manage',
-}
+import { RoutePath } from './core/configs/core';
 
 const routes: Routes = [
   { path: RoutePath.Home,

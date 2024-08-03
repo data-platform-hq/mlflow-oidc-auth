@@ -18,6 +18,7 @@ import { ExperimentModel, ModelModel } from 'src/app/shared/interfaces/groups-da
 import { ExperimentsDataService, PermissionDataService, SnackBarService } from 'src/app/shared/services';
 import { PermissionModalService } from 'src/app/shared/services/permission-modal.service';
 import { TableActionEnum } from 'src/app/shared/components/table/table.config';
+import { EntityEnum } from 'src/app/core/configs/core';
 
 @Component({
   selector: 'ml-group-permission-details',
@@ -56,7 +57,7 @@ export class GroupPermissionDetailsComponent implements OnInit {
   openModalAddExperimentPermissionToGroup() {
     this.experimentsDataService.getAllExperiments()
       .pipe(
-        switchMap((experiments) => this.permissionModalService.openGrantExperimentPermissionModal(experiments, this.groupName)),
+        switchMap((experiments) => this.permissionModalService.openGrantPermissionModal(EntityEnum.EXPERIMENT, experiments, this.groupName)),
         filter(Boolean),
         switchMap((newPermission) => this.permissionDataService.addExperimentPermissionToGroup(this.groupName, newPermission.entity.id, newPermission.permission)),
         tap(() => this.snackBarService.openSnackBar('Permission granted successfully')),
@@ -89,10 +90,10 @@ export class GroupPermissionDetailsComponent implements OnInit {
   }
 
   handleEditExperimentPermissionForGroup(experiment: ExperimentModel) {
-    this.permissionModalService.openEditPermissionsForExperimentModal(experiment.name, this.groupName, experiment.permission)
+    this.permissionModalService.openEditPermissionsModal(experiment.name, this.groupName, experiment.permission)
       .pipe(
         filter(Boolean),
-        switchMap(({ permission }) => this.permissionDataService.updateExperimentPermissionForGroup(this.groupName, experiment.id, permission)),
+        switchMap((permission) => this.permissionDataService.updateExperimentPermissionForGroup(this.groupName, experiment.id, permission)),
         tap(() => this.snackBarService.openSnackBar('Permission updated successfully')),
         switchMap(() => this.groupDataService.getAllExperimentsForGroup(this.groupName)),
       )
@@ -121,10 +122,10 @@ export class GroupPermissionDetailsComponent implements OnInit {
   }
 
   handleEditModelPermissionForGroup(model: ModelModel) {
-    this.permissionModalService.openEditPermissionsForModelModal(model.name, this.groupName, model.permission)
+    this.permissionModalService.openEditPermissionsModal(model.name, this.groupName, model.permission)
       .pipe(
         filter(Boolean),
-        switchMap(({ permission }) => this.permissionDataService.updateModelPermissionForGroup(model.name, this.groupName, permission)),
+        switchMap((permission) => this.permissionDataService.updateModelPermissionForGroup(model.name, this.groupName, permission)),
         tap(() => this.snackBarService.openSnackBar('Permission updated successfully')),
         switchMap(() => this.groupDataService.getAllRegisteredModelsForGroup(this.groupName)),
       )

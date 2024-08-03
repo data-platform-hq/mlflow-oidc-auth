@@ -10,7 +10,6 @@ import { CurrentUserModel } from './shared/interfaces/user-data.interface';
   styleUrls: ['./app.component.scss']
 })
 export class AppComponent implements OnInit {
-  title = 'mlflow-oidc-auth-front';
   loading = false;
   user!: CurrentUserModel;
 

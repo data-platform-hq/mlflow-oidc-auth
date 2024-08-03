@@ -10,7 +10,7 @@ import { GrantPermissionModalData } from './grant-permission-modal.inteface';
   styleUrls: ['./grant-permission-modal.component.scss']
 })
 export class GrantPermissionModalComponent implements OnInit {
-  form!: FormGroup;
+  grantPermissionForm!: FormGroup;
 
   permissions = PERMISSIONS;
   title: string = '';
@@ -22,8 +22,8 @@ export class GrantPermissionModalComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.title = `Grant ${this.data.entityType} permissions for ${this.data.permissionAssignedTo}`;
-    this.form = this.fb.group({
+    this.title = `Grant ${this.data.entityType} permissions for ${this.data.targetName}`;
+    this.grantPermissionForm = this.fb.group({
       permission: [PermissionEnum.READ, Validators.required],
       entity: [null, Validators.required],
     })

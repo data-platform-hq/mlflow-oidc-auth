@@ -1,11 +1,16 @@
 import { Component, OnInit } from '@angular/core';
-import { map } from 'rxjs';
 import { ActivatedRoute, Router } from '@angular/router';
 
 import { TableActionEvent, TableActionModel } from 'src/app/shared/components/table/table.interface';
 import { TableActionEnum } from 'src/app/shared/components/table/table.config';
 import { GROUP_ACTIONS, GROUP_COLUMN_CONFIG } from './group-permissions.config';
 import { GroupDataService } from 'src/app/shared/services/data/group-data.service';
+import { AdminPageRoutesEnum } from '../../../config';
+
+
+interface GroupModel {
+  group: string;
+}
 
 @Component({
   selector: 'ml-group-permissions',
@@ -15,7 +20,7 @@ import { GroupDataService } from 'src/app/shared/services/data/group-data.servic
 export class GroupPermissionsComponent implements OnInit {
 
   columnConfig = GROUP_COLUMN_CONFIG;
-  dataSource: {group: any}[] = [];
+  dataSource: GroupModel[] = [];
   actions: TableActionModel[] = GROUP_ACTIONS;
 
   constructor(
@@ -26,14 +31,11 @@ export class GroupPermissionsComponent implements OnInit {
 
   ngOnInit(): void {
     this.groupDataService.getAllGroups()
-      .pipe(
-        map(({groups}) => groups.map((group) => ({group}))),
-      )
-      .subscribe((groups) => this.dataSource = groups);
+      .subscribe(({ groups }) => this.dataSource = groups.map((group) => ({ group })));
   }
 
-  handleItemAction({ action, item }: TableActionEvent<any>) {
-    const actionHandlers: { [key: string]: (group: any) => void } = {
+  handleItemAction({ action, item }: TableActionEvent<GroupModel>) {
+    const actionHandlers: { [key: string]: (group: GroupModel) => void } = {
       [TableActionEnum.EDIT]: this.handleUserEdit.bind(this),
     }
 
@@ -43,7 +45,7 @@ export class GroupPermissionsComponent implements OnInit {
     }
   }
 
-  handleUserEdit({ group }: any): void {
-    this.router.navigate(['../group/' + group], { relativeTo: this.route })
+  handleUserEdit({ group }: GroupModel): void {
+    this.router.navigate([`../${AdminPageRoutesEnum.GROUP}/` + group], { relativeTo: this.route })
   }
 }
