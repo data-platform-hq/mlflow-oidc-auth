@@ -6,6 +6,7 @@ import { TableActionEnum } from 'src/app/shared/components/table/table.config';
 import { GROUP_ACTIONS, GROUP_COLUMN_CONFIG } from './group-permissions.config';
 import { GroupDataService } from 'src/app/shared/services/data/group-data.service';
 import { AdminPageRoutesEnum } from '../../../config';
+import { finalize } from 'rxjs';
 
 
 interface GroupModel {
@@ -23,6 +24,8 @@ export class GroupPermissionsComponent implements OnInit {
   dataSource: GroupModel[] = [];
   actions: TableActionModel[] = GROUP_ACTIONS;
 
+  isLoading = false;
+
   constructor(
     private readonly router: Router,
     private readonly route: ActivatedRoute,
@@ -30,7 +33,11 @@ export class GroupPermissionsComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
+    this.isLoading = true;
     this.groupDataService.getAllGroups()
+      .pipe(
+        finalize(() => this.isLoading = false),
+      )
       .subscribe(({ groups }) => this.dataSource = groups.map((group) => ({ group })));
   }
 

@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { finalize } from 'rxjs';
 
 import { UserDataService } from 'src/app/shared/services';
 import { TableActionEvent, TableActionModel } from 'src/app/shared/components/table/table.interface';
@@ -21,6 +22,8 @@ export class UserPermissionsComponent implements OnInit {
   actions: TableActionModel[] = USER_ACTIONS;
   dataSource: UserModel[] = [];
 
+  isLoading = false;
+
   constructor(
     private readonly router: Router,
     private readonly route: ActivatedRoute,
@@ -29,7 +32,11 @@ export class UserPermissionsComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.isLoading = true;
     this.userDataService.getAllUsers()
+      .pipe(
+        finalize(() => this.isLoading = false),
+      )
       .subscribe(({ users }) => this.dataSource = users.map((user) => ({ user })))
   }
 

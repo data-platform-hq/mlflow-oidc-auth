@@ -7,6 +7,7 @@ import { MODEL_COLUMN_CONFIG, MODEL_TABLE_ACTIONS } from './model-permissions.co
 import { TableActionEnum } from 'src/app/shared/components/table/table.config';
 import { ModelModel } from 'src/app/shared/interfaces/models-data.interface';
 import { AdminPageRoutesEnum } from '../../../config';
+import { finalize } from 'rxjs';
 
 @Component({
   selector: 'ml-model-permissions',
@@ -18,6 +19,8 @@ export class ModelPermissionsComponent implements OnInit {
   dataSource: ModelModel[] = [];
   actions: TableActionModel[] = MODEL_TABLE_ACTIONS;
 
+  isLoading = false;
+
   constructor(
     private readonly route: ActivatedRoute,
     private readonly router: Router,
@@ -26,7 +29,11 @@ export class ModelPermissionsComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.isLoading = true;
     this.modelDataService.getAllModels()
+      .pipe(
+        finalize(() => this.isLoading = false),
+      )
       .subscribe((models) => {
         this.dataSource = models;
       })

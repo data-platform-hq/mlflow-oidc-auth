@@ -7,6 +7,7 @@ import { TableActionEnum } from 'src/app/shared/components/table/table.config';
 import { COLUMN_CONFIG, TABLE_ACTIONS } from './experiment-permissions.config';
 import { ExperimentModel } from 'src/app/shared/interfaces/experiments-data.interface';
 import { AdminPageRoutesEnum } from '../../../config';
+import { finalize } from 'rxjs';
 
 
 @Component({
@@ -19,6 +20,8 @@ export class ExperimentPermissionsComponent implements OnInit {
   dataSource: ExperimentModel[] = [];
   actions: TableActionModel[] = TABLE_ACTIONS;
 
+  isLoading = false;
+
   constructor(
     private readonly router: Router,
     private readonly route: ActivatedRoute,
@@ -26,7 +29,11 @@ export class ExperimentPermissionsComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
+    this.isLoading = true;
     this.experimentDataService.getAllExperiments()
+      .pipe(
+        finalize(() => this.isLoading = false),
+      )
       .subscribe((experiments) => this.dataSource = experiments);
   }
 
