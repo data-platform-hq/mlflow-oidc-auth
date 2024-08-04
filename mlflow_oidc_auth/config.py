@@ -20,7 +20,7 @@ class AppConfig:
     OIDC_DISCOVERY_URL = os.environ.get("OIDC_DISCOVERY_URL", None)
     OIDC_GROUPS_ATTRIBUTE = os.environ.get("OIDC_GROUPS_ATTRIBUTE", "groups")
     OIDC_SCOPE = os.environ.get("OIDC_SCOPE", "openid,email,profile")
-    OIDC_PROVIDER_TYPE = os.environ.get("OIDC_PROVIDER_TYPE", "oidc") # can be 'oidc' (with groups in user info) or 'microsoft' (with dedicated groups retrieval endpoint)
+    OIDC_GROUP_DETECTION_PLUGIN = os.environ.get("OIDC_GROUP_DETECTION_PLUGIN", None)
     if OIDC_DISCOVERY_URL:
         response = requests.get(OIDC_DISCOVERY_URL)
         config = response.json()

@@ -720,41 +720,18 @@ def callback():
     is_admin = False
     user_groups = []
 
-    # check if user is in the group
-    if AppConfig.get_property("OIDC_PROVIDER_TYPE") == "microsoft":
-        # get groups from graph api
-        graph_url = "https://graph.microsoft.com/v1.0/me/memberOf"
-        group_response = requests.get(
-            graph_url,
-            headers={
-                "Authorization": f"Bearer {access_token}",
-                "Content-Type": "application/json",
-            },
-        )
-        group_data = group_response.json()
-        app.logger.debug(group_data)
-        # user_groups
-        if not any(
-            group["displayName"] == AppConfig.get_property("OIDC_GROUP_NAME")
-            or group["displayName"] == AppConfig.get_property("OIDC_ADMIN_GROUP_NAME")
-            for group in group_data["value"]
-        ):
-            return "User not in group", 401
-        # set is_admin if user is in admin group
-        if any(group["displayName"] == AppConfig.get_property("OIDC_ADMIN_GROUP_NAME") for group in group_data["value"]):
-            is_admin = True
-    elif AppConfig.get_property("OIDC_PROVIDER_TYPE") == "oidc":
-        user_groups.extend(user_data.get(AppConfig.get_property("OIDC_GROUPS_ATTRIBUTE"), []))
-        if not any(
-            group == AppConfig.get_property("OIDC_GROUP_NAME") or group == AppConfig.get_property("OIDC_ADMIN_GROUP_NAME")
-            for group in user_data.get(AppConfig.get_property("OIDC_GROUPS_ATTRIBUTE"), [])
-        ):
-            return "User not in group", 401
-        # set is_admin if user is in admin group
-        if AppConfig.get_property("OIDC_ADMIN_GROUP_NAME") in user_data.get(
-            AppConfig.get_property("OIDC_GROUPS_ATTRIBUTE"), []
-        ):
-            is_admin = True
+    if AppConfig.get_property("OIDC_GROUP_DETECTION_PLUGIN"):
+        import importlib
+        user_groups = importlib.import_module(AppConfig.get_property("OIDC_GROUP_DETECTION_PLUGIN")).get_user_groups(access_token)
+    else:
+        user_groups = user_data.get(AppConfig.get_property("OIDC_GROUPS_ATTRIBUTE"), [])
+
+    app.logger.debug(f"User groups: {user_groups}")
+
+    if AppConfig.get_property("OIDC_ADMIN_GROUP_NAME") in user_groups:
+        is_admin = True
+    elif AppConfig.get_property("OIDC_GROUP_NAME") not in user_groups:
+        return "User is not allowed to login", 401
 
     # Create user due to auth
     create_user(username=email.lower(), display_name=display_name, is_admin=is_admin)
