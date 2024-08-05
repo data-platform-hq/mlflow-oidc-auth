@@ -556,7 +556,7 @@ BEFORE_REQUEST_VALIDATORS.update(
         # (SIGNUP, "GET"): validate_can_create_user,
         # (routes.GET_USER, "GET"): validate_can_read_user,
         (routes.CREATE_USER, "POST"): validate_can_create_user,
-        # (routes.UPDATE_USER_PASSWORD, "PATCH"): validate_can_update_user_password,
+        (routes.UPDATE_USER_PASSWORD, "PATCH"): validate_can_update_user_password,
         (routes.UPDATE_USER_ADMIN, "PATCH"): validate_can_update_user_admin,
         (routes.DELETE_USER, "DELETE"): validate_can_delete_user,
     }
