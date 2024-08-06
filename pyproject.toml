@@ -23,7 +23,7 @@ classifiers = [
 requires-python = ">=3.8"
 dependencies = [
   "cachelib<1",
-  "mlflow>=2.11.1",
+  "mlflow<3,>=2.11.1",
   "oauthlib<4",
   "python-dotenv<2",
   "requests<3,>=2.31.0",
