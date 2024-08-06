@@ -14,7 +14,7 @@ export interface ModelPermissionsModel {
 
 export interface ModelPermissionModel {
   name: string;
-  permissions: PermissionEnum;
+  permission: PermissionEnum;
 }
 
 export interface ModelUserListModel {

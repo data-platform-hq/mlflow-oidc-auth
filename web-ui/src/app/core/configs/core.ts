@@ -6,4 +6,10 @@ export const CORE_CONFIGS = {
 export enum EntityEnum {
   EXPERIMENT = 'experiment',
   MODEL = 'model',
+  GROUP = 'group',
+}
+
+export enum RoutePath {
+  Home = 'home',
+  Manage = 'manage',
 }

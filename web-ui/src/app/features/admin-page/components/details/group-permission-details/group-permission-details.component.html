@@ -1,0 +1,44 @@
+<mat-tab-group>
+    <!--  Experiments-->
+    <mat-tab label="Experiments">
+        <div class="my-3">
+            <div class="header-section">
+                <button mat-button (click)="openModalAddExperimentPermissionToGroup()">
+                    <mat-icon>add</mat-icon>
+                    <span>Add</span>
+                </button>
+            </div>
+        </div>
+
+        <ml-table
+                [columnConfig]="experimentColumnConfig"
+                [data]="experimentDataSource"
+                [actions]="experimentActions"
+                (action)="handleExperimentActions($event)"
+        ></ml-table>
+
+    </mat-tab>
+
+    <!--  Models-->
+    <mat-tab label="Models">
+        <div class="my-3">
+            <div class="my-3">
+                <div class="header-section">
+                    <button mat-button (click)="openModalAddModelPermissionToGroup()">
+                        <mat-icon>add</mat-icon>
+                        <span>Add</span>
+                    </button>
+                </div>
+            </div>
+
+
+            <ml-table
+                    [columnConfig]="modelColumnConfig"
+                    [data]="modelDataSource"
+                    [actions]="modelActions"
+                    (action)="handleModelActions($event)"
+            ></ml-table>
+        </div>
+    </mat-tab>
+
+</mat-tab-group>

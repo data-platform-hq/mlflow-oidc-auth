@@ -7,6 +7,7 @@ from mlflow.protos.databricks_pb2 import INVALID_PARAMETER_VALUE
 @dataclass
 class Permission:
     name: str
+    priority: int
     can_read: bool
     can_update: bool
     can_delete: bool
@@ -15,6 +16,7 @@ class Permission:
 
 READ = Permission(
     name="READ",
+    priority=1,
     can_read=True,
     can_update=False,
     can_delete=False,
@@ -23,6 +25,7 @@ READ = Permission(
 
 EDIT = Permission(
     name="EDIT",
+    priority=2,
     can_read=True,
     can_update=True,
     can_delete=False,
@@ -31,6 +34,7 @@ EDIT = Permission(
 
 MANAGE = Permission(
     name="MANAGE",
+    priority=3,
     can_read=True,
     can_update=True,
     can_delete=True,
@@ -39,6 +43,7 @@ MANAGE = Permission(
 
 NO_PERMISSIONS = Permission(
     name="NO_PERMISSIONS",
+    priority=100,
     can_read=False,
     can_update=False,
     can_delete=False,
@@ -63,3 +68,8 @@ def _validate_permission(permission: str):
             f"Invalid permission '{permission}'. Valid permissions are: {tuple(ALL_PERMISSIONS)}",
             INVALID_PARAMETER_VALUE,
         )
+
+def compare_permissions(permission1: str, permission2: str) -> bool:
+    _validate_permission(permission1)
+    _validate_permission(permission2)
+    return ALL_PERMISSIONS[permission1].priority <= ALL_PERMISSIONS[permission2].priority

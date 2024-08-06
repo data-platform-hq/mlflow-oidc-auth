@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
-
 import { HttpClient } from '@angular/common/http';
 import { map } from 'rxjs';
+
 import {
   ExperimentModel,
   ExperimentsForUserModel,
@@ -27,7 +27,7 @@ export class ExperimentsDataService {
     const url = API_URL.EXPERIMENTS_FOR_USER.replace('${userName}', userName);
     return this.http.get<ExperimentsForUserModel>(url)
       .pipe(
-        map(response => response.experiments),
+        map(({ experiments }) => experiments)
       );
   }
 

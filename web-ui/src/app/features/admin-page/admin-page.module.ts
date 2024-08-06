@@ -7,6 +7,8 @@ import {
   AdminPageComponent,
   ExperimentPermissionDetailsComponent,
   ExperimentPermissionsComponent,
+  GroupPermissionDetailsComponent,
+  GroupPermissionsComponent,
   ModelPermissionDetailsComponent,
   ModelPermissionsComponent,
   PermissionsComponent,
@@ -27,6 +29,8 @@ import { SharedModule } from '../../shared/shared.module';
     PermissionsComponent,
     ExperimentPermissionDetailsComponent,
     ModelPermissionDetailsComponent,
+    GroupPermissionDetailsComponent,
+    GroupPermissionsComponent,
   ],
   imports: [
     CommonModule,
