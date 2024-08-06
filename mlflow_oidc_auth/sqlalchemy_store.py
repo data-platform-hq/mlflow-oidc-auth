@@ -143,12 +143,12 @@ class SqlAlchemyStore:
             )
         except NoResultFound:
             raise MlflowException(
-                f"Experiment permission with experiment_id={experiment_id} and " f"username={username} not found",
+                f"Experiment permission with experiment_id={experiment_id} and username={username} not found",
                 RESOURCE_DOES_NOT_EXIST,
             )
         except MultipleResultsFound:
             raise MlflowException(
-                f"Found multiple experiment permissions with experiment_id={experiment_id} " f"and username={username}",
+                f"Found multiple experiment permissions with experiment_id={experiment_id} and username={username}",
                 INVALID_STATE,
             )
 
@@ -167,7 +167,7 @@ class SqlAlchemyStore:
             return None
         except MultipleResultsFound:
             raise MlflowException(
-                f"Found multiple experiment permissions with experiment_id={experiment_id} " f"and group_name={group_name}",
+                f"Found multiple experiment permissions with experiment_id={experiment_id} and group_name={group_name}",
                 INVALID_STATE,
             )
 
@@ -190,7 +190,7 @@ class SqlAlchemyStore:
                 return user_perms.to_mlflow_entity()
             except AttributeError:
                 raise MlflowException(
-                f"Experiment permission with experiment_id={experiment_id} and " f"username={username} not found",
+                f"Experiment permission with experiment_id={experiment_id} and username={username} not found",
                 RESOURCE_DOES_NOT_EXIST,
             )
 
@@ -241,7 +241,7 @@ class SqlAlchemyStore:
                 return perm.to_mlflow_entity()
             except IntegrityError as e:
                 raise MlflowException(
-                    f"Registered model permission (name={name}, username={username}) " f"already exists. Error: {e}",
+                    f"Registered model permission (name={name}, username={username}) already exists. Error: {e}",
                     RESOURCE_ALREADY_EXISTS,
                 )
 
@@ -263,7 +263,7 @@ class SqlAlchemyStore:
             )
         except MultipleResultsFound:
             raise MlflowException(
-                f"Found multiple registered model permissions with name={name} " f"and username={username}",
+                f"Found multiple registered model permissions with name={name} and username={username}",
                 INVALID_STATE,
             )
     def _get_registered_model_group_permission(self, session, name: str, group_name: str) -> SqlRegisteredModelGroupPermission:
@@ -281,7 +281,7 @@ class SqlAlchemyStore:
             return None
         except MultipleResultsFound:
             raise MlflowException(
-                f"Found multiple registered model permissions with name={name} " f"and group_name={group_name}",
+                f"Found multiple registered model permissions with name={name} and group_name={group_name}",
                 INVALID_STATE,
             )
 
@@ -304,7 +304,7 @@ class SqlAlchemyStore:
                 return user_perms.to_mlflow_entity()
             except AttributeError:
                 raise MlflowException(
-                f"Registered model permission with name={name} and " f"username={username} not found",
+                f"Registered model permission with name={name} and username={username} not found",
                 RESOURCE_DOES_NOT_EXIST,
             )
     def list_registered_model_permissions(self, username: str) -> List[RegisteredModelPermission]:
