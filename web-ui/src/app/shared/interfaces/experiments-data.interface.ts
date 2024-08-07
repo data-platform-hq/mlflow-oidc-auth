@@ -1,4 +1,4 @@
-import { PermissionEnum } from '../../core/configs/permissions';
+import { PermissionEnum } from 'src/app/core/configs/permissions';
 
 export interface ExperimentModel {
   id: string;
@@ -6,15 +6,14 @@ export interface ExperimentModel {
   tags: Record<string, unknown>;
 }
 
-
 export interface ExperimentsForUserModel {
   experiments: ExperimentForUserModel[]
 }
 
-interface ExperimentForUserModel {
+export interface ExperimentForUserModel {
   id: string,
   name: string,
-  permissions: string,
+  permissions: PermissionEnum,
 }
 
 

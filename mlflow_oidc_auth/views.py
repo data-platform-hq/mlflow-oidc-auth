@@ -1,4 +1,3 @@
-import logging
 import os
 import re
 import requests
@@ -95,12 +94,12 @@ from mlflow_oidc_auth import routes
 from mlflow_oidc_auth.config import AppConfig
 from mlflow_oidc_auth.sqlalchemy_store import SqlAlchemyStore
 
+from mlflow.server import app
+
 # Create the OAuth2 client
 auth_client = WebApplicationClient(AppConfig.get_property("OIDC_CLIENT_ID"))
 store = SqlAlchemyStore()
 store.init_db((AppConfig.get_property("OIDC_USERS_DB_URI")))
-_logger = logging.getLogger(__name__)
-
 
 def _get_experiment_id() -> str:
     if request.method == "GET":
@@ -157,31 +156,40 @@ def _is_unprotected_route(path: str) -> bool:
     )
 
 
-def _get_permission_from_store_or_default(store_permission_func: Callable[[], str]) -> Permission:
+def _get_permission_from_store_or_default(store_permission_user_func: Callable[[], str], store_permission_group_func: Callable[[], str]) -> Permission:
     """
     Attempts to get permission from store,
     and returns default permission if no record is found.
+    user permission takes precedence over group permission
     """
     try:
-        perm = store_permission_func()
+        perm = store_permission_user_func()
+        app.logger.debug("User permission found")
     except MlflowException as e:
         if e.error_code == ErrorCode.Name(RESOURCE_DOES_NOT_EXIST):
-            perm = AppConfig.get_property("DEFAULT_MLFLOW_PERMISSION")
+            try:
+                perm = store_permission_group_func()
+                app.logger.debug("Group permission found")
+            except MlflowException as e:
+                if e.error_code == ErrorCode.Name(RESOURCE_DOES_NOT_EXIST):
+                    perm = AppConfig.get_property("DEFAULT_MLFLOW_PERMISSION")
+                    app.logger.debug("Default permission used")
+                else:
+                    raise
         else:
             raise
     return get_permission(perm)
 
-
 def authenticate_request_basic_auth() -> Union[Authorization, Response]:
     username = request.authorization.username
     password = request.authorization.password
-    _logger.debug("Authenticating user %s", username)
+    app.logger.debug("Authenticating user %s", username)
     if store.authenticate_user(username.lower(), password):
         _set_username(username.lower())
-        _logger.debug("User %s authenticated", username)
+        app.logger.debug("User %s authenticated", username)
         return True
     else:
-        _logger.debug("User %s not authenticated", username)
+        app.logger.debug("User %s not authenticated", username)
         return False
 
 
@@ -208,7 +216,10 @@ def username_is_sender():
 def _get_permission_from_experiment_id() -> Permission:
     experiment_id = _get_experiment_id()
     username = _get_username()
-    return _get_permission_from_store_or_default(lambda: store.get_experiment_permission(experiment_id, username).permission)
+    return _get_permission_from_store_or_default(
+        lambda: store.get_experiment_permission(experiment_id, username).permission,
+        lambda: store.get_user_groups_experiment_permission(experiment_id, username).permission
+        )
 
 
 _EXPERIMENT_ID_PATTERN = re.compile(r"^(\d+)/")
@@ -225,7 +236,8 @@ def _get_permission_from_experiment_id_artifact_proxy() -> Permission:
     if experiment_id := _get_experiment_id_from_view_args():
         username = _get_username()
         return _get_permission_from_store_or_default(
-            lambda: store.get_experiment_permission(experiment_id, username).permission
+            lambda: store.get_experiment_permission(experiment_id, username).permission,
+            lambda: store.get_user_groups_experiment_permission(experiment_id, username).permission
         )
     return get_permission(AppConfig.get_property("DEFAULT_MLFLOW_PERMISSION"))
 
@@ -240,7 +252,8 @@ def _get_permission_from_experiment_name() -> Permission:
         )
     username = _get_username()
     return _get_permission_from_store_or_default(
-        lambda: store.get_experiment_permission(store_exp.experiment_id, username).permission
+        lambda: store.get_experiment_permission(store_exp.experiment_id, username).permission,
+        lambda: store.get_user_groups_experiment_permission(store_exp.experiment_id, username).permission
     )
 
 
@@ -251,13 +264,19 @@ def _get_permission_from_run_id() -> Permission:
     run = _get_tracking_store().get_run(run_id)
     experiment_id = run.info.experiment_id
     username = _get_username()
-    return _get_permission_from_store_or_default(lambda: store.get_experiment_permission(experiment_id, username).permission)
+    return _get_permission_from_store_or_default(
+        lambda: store.get_experiment_permission(experiment_id, username).permission,
+        lambda: store.get_user_groups_experiment_permission(experiment_id, username).permission
+        )
 
 
 def _get_permission_from_registered_model_name() -> Permission:
     model_name = _get_request_param("name")
     username = _get_username()
-    return _get_permission_from_store_or_default(lambda: store.get_registered_model_permission(model_name, username).permission)
+    return _get_permission_from_store_or_default(
+        lambda: store.get_registered_model_permission(model_name, username).permission,
+        lambda: store.get_user_groups_registered_model_permission(model_name, username).permission
+    )
 
 
 def set_can_manage_experiment_permission(resp: Response):
@@ -286,7 +305,9 @@ def filter_search_experiments(resp: Response):
     # fetch permissions
     username = _get_username()
     perms = store.list_experiment_permissions(username)
-    can_read = {p.experiment_id: get_permission(p.permission).can_read for p in perms}
+    perms_group = store.list_user_groups_experiment_permissions(username)
+    can_read = {p.experiment_id: get_permission(p.permission).can_read for p in perms_group}
+    can_read.update({p.experiment_id: get_permission(p.permission).can_read for p in perms})
     default_can_read = get_permission(AppConfig.get_property("DEFAULT_MLFLOW_PERMISSION")).can_read
 
     # filter out unreadable
@@ -330,7 +351,9 @@ def filter_search_registered_models(resp: Response):
     # fetch permissions
     username = _get_username()
     perms = store.list_registered_model_permissions(username)
-    can_read = {p.name: get_permission(p.permission).can_read for p in perms}
+    perms_group = store.list_user_groups_registered_model_permissions(username)
+    can_read = {p.name: get_permission(p.permission).can_read for p in perms_group}
+    can_read.update({p.name: get_permission(p.permission).can_read for p in perms})
     default_can_read = get_permission(AppConfig.get_property("DEFAULT_MLFLOW_PERMISSION")).can_read
 
     # filter out unreadable
@@ -533,7 +556,7 @@ BEFORE_REQUEST_VALIDATORS.update(
         # (SIGNUP, "GET"): validate_can_create_user,
         # (routes.GET_USER, "GET"): validate_can_read_user,
         (routes.CREATE_USER, "POST"): validate_can_create_user,
-        # (routes.UPDATE_USER_PASSWORD, "PATCH"): validate_can_update_user_password,
+        (routes.UPDATE_USER_PASSWORD, "PATCH"): validate_can_update_user_password,
         (routes.UPDATE_USER_ADMIN, "PATCH"): validate_can_update_user_admin,
         (routes.DELETE_USER, "DELETE"): validate_can_delete_user,
     }
@@ -695,41 +718,26 @@ def callback():
         return "No email provided", 401
     display_name = user_data.get("name", "Unknown")
     is_admin = False
+    user_groups = []
 
-    # check if user is in the group
-    if AppConfig.get_property("OIDC_PROVIDER_TYPE") == "microsoft":
-        # get groups from graph api
-        graph_url = "https://graph.microsoft.com/v1.0/me/memberOf"
-        group_response = requests.get(
-            graph_url,
-            headers={
-                "Authorization": f"Bearer {access_token}",
-                "Content-Type": "application/json",
-            },
-        )
-        group_data = group_response.json()
-        if not any(
-            group["displayName"] == AppConfig.get_property("OIDC_GROUP_NAME")
-            or group["displayName"] == AppConfig.get_property("OIDC_ADMIN_GROUP_NAME")
-            for group in group_data["value"]
-        ):
-            return "User not in group", 401
-        # set is_admin if user is in admin group
-        if any(group["displayName"] == AppConfig.get_property("OIDC_ADMIN_GROUP_NAME") for group in group_data["value"]):
-            is_admin = True
-    elif AppConfig.get_property("OIDC_PROVIDER_TYPE") == "oidc":
-        if not any (
-            group == AppConfig.get_property("OIDC_GROUP_NAME")
-            or group == AppConfig.get_property("OIDC_ADMIN_GROUP_NAME")
-            for group in user_data.get(AppConfig.get_property("OIDC_GROUPS_ATTRIBUTE"), [])
-        ):
-            return "User not in group", 401
-        # set is_admin if user is in admin group
-        if AppConfig.get_property("OIDC_ADMIN_GROUP_NAME") in user_data.get(AppConfig.get_property("OIDC_GROUPS_ATTRIBUTE"), []):
-            is_admin = True
+    if AppConfig.get_property("OIDC_GROUP_DETECTION_PLUGIN"):
+        import importlib
+        user_groups = importlib.import_module(AppConfig.get_property("OIDC_GROUP_DETECTION_PLUGIN")).get_user_groups(access_token)
+    else:
+        user_groups = user_data.get(AppConfig.get_property("OIDC_GROUPS_ATTRIBUTE"), [])
+
+    app.logger.debug(f"User groups: {user_groups}")
+
+    if AppConfig.get_property("OIDC_ADMIN_GROUP_NAME") in user_groups:
+        is_admin = True
+    elif AppConfig.get_property("OIDC_GROUP_NAME") not in user_groups:
+        return "User is not allowed to login", 401
 
     # Create user due to auth
     create_user(username=email.lower(), display_name=display_name, is_admin=is_admin)
+    store.populate_groups(group_names=user_groups)
+    # set user groups
+    store.set_user_groups(email.lower(), user_groups)
     _set_username(email.lower())
     return redirect(url_for("oidc_ui"))
 
@@ -880,7 +888,7 @@ def get_user_experiments(username):
             {
                 "name": experiment.name,
                 "id": experiments.experiment_id,
-                "permissions": experiments.permission,
+                "permission": experiments.permission,
             }
         )
     return jsonify({"experiments": experiments_list})
@@ -892,7 +900,7 @@ def get_user_models(username):
     registered_models = store.list_registered_model_permissions(username)
     models = []
     for model in registered_models:
-        models.append({"name": model.name, "permissions": model.permission})
+        models.append({"name": model.name, "permission": model.permission})
     # return as json
     return jsonify({"models": models})
 
@@ -983,6 +991,82 @@ def delete_registered_model_permission():
     username = _get_request_param("user_name")
     store.delete_registered_model_permission(name, username)
     return make_response(jsonify({"message": "Model permission has been deleted"}))
+
+
+@catch_mlflow_exception
+def get_groups():
+    groups = store.get_groups()
+    return jsonify({"groups": groups})
+
+
+@catch_mlflow_exception
+def get_group_users(group_name):
+    users = store.get_group_users(group_name)
+    return jsonify({"users": users})
+
+
+@catch_mlflow_exception
+def get_group_experiments(group_name):
+    experiments = store.get_group_experiments(group_name)
+    return jsonify([
+        {
+            "id": experiment.experiment_id,
+            "name": _get_tracking_store().get_experiment(experiment.experiment_id).name,
+            "permission": experiment.permission,
+        }
+        for experiment in experiments
+    ])
+
+@catch_mlflow_exception
+def create_group_experiment_permission(group_name):
+    experiment_id = _get_request_param("experiment_id")
+    permission = _get_request_param("permission")
+    store.create_group_experiment_permission(group_name, experiment_id, permission)
+    return jsonify({"message": "Group experiment permission has been created."})
+
+
+@catch_mlflow_exception
+def delete_group_experiment_permission(group_name):
+    experiment_id = _get_request_param("experiment_id")
+    store.delete_group_experiment_permission(group_name, experiment_id)
+    return jsonify({"message": "Group experiment permission has been deleted."})
+
+
+@catch_mlflow_exception
+def update_group_experiment_permission(group_name):
+    experiment_id = _get_request_param("experiment_id")
+    permission = _get_request_param("permission")
+    store.update_group_experiment_permission(group_name, experiment_id, permission)
+    return jsonify({"message": "Group experiment permission has been updated."})
+
+
+@catch_mlflow_exception
+def get_group_models(group_name):
+    models = store.get_group_models(group_name)
+    return jsonify([{"name": model.name, "permission": model.permission} for model in models])
+
+
+@catch_mlflow_exception
+def create_group_model_permission(group_name):
+    model_name = _get_request_param("model_name")
+    permission = _get_request_param("permission")
+    store.create_group_model_permission(group_name, model_name, permission)
+    return jsonify({"message": "Group model permission has been created."})
+
+
+@catch_mlflow_exception
+def delete_group_model_permission(group_name):
+    model_name = _get_request_param("model_name")
+    store.delete_group_model_permission(group_name, model_name)
+    return jsonify({"message": "Group model permission has been deleted."})
+
+
+@catch_mlflow_exception
+def update_group_model_permission(group_name):
+    model_name = _get_request_param("model_name")
+    permission = _get_request_param("permission")
+    store.update_group_model_permission(group_name, model_name, permission)
+    return jsonify({"message": "Group model permission has been updated."})
 
 
 def index():

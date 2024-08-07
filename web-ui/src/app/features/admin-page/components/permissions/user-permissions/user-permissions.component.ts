@@ -1,10 +1,12 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { finalize } from 'rxjs';
 
 import { UserDataService } from 'src/app/shared/services';
 import { TableActionEvent, TableActionModel } from 'src/app/shared/components/table/table.interface';
 import { TableActionEnum } from 'src/app/shared/components/table/table.config';
 import { USER_ACTIONS, USER_COLUMN_CONFIG } from './user-permissions.config';
+import { AdminPageRoutesEnum } from '../../../config';
 
 interface UserModel {
   user: string,
@@ -20,6 +22,8 @@ export class UserPermissionsComponent implements OnInit {
   actions: TableActionModel[] = USER_ACTIONS;
   dataSource: UserModel[] = [];
 
+  isLoading = false;
+
   constructor(
     private readonly router: Router,
     private readonly route: ActivatedRoute,
@@ -28,7 +32,11 @@ export class UserPermissionsComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.isLoading = true;
     this.userDataService.getAllUsers()
+      .pipe(
+        finalize(() => this.isLoading = false),
+      )
       .subscribe(({ users }) => this.dataSource = users.map((user) => ({ user })))
   }
 
@@ -44,6 +52,6 @@ export class UserPermissionsComponent implements OnInit {
   }
 
   handleUserEdit({ user }: UserModel): void {
-    this.router.navigate(['../user/' + user], { relativeTo: this.route })
+    this.router.navigate([`../${AdminPageRoutesEnum.USER}/` + user], { relativeTo: this.route })
   }
 }

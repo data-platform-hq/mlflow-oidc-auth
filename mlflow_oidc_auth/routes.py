@@ -38,3 +38,17 @@ CREATE_REGISTERED_MODEL_PERMISSION = _get_rest_path("/mlflow/registered-models/p
 GET_REGISTERED_MODEL_PERMISSION = _get_rest_path("/mlflow/registered-models/permissions/get")
 UPDATE_REGISTERED_MODEL_PERMISSION = _get_rest_path("/mlflow/registered-models/permissions/update")
 DELETE_REGISTERED_MODEL_PERMISSION = _get_rest_path("/mlflow/registered-models/permissions/delete")
+
+# manage group permissions
+GET_GROUPS = _get_rest_path("/mlflow/groups")
+GET_GROUP_USERS = _get_rest_path("/mlflow/groups/<string:group_name>/users")
+
+GET_GROUP_EXPERIMENTS_PERMISSION = _get_rest_path("/mlflow/groups/<string:group_name>/experiments")
+CREATE_GROUP_EXPERIMENT_PERMISSION = _get_rest_path("/mlflow/groups/<string:group_name>/experiments/create")
+DELETE_GROUP_EXPERIMENT_PERMISSION = _get_rest_path("/mlflow/groups/<string:group_name>/experiments/delete")
+UPDATE_GROUP_EXPERIMENT_PERMISSION = _get_rest_path("/mlflow/groups/<string:group_name>/experiments/update")
+
+GET_GROUP_MODELS_PERMISSION = _get_rest_path("/mlflow/groups/<string:group_name>/registered-models")
+CREATE_GROUP_MODEL_PERMISSION = _get_rest_path("/mlflow/groups/<string:group_name>/registered-models/create")
+DELETE_GROUP_MODEL_PERMISSION = _get_rest_path("/mlflow/groups/<string:group_name>/registered-models/delete")
+UPDATE_GROUP_MODEL_PERMISSION = _get_rest_path("/mlflow/groups/<string:group_name>/registered-models/update")

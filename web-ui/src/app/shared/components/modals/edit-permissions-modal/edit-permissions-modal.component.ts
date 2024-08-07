@@ -1,6 +1,6 @@
 import { Component, Inject, OnInit } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormControl, Validators } from '@angular/forms';
 
 import { PERMISSIONS } from 'src/app/core/configs/permissions';
 import { PermissionsDialogData } from './edit-permissions-modal.interface';
@@ -13,8 +13,7 @@ import { PermissionsDialogData } from './edit-permissions-modal.interface';
 export class EditPermissionsModalComponent implements OnInit {
   permissions = PERMISSIONS;
   title: string = '';
-
-  form!: FormGroup
+  permission: FormControl = new FormControl();
 
   constructor(
     public dialogRef: MatDialogRef<EditPermissionsModalComponent>,
@@ -23,9 +22,7 @@ export class EditPermissionsModalComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.title = `Edit ${this.data.entityName} permissions for ${this.data.userName}`;
-    this.form = this.fb.group({
-      permission: [this.data.permission, Validators.required],
-    })
+    this.title = `Edit ${this.data.entity} permissions for ${this.data.targetEntity}`;
+    this.permission = this.fb.control(this.data.currentPermission, Validators.required);
   }
 }

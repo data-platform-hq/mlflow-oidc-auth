@@ -15,7 +15,7 @@ jobs:
       - name: Check Commit Type
         uses: gsactions/commit-message-checker@v2
         with:
-          pattern: '^(|feat|fix|chore|docs|style|ci|refactor|perf|test)(\([\w-]+\))?:\s.+$|^(Merge\sbranch)|^(Merge\sremote)'
+          pattern: '^(|feat|fix|chore|docs|style|ci|refactor|perf|test|build)(\([\w-]+\))?:\s.+$|^(Merge\sbranch)|^(Merge\sremote)'
           error: 'Your first line has to contain a commit type like "feat|fix|chore|docs|style|ci|refactor|perf|test".'
           excludeDescription: "true"
           excludeTitle: "true"

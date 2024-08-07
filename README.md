@@ -12,7 +12,7 @@ The plugin required the following environment variables but also supported `.env
 | OIDC_DISCOVERY_URL     | OIDC Discovery URL |
 | OIDC_CLIENT_SECRET     | OIDC Client Secret |
 | OIDC_CLIENT_ID         |  OIDC Client ID |
-| OIDC_PROVIDER_TYPE | can be 'oidc' or 'microsoft' |
+| OIDC_GROUP_DETECTION_PLUGIN | OIDC plugin to detect groups |
 | OIDC_PROVIDER_DISPLAY_NAME | any text to display |
 | OIDC_SCOPE | OIDC scope |
 | OIDC_GROUP_NAME | User group name to be allowed login to MLFlow, currently supported groups in OIDC claims and Microsoft Entra ID groups |
@@ -33,7 +33,6 @@ The plugin required the following environment variables but also supported `.env
 OIDC_DISCOVERY_URL = 'https://<your_domain>.okta.com/.well-known/openid-configuration'
 OIDC_CLIENT_SECRET ='<super_secret>'
 OIDC_CLIENT_ID ='<client_id>'
-OIDC_PROVIDER_TYPE = 'oidc'
 OIDC_PROVIDER_DISPLAY_NAME = "Login with Okta"
 OIDC_SCOPE = "openid,profile,email,groups"
 OIDC_GROUP_NAME = "mlflow-users-group-name"
@@ -46,8 +45,8 @@ OIDC_ADMIN_GROUP_NAME = "mlflow-admin-group-name"
 OIDC_DISCOVERY_URL = 'https://login.microsoftonline.com/<tenant_id>/v2.0/.well-known/openid-configuration'
 OIDC_CLIENT_SECRET = '<super_secret>'
 OIDC_CLIENT_ID = '<client_id>'
-OIDC_PROVIDER_TYPE = 'microsoft'
 OIDC_PROVIDER_DISPLAY_NAME = "Login with Microsoft"
+OIDC_GROUP_DETECTION_PLUGIN = 'mlflow_oidc_auth.plugins.group_detection_microsoft_entra_id'
 OIDC_SCOPE = "openid,profile,email"
 OIDC_GROUP_NAME = "mlflow_users_group_name"
 OIDC_ADMIN_GROUP_NAME = "mlflow_admins_group_name"
@@ -63,7 +62,7 @@ The following tools should be installed for local development:
 
 * git
 * nodejs
-* python
+* Python
 
 ```shell
 git clone https://github.com/data-platform-hq/mlflow-oidc-auth

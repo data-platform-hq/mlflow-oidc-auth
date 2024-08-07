@@ -6,6 +6,8 @@ import { TableActionEvent, TableActionModel } from 'src/app/shared/components/ta
 import { TableActionEnum } from 'src/app/shared/components/table/table.config';
 import { COLUMN_CONFIG, TABLE_ACTIONS } from './experiment-permissions.config';
 import { ExperimentModel } from 'src/app/shared/interfaces/experiments-data.interface';
+import { AdminPageRoutesEnum } from '../../../config';
+import { finalize } from 'rxjs';
 
 
 @Component({
@@ -18,6 +20,8 @@ export class ExperimentPermissionsComponent implements OnInit {
   dataSource: ExperimentModel[] = [];
   actions: TableActionModel[] = TABLE_ACTIONS;
 
+  isLoading = false;
+
   constructor(
     private readonly router: Router,
     private readonly route: ActivatedRoute,
@@ -25,12 +29,16 @@ export class ExperimentPermissionsComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
+    this.isLoading = true;
     this.experimentDataService.getAllExperiments()
+      .pipe(
+        finalize(() => this.isLoading = false),
+      )
       .subscribe((experiments) => this.dataSource = experiments);
   }
 
   handleActions(event: TableActionEvent<ExperimentModel>) {
-    const actionMapping: { [key: string]: any } = {
+    const actionMapping: { [key: string]: (experiment: ExperimentModel) => void } = {
       [TableActionEnum.EDIT]: this.handleExperimentEdit.bind(this),
     }
 
@@ -41,6 +49,6 @@ export class ExperimentPermissionsComponent implements OnInit {
   }
 
   handleExperimentEdit({ id }: ExperimentModel) {
-    this.router.navigate(['../experiment/' + id], { relativeTo: this.route })
+    this.router.navigate([`../${AdminPageRoutesEnum.EXPERIMENT}/` + id], { relativeTo: this.route })
   }
 }

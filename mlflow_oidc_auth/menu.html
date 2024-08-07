@@ -16,7 +16,7 @@
     document.addEventListener("DOMContentLoaded", function () {
         // Function to add links after the Docs link
         function addLinks(username, oidcLink, logoutLink) {
-            var docsLink = document.querySelector('.header-links a[href="https://www.mlflow.org/docs/latest/index.html"]');
+            var docsLink = document.querySelector('a[href="https://www.mlflow.org/docs/latest/index.html"]');
             if (!docsLink) {
                 console.error("Docs link not found.");
                 return;

@@ -20,7 +20,7 @@ export class ErrorHandlerInterceptor implements HttpInterceptor {
             : `Error Code: ${error.status}\nMessage: ${error.message}`;
 
           this.snackBarService.openSnackBar(errorMessage);
-          return throwError(errorMessage);
+          return throwError(() => new Error(errorMessage));
         }),
       )
   }
