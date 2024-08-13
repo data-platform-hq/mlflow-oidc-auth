@@ -25,4 +25,3 @@ export class GroupDataService {
     return this.http.get<ModelModel[]>(API_URL.MODELS_FOR_GROUP.replace('${groupName}', groupName));
   }
 }
-
