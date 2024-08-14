@@ -66,7 +66,7 @@ class User:
     @property
     def groups(self):
         return self._groups
-    
+
     @groups.setter
     def groups(self, groups):
         self._groups = groups
@@ -152,6 +152,7 @@ class ExperimentPermission:
             group_id=dictionary.get("group_id"),
         )
 
+
 class RegisteredModelPermission:
     def __init__(
         self,
@@ -206,6 +207,7 @@ class RegisteredModelPermission:
             group_id=dictionary.get("group_id"),
         )
 
+
 class Group:
     def __init__(self, id_, group_name):
         self._id = id_
@@ -231,6 +233,7 @@ class Group:
             id_=dictionary["id"],
             group_name=dictionary["group_name"],
         )
+
 
 class UserGroup:
     def __init__(self, user_id, group_id):

@@ -190,9 +190,9 @@ class SqlAlchemyStore:
                 return user_perms.to_mlflow_entity()
             except AttributeError:
                 raise MlflowException(
-                f"Experiment permission with experiment_id={experiment_id} and username={username} not found",
-                RESOURCE_DOES_NOT_EXIST,
-            )
+                    f"Experiment permission with experiment_id={experiment_id} and username={username} not found",
+                    RESOURCE_DOES_NOT_EXIST,
+                )
 
     def list_experiment_permissions(self, username: str) -> List[ExperimentPermission]:
         with self.ManagedSessionMaker() as session:
@@ -215,7 +215,11 @@ class SqlAlchemyStore:
         with self.ManagedSessionMaker() as session:
             user = self._get_user(session, username=username)
             user_groups = session.query(SqlUserGroup).filter(SqlUserGroup.user_id == user.id).all()
-            perms = session.query(SqlExperimentGroupPermission).filter(SqlExperimentGroupPermission.group_id.in_([ug.group_id for ug in user_groups])).all()
+            perms = (
+                session.query(SqlExperimentGroupPermission)
+                .filter(SqlExperimentGroupPermission.group_id.in_([ug.group_id for ug in user_groups]))
+                .all()
+            )
             return [p.to_mlflow_entity() for p in perms]
 
     def update_experiment_permission(self, experiment_id: str, username: str, permission: str) -> ExperimentPermission:
@@ -266,6 +270,7 @@ class SqlAlchemyStore:
                 f"Found multiple registered model permissions with name={name} and username={username}",
                 INVALID_STATE,
             )
+
     def _get_registered_model_group_permission(self, session, name: str, group_name: str) -> SqlRegisteredModelGroupPermission:
         try:
             group = session.query(SqlGroup).filter(SqlGroup.group_name == group_name).one()
@@ -304,9 +309,10 @@ class SqlAlchemyStore:
                 return user_perms.to_mlflow_entity()
             except AttributeError:
                 raise MlflowException(
-                f"Registered model permission with name={name} and username={username} not found",
-                RESOURCE_DOES_NOT_EXIST,
-            )
+                    f"Registered model permission with name={name} and username={username} not found",
+                    RESOURCE_DOES_NOT_EXIST,
+                )
+
     def list_registered_model_permissions(self, username: str) -> List[RegisteredModelPermission]:
         with self.ManagedSessionMaker() as session:
             user = self._get_user(session, username=username)
@@ -317,7 +323,11 @@ class SqlAlchemyStore:
         with self.ManagedSessionMaker() as session:
             user = self._get_user(session, username=username)
             user_groups = session.query(SqlUserGroup).filter(SqlUserGroup.user_id == user.id).all()
-            perms = session.query(SqlRegisteredModelGroupPermission).filter(SqlRegisteredModelGroupPermission.group_id.in_([ug.group_id for ug in user_groups])).all()
+            perms = (
+                session.query(SqlRegisteredModelGroupPermission)
+                .filter(SqlRegisteredModelGroupPermission.group_id.in_([ug.group_id for ug in user_groups]))
+                .all()
+            )
             return [p.to_mlflow_entity() for p in perms]
 
     def update_registered_model_permission(self, name: str, username: str, permission: str) -> RegisteredModelPermission:
@@ -422,7 +432,10 @@ class SqlAlchemyStore:
             group = session.query(SqlGroup).filter(SqlGroup.group_name == group_name).one()
             perm = (
                 session.query(SqlExperimentGroupPermission)
-                .filter(SqlExperimentGroupPermission.experiment_id == experiment_id, SqlExperimentGroupPermission.group_id == group.id)
+                .filter(
+                    SqlExperimentGroupPermission.experiment_id == experiment_id,
+                    SqlExperimentGroupPermission.group_id == group.id,
+                )
                 .one()
             )
             session.delete(perm)
@@ -434,7 +447,10 @@ class SqlAlchemyStore:
             group = session.query(SqlGroup).filter(SqlGroup.group_name == group_name).one()
             perm = (
                 session.query(SqlExperimentGroupPermission)
-                .filter(SqlExperimentGroupPermission.experiment_id == experiment_id, SqlExperimentGroupPermission.group_id == group.id)
+                .filter(
+                    SqlExperimentGroupPermission.experiment_id == experiment_id,
+                    SqlExperimentGroupPermission.group_id == group.id,
+                )
                 .one()
             )
             perm.permission = permission
@@ -444,7 +460,11 @@ class SqlAlchemyStore:
     def get_group_models(self, group_name: str) -> List[ExperimentPermission]:
         with self.ManagedSessionMaker() as session:
             group = session.query(SqlGroup).filter(SqlGroup.group_name == group_name).one()
-            perms = session.query(SqlRegisteredModelGroupPermission).filter(SqlRegisteredModelGroupPermission.group_id == group.id).all()
+            perms = (
+                session.query(SqlRegisteredModelGroupPermission)
+                .filter(SqlRegisteredModelGroupPermission.group_id == group.id)
+                .all()
+            )
             return [p.to_mlflow_entity() for p in perms]
 
     def create_group_model_permission(self, group_name: str, name: str, permission: str):

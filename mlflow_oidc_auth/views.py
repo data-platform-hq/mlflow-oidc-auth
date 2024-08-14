@@ -101,6 +101,7 @@ auth_client = WebApplicationClient(AppConfig.get_property("OIDC_CLIENT_ID"))
 store = SqlAlchemyStore()
 store.init_db((AppConfig.get_property("OIDC_USERS_DB_URI")))
 
+
 def _get_experiment_id() -> str:
     if request.method == "GET":
         args = request.args
@@ -156,7 +157,9 @@ def _is_unprotected_route(path: str) -> bool:
     )
 
 
-def _get_permission_from_store_or_default(store_permission_user_func: Callable[[], str], store_permission_group_func: Callable[[], str]) -> Permission:
+def _get_permission_from_store_or_default(
+    store_permission_user_func: Callable[[], str], store_permission_group_func: Callable[[], str]
+) -> Permission:
     """
     Attempts to get permission from store,
     and returns default permission if no record is found.
@@ -179,6 +182,7 @@ def _get_permission_from_store_or_default(store_permission_user_func: Callable[[
         else:
             raise
     return get_permission(perm)
+
 
 def authenticate_request_basic_auth() -> Union[Authorization, Response]:
     username = request.authorization.username
@@ -218,8 +222,8 @@ def _get_permission_from_experiment_id() -> Permission:
     username = _get_username()
     return _get_permission_from_store_or_default(
         lambda: store.get_experiment_permission(experiment_id, username).permission,
-        lambda: store.get_user_groups_experiment_permission(experiment_id, username).permission
-        )
+        lambda: store.get_user_groups_experiment_permission(experiment_id, username).permission,
+    )
 
 
 _EXPERIMENT_ID_PATTERN = re.compile(r"^(\d+)/")
@@ -237,7 +241,7 @@ def _get_permission_from_experiment_id_artifact_proxy() -> Permission:
         username = _get_username()
         return _get_permission_from_store_or_default(
             lambda: store.get_experiment_permission(experiment_id, username).permission,
-            lambda: store.get_user_groups_experiment_permission(experiment_id, username).permission
+            lambda: store.get_user_groups_experiment_permission(experiment_id, username).permission,
         )
     return get_permission(AppConfig.get_property("DEFAULT_MLFLOW_PERMISSION"))
 
@@ -253,7 +257,7 @@ def _get_permission_from_experiment_name() -> Permission:
     username = _get_username()
     return _get_permission_from_store_or_default(
         lambda: store.get_experiment_permission(store_exp.experiment_id, username).permission,
-        lambda: store.get_user_groups_experiment_permission(store_exp.experiment_id, username).permission
+        lambda: store.get_user_groups_experiment_permission(store_exp.experiment_id, username).permission,
     )
 
 
@@ -266,8 +270,8 @@ def _get_permission_from_run_id() -> Permission:
     username = _get_username()
     return _get_permission_from_store_or_default(
         lambda: store.get_experiment_permission(experiment_id, username).permission,
-        lambda: store.get_user_groups_experiment_permission(experiment_id, username).permission
-        )
+        lambda: store.get_user_groups_experiment_permission(experiment_id, username).permission,
+    )
 
 
 def _get_permission_from_registered_model_name() -> Permission:
@@ -275,7 +279,7 @@ def _get_permission_from_registered_model_name() -> Permission:
     username = _get_username()
     return _get_permission_from_store_or_default(
         lambda: store.get_registered_model_permission(model_name, username).permission,
-        lambda: store.get_user_groups_registered_model_permission(model_name, username).permission
+        lambda: store.get_user_groups_registered_model_permission(model_name, username).permission,
     )
 
 
@@ -722,7 +726,10 @@ def callback():
 
     if AppConfig.get_property("OIDC_GROUP_DETECTION_PLUGIN"):
         import importlib
-        user_groups = importlib.import_module(AppConfig.get_property("OIDC_GROUP_DETECTION_PLUGIN")).get_user_groups(access_token)
+
+        user_groups = importlib.import_module(AppConfig.get_property("OIDC_GROUP_DETECTION_PLUGIN")).get_user_groups(
+            access_token
+        )
     else:
         user_groups = user_data.get(AppConfig.get_property("OIDC_GROUPS_ATTRIBUTE"), [])
 
@@ -1008,14 +1015,17 @@ def get_group_users(group_name):
 @catch_mlflow_exception
 def get_group_experiments(group_name):
     experiments = store.get_group_experiments(group_name)
-    return jsonify([
-        {
-            "id": experiment.experiment_id,
-            "name": _get_tracking_store().get_experiment(experiment.experiment_id).name,
-            "permission": experiment.permission,
-        }
-        for experiment in experiments
-    ])
+    return jsonify(
+        [
+            {
+                "id": experiment.experiment_id,
+                "name": _get_tracking_store().get_experiment(experiment.experiment_id).name,
+                "permission": experiment.permission,
+            }
+            for experiment in experiments
+        ]
+    )
+
 
 @catch_mlflow_exception
 def create_group_experiment_permission(group_name):

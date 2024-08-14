@@ -74,6 +74,7 @@ class SqlRegisteredModelPermission(Base):
             permission=self.permission,
         )
 
+
 class SqlGroup(Base):
     __tablename__ = "groups"
     id = Column(Integer(), primary_key=True)
@@ -86,18 +87,20 @@ class SqlGroup(Base):
             group_name=self.group_name,
         )
 
+
 class SqlUserGroup(Base):
     __tablename__ = "user_groups"
     id = Column(Integer(), primary_key=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     group_id = Column(Integer, ForeignKey("groups.id"), nullable=False)
     __table_args__ = (UniqueConstraint("user_id", "group_id", name="unique_user_group"),)
-    
+
     def to_mlflow_entity(self):
         return UserGroup(
             user_id=self.user_id,
             group_id=self.group_id,
         )
+
 
 class SqlExperimentGroupPermission(Base):
     __tablename__ = "experiment_group_permissions"
@@ -113,6 +116,7 @@ class SqlExperimentGroupPermission(Base):
             group_id=self.group_id,
             permission=self.permission,
         )
+
 
 class SqlRegisteredModelGroupPermission(Base):
     __tablename__ = "registered_model_group_permissions"

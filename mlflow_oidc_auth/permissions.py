@@ -69,6 +69,7 @@ def _validate_permission(permission: str):
             INVALID_PARAMETER_VALUE,
         )
 
+
 def compare_permissions(permission1: str, permission2: str) -> bool:
     _validate_permission(permission1)
     _validate_permission(permission2)

@@ -1,0 +1,2 @@
+[run]
+omit = mlflow_oidc_auth/tests/*,mlflow_oidc_auth/db/migrations/versions/*,mlflow_oidc_auth/app.py

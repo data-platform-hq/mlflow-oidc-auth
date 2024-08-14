@@ -21,4 +21,3 @@ export interface ModelUserListModel {
   permission: PermissionEnum;
   username: string;
 }
-
