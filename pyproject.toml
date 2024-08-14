@@ -70,3 +70,9 @@ version = {attr = "mlflow_oidc_auth.version"}
 
 [tool.black]
 line-length = 128
+
+[project.optional-dependencies]
+dev = [
+  "black==24.8.0",
+  "pre-commit==3.5.0",
+]

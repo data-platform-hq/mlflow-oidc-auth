@@ -9,6 +9,7 @@ from mlflow.server import app
 load_dotenv()  # take environment variables from .env.
 app.logger.setLevel(os.environ.get("LOG_LEVEL", "INFO"))
 
+
 class AppConfig:
     DEFAULT_MLFLOW_PERMISSION = os.environ.get("DEFAULT_MLFLOW_PERMISSION", "MANAGE")
     SECRET_KEY = os.environ.get("SECRET_KEY", secrets.token_hex(16))
@@ -35,9 +36,7 @@ class AppConfig:
     OIDC_CLIENT_ID = os.environ.get("OIDC_CLIENT_ID", None)
     OIDC_CLIENT_SECRET = os.environ.get("OIDC_CLIENT_SECRET", None)
 
-
     @staticmethod
     def get_property(property_name):
         app.logger.debug(f"Getting property {property_name}")
         return getattr(AppConfig, property_name, None)
-
