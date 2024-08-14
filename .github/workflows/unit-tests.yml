@@ -1,0 +1,31 @@
+name: Unit tests
+on:
+  pull_request:
+    types:
+      - opened
+      - edited
+      - reopened
+      - synchronize
+jobs:
+  python-tests:
+    name: Run python tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+      - name: Set up Python
+        uses: actions/setup-python@39cd14951b08e74b54015e9e001cdefcf80e669f # v5.1.1
+        with:
+          python-version: 3.11
+      - name: Install build dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e '.[test]'
+      - name: Build coverage file
+        run: |
+          pytest --cache-clear --junitxml=pytest.xml --cov-report=term-missing:skip-covered --cov=mlflow_oidc_auth > pytest-coverage.txt
+      - name: Pytest coverage comment
+        uses: MishaKav/pytest-coverage-comment@fa1c641d7e3fa1d98ed95d5f658ccd638b774628 # v1.1.52
+        with:
+          pytest-coverage-path: ./pytest-coverage.txt
+          junitxml-path: ./pytest.xml
