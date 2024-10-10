@@ -23,7 +23,7 @@ classifiers = [
 requires-python = ">=3.8"
 dependencies = [
   "cachelib<1",
-  "mlflow<3,>=2.11.1",
+  "mlflow-skinny<3,>=2.11.1",
   "oauthlib<4",
   "python-dotenv<2",
   "requests<3,>=2.31.0",
@@ -31,6 +31,9 @@ dependencies = [
   "Flask<4",
   "Flask-Session>=0.7.0",
 ]
+
+[project.optional-dependencies]
+full = ["mlflow<3,>=2.11.1"]
 
 [[project.maintainers]]
 name = "Data Platform folks"
@@ -66,7 +69,7 @@ include = ["mlflow_oidc_auth", "mlflow_oidc_auth.*"]
 exclude = ["tests", "tests.*"]
 
 [tool.setuptools.dynamic]
-version = {attr = "mlflow_oidc_auth.version"}
+version = { attr = "mlflow_oidc_auth.version" }
 
 [tool.black]
 line-length = 128

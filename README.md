@@ -1,7 +1,18 @@
 # mlflow-oidc-auth
 Mlflow auth plugin to use OpenID Connect (OIDC) as authentication and authorization provider
 
-To get it just do ```pip install mlflow-oidc-auth``` (mlflow will come as a dependency)
+
+# Installation
+
+To get full version (with entire MLFlow and all dependencies) run:
+```bash
+python3 -m pip install mlflow-oidc-auth[full]
+```
+
+To get skinny version run:
+```bash
+python3 -m pip install mlflow-oidc-auth
+```
 
 # Configuration
 The plugin required the following environment variables but also supported `.env` file
