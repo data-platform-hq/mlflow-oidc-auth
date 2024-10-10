@@ -28,7 +28,7 @@
                         "path": "dist/*.whl"
                     }
                 ],
-                "successComment": true,
+                "successComment": false,
                 "addReleases": "top"
             }
         ]
