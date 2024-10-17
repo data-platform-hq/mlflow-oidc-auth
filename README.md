@@ -17,6 +17,7 @@ python3 -m pip install mlflow-oidc-auth
 # Configuration
 The plugin required the following environment variables but also supported `.env` file
 
+## Application configuration
 | Parameter | Description|
 |---|---|
 | OIDC_REDIRECT_URI      |  Application redirect/callback url (https://example.com/callback) |
@@ -35,6 +36,21 @@ The plugin required the following environment variables but also supported `.env
 | OAUTHLIB_INSECURE_TRANSPORT | Development only. Allow to use insecure endpoints for OIDC |
 | LOG_LEVEL                   | Application log level |
 | OIDC_USERS_DB_URI | Database connection string |
+
+## Application session storage configuration
+| Parameter | Description | Default |
+|---|---|---|
+| SESSION_TYPE | Flask session type (filesystem or redis supported) | filesystem |
+| SESSION_FILE_DIR | The directory where session files are stored | flask_session |
+| SESSION_PERMANENT | Whether use permanent session or not | False |
+| PERMANENT_SESSION_LIFETIME | Server-side session expiration time (in seconds) | 86400 |
+| SESSION_KEY_PREFIX | A prefix that is added before all session keys | mlflow_oidc: |
+| REDIS_HOST | Redis hostname | localhost |
+| REDIS_PORT | Redis port | 6379 |
+| REDIS_DB | Redis DB number | 0 |
+| REDIS_USERNAME | Redis username | None |
+| REDIS_PASSWORD | Redis password | None |
+| REDIS_SSL | Use SSL | false |
 
 # Configuration examples
 

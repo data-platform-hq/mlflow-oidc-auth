@@ -1,0 +1,14 @@
+# docker compose to test redis cache integration
+services:
+  redis:
+    image: redis:6.0.9
+    container_name: redis
+    ports:
+      - "6379:6379"
+  redisinsight:
+    image: redislabs/redisinsight:latest
+    container_name: redisinsight
+    ports:
+      - "5540:5540"
+    environment:
+      - REDIS_URI=redis://redis:6379

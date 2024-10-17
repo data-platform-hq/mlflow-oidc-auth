@@ -36,7 +36,8 @@ dependencies = [
 
 [project.optional-dependencies]
 full = ["mlflow<3,>=2.11.1"]
-dev = ["black==24.8.0", "pre-commit==3.5.0"]
+caching-redis = ["redis[hiredis]<6"]
+dev = ["black<25", "pre-commit<5"]
 
 [[project.maintainers]]
 name = "Data Platform folks"
