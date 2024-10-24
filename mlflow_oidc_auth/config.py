@@ -34,6 +34,7 @@ class AppConfig:
     OIDC_REDIRECT_URI = os.environ.get("OIDC_REDIRECT_URI", None)
     OIDC_CLIENT_ID = os.environ.get("OIDC_CLIENT_ID", None)
     OIDC_CLIENT_SECRET = os.environ.get("OIDC_CLIENT_SECRET", None)
+    OIDC_AUDIENCE = os.environ.get("OIDC_AUDIENCE", None)
 
     # https://flask-session.readthedocs.io/en/latest/config.html
     SESSION_TYPE = os.environ.get("SESSION_TYPE", "filesystem")
