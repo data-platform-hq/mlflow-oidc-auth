@@ -34,6 +34,11 @@ class AppConfig:
     OIDC_REDIRECT_URI = os.environ.get("OIDC_REDIRECT_URI", None)
     OIDC_CLIENT_ID = os.environ.get("OIDC_CLIENT_ID", None)
     OIDC_CLIENT_SECRET = os.environ.get("OIDC_CLIENT_SECRET", None)
+    OIDC_AUDIENCE = os.environ.get("OIDC_AUDIENCE", None)
+    OIDC_PUBLIC_KEYS_URL = os.environ.get("OIDC_PUBLIC_KEYS_URL", None)
+    OIDC_USERNAME_TOKEN_ATTRIBUTE = os.environ.get("OIDC_USERNAME_TOKEN_ATTRIBUTE", "email")
+    OIDC_SIGNING_ALG = os.environ.get("OIDC_SIGNING_ALG", None) # ES256, EdDSA, PS256, RS256, HS256
+    OIDC_HS256_SECRET = os.environ.get("OIDC_HS256_SECRET", None) # ES256, EdDSA, PS256, RS256, HS256
 
     # https://flask-session.readthedocs.io/en/latest/config.html
     SESSION_TYPE = os.environ.get("SESSION_TYPE", "filesystem")

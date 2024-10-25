@@ -1,3 +1,4 @@
+import json
 import os
 import re
 import requests
@@ -96,6 +97,8 @@ from mlflow_oidc_auth.sqlalchemy_store import SqlAlchemyStore
 
 from mlflow.server import app
 
+import jwt
+
 # Create the OAuth2 client
 auth_client = WebApplicationClient(AppConfig.get_property("OIDC_CLIENT_ID"))
 store = SqlAlchemyStore()
@@ -186,6 +189,9 @@ def _get_permission_from_store_or_default(
 
 def authenticate_request_basic_auth() -> Union[Authorization, Response]:
     username = request.authorization.username
+    if username == "" or username is None:
+        app.logger.debug("Username is not set in basic auth")
+        return False
     password = request.authorization.password
     app.logger.debug("Authenticating user %s", username)
     if store.authenticate_user(username.lower(), password):
@@ -195,6 +201,64 @@ def authenticate_request_basic_auth() -> Union[Authorization, Response]:
     else:
         app.logger.debug("User %s not authenticated", username)
         return False
+    
+
+def _get_public_keys():
+    """
+    Returns:
+        List of RSA public keys usable by PyJWT.
+    """
+    r = requests.get(AppConfig.get_property("OIDC_PUBLIC_KEYS_URL"))
+    public_keys = []
+    jwk_set = r.json()
+    for key_dict in jwk_set["keys"]:
+        public_key = jwt.algorithms.RSAAlgorithm.from_jwk(json.dumps(key_dict))
+        public_keys.append(public_key)
+    return public_keys
+
+
+def validate_token(token, key, sign_alg):
+    try:
+        token = jwt.decode(token, key=key, audience=AppConfig.get_property("OIDC_AUDIENCE"), algorithms=[sign_alg])
+    except jwt.exceptions.InvalidTokenError as e:
+        app.logger.debug(f"Token is not valid: {token}")
+        raise MlflowException(f"Token is not valid: {str(e)}")
+    username_token_attr = AppConfig.get_property("OIDC_USERNAME_TOKEN_ATTRIBUTE")
+    username = token[username_token_attr]
+    if username == "" or username is None:
+        app.logger.debug(f"username from token attribute {username_token_attr} is {username}")
+        raise MlflowException(f"Username is not set at attribute: {username_token_attr}")
+    _set_username(username)
+
+
+def authenticate_token():
+    """
+    Verify the token in the request.
+    """
+    token = request.authorization.token
+    if token == "" or token is None:
+        app.logger.debug(f"Token is not set: {token}")
+        return False
+    sign_alg = AppConfig.get_property("OIDC_SIGNING_ALG")
+    token_is_valid = False
+    if sign_alg == "HS256":
+        key = AppConfig.get_property("OIDC_HS256_SECRET")
+        try:
+            validate_token(token, key, sign_alg)
+            token_is_valid = True
+        except MlflowException as e:
+            return False
+
+    keys = _get_public_keys()
+    for key in keys:
+        try:
+            validate_token(token, key, sign_alg)
+            token_is_valid = True
+            break
+        except MlflowException as e:
+            return False
+    
+    return token_is_valid
 
 
 def _get_username():
@@ -617,8 +681,13 @@ def before_request_hook():
     if _is_unprotected_route(request.path):
         return
     if request.authorization is not None:
-        if not authenticate_request_basic_auth():
-            return make_basic_auth_response()
+        if not authenticate_token():
+            app.logger.debug("No valid token authentication found")
+            # TODO maybe return 401 here instead of basic auth response
+
+            if not authenticate_request_basic_auth():
+                app.logger.debug("No valid basic authentication found")
+                return make_basic_auth_response()
     else:
         # authentication
         if not _get_username():
