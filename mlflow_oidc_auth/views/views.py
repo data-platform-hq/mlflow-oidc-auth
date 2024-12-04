@@ -1,35 +1,12 @@
 import os
 import re
-import requests
-import secrets
-import string
-from typing import Any, Callable, Dict, Optional, Union
-from mlflow.store.entities import PagedList
-from mlflow.entities.model_registry import RegisteredModel
-from mlflow.entities import Experiment
-from mlflow.utils.proto_json_utils import message_to_json, parse_dict
-from werkzeug.datastructures import Authorization
-from mlflow.utils.search_utils import SearchUtils
-from flask import (
-    make_response,
-    request,
-    redirect,
-    render_template,
-    Response,
-    session,
-    send_from_directory,
-    url_for,
-    jsonify,
-)
+from typing import Any, Callable, Dict, Optional
 
+from flask import Response, jsonify, make_response, redirect, render_template, request, send_from_directory, session, url_for
 from mlflow import MlflowException
-from mlflow.protos.databricks_pb2 import (
-    BAD_REQUEST,
-    ErrorCode,
-    INVALID_PARAMETER_VALUE,
-    RESOURCE_DOES_NOT_EXIST,
-)
-
+from mlflow.entities import Experiment
+from mlflow.entities.model_registry import RegisteredModel
+from mlflow.protos.databricks_pb2 import BAD_REQUEST, INVALID_PARAMETER_VALUE, RESOURCE_DOES_NOT_EXIST, ErrorCode
 from mlflow.protos.model_registry_pb2 import (
     CreateModelVersion,
     CreateRegisteredModel,
@@ -52,7 +29,6 @@ from mlflow.protos.model_registry_pb2 import (
     UpdateModelVersion,
     UpdateRegisteredModel,
 )
-
 from mlflow.protos.service_pb2 import (
     CreateExperiment,
     CreateRun,
@@ -76,7 +52,7 @@ from mlflow.protos.service_pb2 import (
     UpdateExperiment,
     UpdateRun,
 )
-from mlflow_oidc_auth.permissions import Permission, get_permission, MANAGE, NO_PERMISSIONS
+from mlflow.server import app
 from mlflow.server.handlers import (
     _get_model_registry_store,
     _get_request_message,
@@ -84,22 +60,16 @@ from mlflow.server.handlers import (
     catch_mlflow_exception,
     get_endpoints,
 )
-
+from mlflow.store.entities import PagedList
+from mlflow.utils.proto_json_utils import message_to_json, parse_dict
 from mlflow.utils.rest_utils import _REST_API_PATH_PREFIX
-from oauthlib.oauth2 import WebApplicationClient
+from mlflow.utils.search_utils import SearchUtils
 
 from mlflow_oidc_auth import routes
-
-# from mlflow_oidc_auth.client import AuthServiceClient
 from mlflow_oidc_auth.config import AppConfig
-from mlflow_oidc_auth.sqlalchemy_store import SqlAlchemyStore
-
-from mlflow.server import app
-
-# Create the OAuth2 client
-auth_client = WebApplicationClient(AppConfig.get_property("OIDC_CLIENT_ID"))
-store = SqlAlchemyStore()
-store.init_db((AppConfig.get_property("OIDC_USERS_DB_URI")))
+from mlflow_oidc_auth.permissions import MANAGE, NO_PERMISSIONS, Permission, get_permission
+from mlflow_oidc_auth.store import store
+from mlflow_oidc_auth.utils import get_username
 
 
 def _get_experiment_id() -> str:
@@ -184,42 +154,20 @@ def _get_permission_from_store_or_default(
     return get_permission(perm)
 
 
-def authenticate_request_basic_auth() -> Union[Authorization, Response]:
-    username = request.authorization.username
-    password = request.authorization.password
-    app.logger.debug("Authenticating user %s", username)
-    if store.authenticate_user(username.lower(), password):
-        _set_username(username.lower())
-        app.logger.debug("User %s authenticated", username)
-        return True
-    else:
-        app.logger.debug("User %s not authenticated", username)
-        return False
-
-
-def _get_username():
-    return session.get("username")
-
-
-def _set_username(username):
-    session["username"] = username
-    return
-
-
 def _get_is_admin() -> bool:
-    return bool(store.get_user(_get_username()).is_admin)
+    return bool(store.get_user(get_username()).is_admin)
 
 
 def username_is_sender():
     """Validate if the request username is the sender"""
     username = _get_request_param("username")
-    sender = _get_username()
+    sender = get_username()
     return username == sender
 
 
 def _get_permission_from_experiment_id() -> Permission:
     experiment_id = _get_experiment_id()
-    username = _get_username()
+    username = get_username()
     return _get_permission_from_store_or_default(
         lambda: store.get_experiment_permission(experiment_id, username).permission,
         lambda: store.get_user_groups_experiment_permission(experiment_id, username).permission,
@@ -238,7 +186,7 @@ def _get_experiment_id_from_view_args():
 
 def _get_permission_from_experiment_id_artifact_proxy() -> Permission:
     if experiment_id := _get_experiment_id_from_view_args():
-        username = _get_username()
+        username = get_username()
         return _get_permission_from_store_or_default(
             lambda: store.get_experiment_permission(experiment_id, username).permission,
             lambda: store.get_user_groups_experiment_permission(experiment_id, username).permission,
@@ -254,7 +202,7 @@ def _get_permission_from_experiment_name() -> Permission:
             f"Could not find experiment with name {experiment_name}",
             error_code=RESOURCE_DOES_NOT_EXIST,
         )
-    username = _get_username()
+    username = get_username()
     return _get_permission_from_store_or_default(
         lambda: store.get_experiment_permission(store_exp.experiment_id, username).permission,
         lambda: store.get_user_groups_experiment_permission(store_exp.experiment_id, username).permission,
@@ -267,7 +215,7 @@ def _get_permission_from_run_id() -> Permission:
     run_id = _get_request_param("run_id")
     run = _get_tracking_store().get_run(run_id)
     experiment_id = run.info.experiment_id
-    username = _get_username()
+    username = get_username()
     return _get_permission_from_store_or_default(
         lambda: store.get_experiment_permission(experiment_id, username).permission,
         lambda: store.get_user_groups_experiment_permission(experiment_id, username).permission,
@@ -276,7 +224,7 @@ def _get_permission_from_run_id() -> Permission:
 
 def _get_permission_from_registered_model_name() -> Permission:
     model_name = _get_request_param("name")
-    username = _get_username()
+    username = get_username()
     return _get_permission_from_store_or_default(
         lambda: store.get_registered_model_permission(model_name, username).permission,
         lambda: store.get_user_groups_registered_model_permission(model_name, username).permission,
@@ -287,7 +235,7 @@ def set_can_manage_experiment_permission(resp: Response):
     response_message = CreateExperiment.Response()
     parse_dict(resp.json, response_message)
     experiment_id = response_message.experiment_id
-    username = _get_username()
+    username = get_username()
     store.create_experiment_permission(experiment_id, username, MANAGE.name)
 
 
@@ -295,7 +243,7 @@ def set_can_manage_registered_model_permission(resp: Response):
     response_message = CreateRegisteredModel.Response()
     parse_dict(resp.json, response_message)
     name = response_message.registered_model.name
-    username = _get_username()
+    username = get_username()
     store.create_registered_model_permission(name, username, MANAGE.name)
 
 
@@ -307,7 +255,7 @@ def filter_search_experiments(resp: Response):
     parse_dict(resp.json, response_message)
 
     # fetch permissions
-    username = _get_username()
+    username = get_username()
     perms = store.list_experiment_permissions(username)
     perms_group = store.list_user_groups_experiment_permissions(username)
     can_read = {p.experiment_id: get_permission(p.permission).can_read for p in perms_group}
@@ -353,7 +301,7 @@ def filter_search_registered_models(resp: Response):
     parse_dict(resp.json, response_message)
 
     # fetch permissions
-    username = _get_username()
+    username = get_username()
     perms = store.list_registered_model_permissions(username)
     perms_group = store.list_user_groups_registered_model_permissions(username)
     can_read = {p.name: get_permission(p.permission).can_read for p in perms_group}
@@ -611,17 +559,23 @@ def _get_proxy_artifact_validator(method: str, view_args: Optional[Dict[str, Any
     }.get(method)
 
 
+from mlflow_oidc_auth.auth import authenticate_request_basic_auth, authenticate_request_bearer_token
+
+
 def before_request_hook():
     """Called before each request. If it did not return a response,
     the view function for the matched route is called and returns a response"""
     if _is_unprotected_route(request.path):
         return
     if request.authorization is not None:
-        if not authenticate_request_basic_auth():
-            return make_basic_auth_response()
+        if request.authorization.type == "basic":
+            if not authenticate_request_basic_auth():
+                return make_basic_auth_response()
+        if request.authorization.type == "bearer":
+            if not authenticate_request_bearer_token():
+                return make_forbidden_response()
     else:
-        # authentication
-        if not _get_username():
+        if session.get("username") is None:
             return render_template(
                 "auth.html",
                 username=None,
@@ -674,91 +628,16 @@ def get_experiment_permission():
     return make_response({"experiment_permission": ep.to_json()})
 
 
-def login():
-    state = secrets.token_urlsafe(16)
-    session["oauth_state"] = state
-    # Generate the authorization request URL with the state parameter
-    authorization_url = auth_client.prepare_request_uri(
-        AppConfig.get_property("OIDC_AUTHORIZATION_URL"),
-        redirect_uri=AppConfig.get_property("OIDC_REDIRECT_URI"),
-        scope=AppConfig.get_property("OIDC_SCOPE").split(","),
-        state=state,
-    )
-    return redirect(authorization_url)
-
-
-def logout():
-    session.clear()
-    return redirect("/")
-
-
-def callback():
-    """Validate the state to protect against CSRF"""
-
-    if "oauth_state" not in session or _get_request_param("state") != session["oauth_state"]:
-        return "Invalid state parameter", 401
-
-    # Get the access token from the authorization code
-    token_url, headers, body = auth_client.prepare_token_request(
-        AppConfig.get_property("OIDC_TOKEN_URL"),
-        authorization_response=request.url,
-        redirect_url=AppConfig.get_property("OIDC_REDIRECT_URI"),
-        code=_get_request_param("code"),
-        client_secret=AppConfig.get_property("OIDC_CLIENT_SECRET"),
-    )
-    token_response = requests.post(token_url, headers=headers, data=body)
-    # Parse the access token response
-    auth_client.parse_request_body_response(token_response.text)
-    access_token = auth_client.token["access_token"]
-    user_response = requests.get(
-        AppConfig.get_property("OIDC_USER_URL"),
-        headers={"Authorization": f"Bearer {access_token}"},
-    )
-
-    # Process the user data
-    user_data = user_response.json()
-    email = user_data.get("email", None)
-    if email is None:
-        return "No email provided", 401
-    display_name = user_data.get("name", "Unknown")
-    is_admin = False
-    user_groups = []
-
-    if AppConfig.get_property("OIDC_GROUP_DETECTION_PLUGIN"):
-        import importlib
-
-        user_groups = importlib.import_module(AppConfig.get_property("OIDC_GROUP_DETECTION_PLUGIN")).get_user_groups(
-            access_token
-        )
-    else:
-        user_groups = user_data.get(AppConfig.get_property("OIDC_GROUPS_ATTRIBUTE"), [])
-
-    app.logger.debug(f"User groups: {user_groups}")
-
-    if AppConfig.get_property("OIDC_ADMIN_GROUP_NAME") in user_groups:
-        is_admin = True
-    elif AppConfig.get_property("OIDC_GROUP_NAME") not in user_groups:
-        return "User is not allowed to login", 401
-
-    # Create user due to auth
-    create_user(username=email.lower(), display_name=display_name, is_admin=is_admin)
-    store.populate_groups(group_names=user_groups)
-    # set user groups
-    store.set_user_groups(email.lower(), user_groups)
-    _set_username(email.lower())
-    return redirect(url_for("oidc_ui"))
-
-
 def oidc_static(filename):
     # Specify the directory where your static files are located
-    static_directory = os.path.join(os.path.dirname(__file__), "static")
+    static_directory = os.path.join(os.path.dirname(__file__), "..", "static")
     # Return the file from the specified directory
     return send_from_directory(static_directory, filename)
 
 
 def oidc_ui(filename=None):
     # Specify the directory where your static files are located
-    ui_directory = os.path.join(os.path.dirname(__file__), "ui")
+    ui_directory = os.path.join(os.path.dirname(__file__), "..", "ui")
     if not filename:
         filename = "index.html"
     elif not os.path.exists(os.path.join(ui_directory, filename)):
@@ -766,33 +645,9 @@ def oidc_ui(filename=None):
     return send_from_directory(ui_directory, filename)
 
 
-def create_user(username: str, display_name: str, is_admin: bool = False):
-    try:
-        user = store.get_user(username)
-        store.update_user(username, is_admin=is_admin)
-        return (
-            jsonify({"message": f"User {user.username} (ID: {user.id}) already exists"}),
-            200,
-        )
-    except MlflowException:
-        password = _password_generation()
-        user = store.create_user(username=username, password=password, display_name=display_name, is_admin=is_admin)
-        return (
-            jsonify({"message": f"User {user.username} (ID: {user.id}) successfully created"}),
-            201,
-        )
-
-
-@catch_mlflow_exception
-def create_access_token():
-    new_token = _password_generation()
-    store.update_user(_get_username(), new_token)
-    return jsonify({"token": new_token})
-
-
 @catch_mlflow_exception
 def get_current_user():
-    user = store.get_user(_get_username())
+    user = store.get_user(get_username())
     user_json = user.to_json()
     user_json["experiment_permissions"] = [
         {
@@ -815,23 +670,16 @@ def get_current_user():
 
 
 @catch_mlflow_exception
-def update_username_password():
-    new_password = _password_generation()
-    store.update_user(_get_username(), new_password)
-    return jsonify({"token": new_password})
-
-
-@catch_mlflow_exception
 def update_user_admin():
     is_admin = _get_request_param("is_admin")
-    store.update_user(_get_username(), is_admin)
+    store.update_user(get_username(), is_admin)
     return jsonify({"is_admin": is_admin})
 
 
 @catch_mlflow_exception
 def delete_user():
     store.delete_user(_get_request_param("user_name"))
-    return jsonify({"message": f"User {_get_username()} has been deleted"})
+    return jsonify({"message": f"User {get_username()} has been deleted"})
 
 
 @catch_mlflow_exception
@@ -939,12 +787,6 @@ def get_model_users(model_name):
         if model_name in user_models:
             users.append({"username": user.username, "permission": user_models[model_name]})
     return jsonify(users)
-
-
-def _password_generation():
-    alphabet = string.ascii_letters + string.digits
-    new_password = "".join(secrets.choice(alphabet) for _ in range(24))
-    return new_password
 
 
 @catch_mlflow_exception
@@ -1085,7 +927,7 @@ def index():
     if os.path.exists(os.path.join(static_folder, "index.html")):
         with open(os.path.join(static_folder, "index.html"), "r") as f:
             html_content = f.read()
-            with open(os.path.join(os.path.dirname(__file__), "menu.html"), "r") as js_file:
+            with open(os.path.join(os.path.dirname(__file__), "..", "hack", "menu.html"), "r") as js_file:
                 js_injection = js_file.read()
                 modified_html_content = html_content.replace("</body>", f"{js_injection}\n</body>")
                 return modified_html_content
