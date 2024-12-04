@@ -3,7 +3,7 @@ import secrets
 from flask import redirect, session, url_for
 
 import mlflow_oidc_auth.utils as utils
-from mlflow_oidc_auth import auth
+from mlflow_oidc_auth.auth import oauth
 from mlflow_oidc_auth.app import app
 from mlflow_oidc_auth.config import AppConfig
 from mlflow_oidc_auth.views.user_management import create_user, populate_groups, set_user_groups
@@ -12,7 +12,7 @@ from mlflow_oidc_auth.views.user_management import create_user, populate_groups,
 def login():
     state = secrets.token_urlsafe(16)
     session["oauth_state"] = state
-    return auth.oidc.authorize_redirect(AppConfig.get_property("OIDC_REDIRECT_URI"), state=state)
+    return oauth.oidc.authorize_redirect(AppConfig.get_property("OIDC_REDIRECT_URI"), state=state)
 
 
 def logout():
@@ -26,7 +26,7 @@ def callback():
     if "oauth_state" not in session or utils.get_request_param("state") != session["oauth_state"]:
         return "Invalid state parameter", 401
 
-    token = auth.oidc.authorize_access_token()
+    token = oauth.oidc.authorize_access_token()
     session["user"] = token["userinfo"]
 
     email = token["userinfo"]["email"]
@@ -58,4 +58,6 @@ def callback():
     # set user groups
     set_user_groups(email.lower(), user_groups)
     # _set_username(email.lower())
+    session["username"] = email.lower()
+
     return redirect(url_for("oidc_ui"))

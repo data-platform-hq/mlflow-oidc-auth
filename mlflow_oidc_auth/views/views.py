@@ -1,8 +1,7 @@
-import os
 import re
 from typing import Any, Callable, Dict, Optional
 
-from flask import Response, jsonify, make_response, redirect, render_template, request, send_from_directory, session, url_for
+from flask import Response, jsonify, make_response, redirect, render_template, request, session, url_for
 from mlflow import MlflowException
 from mlflow.entities import Experiment
 from mlflow.entities.model_registry import RegisteredModel
@@ -573,9 +572,10 @@ def before_request_hook():
                 return make_basic_auth_response()
         if request.authorization.type == "bearer":
             if not authenticate_request_bearer_token():
-                return make_forbidden_response()
+                return make_auth_required_response()
     else:
         if session.get("username") is None:
+            session.clear()
             return render_template(
                 "auth.html",
                 username=None,
@@ -592,6 +592,12 @@ def before_request_hook():
         if validator := _get_proxy_artifact_validator(request.method, request.view_args):
             if not validator():
                 return make_forbidden_response()
+
+
+def make_auth_required_response() -> Response:
+    res = make_response(jsonify({"message": "Authentication required"}))
+    res.status_code = 401
+    return res
 
 
 def make_forbidden_response() -> Response:
@@ -626,23 +632,6 @@ def get_experiment_permission():
     username = _get_request_param("user_name")
     ep = store.get_experiment_permission(experiment_id, username)
     return make_response({"experiment_permission": ep.to_json()})
-
-
-def oidc_static(filename):
-    # Specify the directory where your static files are located
-    static_directory = os.path.join(os.path.dirname(__file__), "..", "static")
-    # Return the file from the specified directory
-    return send_from_directory(static_directory, filename)
-
-
-def oidc_ui(filename=None):
-    # Specify the directory where your static files are located
-    ui_directory = os.path.join(os.path.dirname(__file__), "..", "ui")
-    if not filename:
-        filename = "index.html"
-    elif not os.path.exists(os.path.join(ui_directory, filename)):
-        filename = "index.html"
-    return send_from_directory(ui_directory, filename)
 
 
 @catch_mlflow_exception
@@ -919,19 +908,3 @@ def update_group_model_permission(group_name):
     permission = _get_request_param("permission")
     store.update_group_model_permission(group_name, model_name, permission)
     return jsonify({"message": "Group model permission has been updated."})
-
-
-def index():
-    from mlflow_oidc_auth.app import static_folder
-
-    if os.path.exists(os.path.join(static_folder, "index.html")):
-        with open(os.path.join(static_folder, "index.html"), "r") as f:
-            html_content = f.read()
-            with open(os.path.join(os.path.dirname(__file__), "..", "hack", "menu.html"), "r") as js_file:
-                js_injection = js_file.read()
-                modified_html_content = html_content.replace("</body>", f"{js_injection}\n</body>")
-                return modified_html_content
-    import textwrap
-
-    text = textwrap.dedent("Unable to display MLflow UI - landing page not found")
-    return Response(text, mimetype="text/plain")
