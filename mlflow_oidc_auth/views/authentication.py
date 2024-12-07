@@ -50,7 +50,7 @@ def callback():
 
     if config.OIDC_ADMIN_GROUP_NAME in user_groups:
         is_admin = True
-    elif config.OIDC_GROUP_NAME not in user_groups:
+    elif not any(group in user_groups for group in config.OIDC_GROUP_NAME):
         return "User is not allowed to login", 401
 
     create_user(username=email.lower(), display_name=display_name, is_admin=is_admin)
