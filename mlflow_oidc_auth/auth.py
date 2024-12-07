@@ -4,39 +4,36 @@ import requests
 from authlib.integrations.flask_client import OAuth
 from authlib.jose import jwt
 from flask import Response, request
-from flask_caching import Cache
 from werkzeug.datastructures import Authorization
 
 from mlflow_oidc_auth.app import app
-from mlflow_oidc_auth.config import AppConfig
+from mlflow_oidc_auth.config import config
 from mlflow_oidc_auth.store import store
-
 oauth = OAuth(app)
-cache = Cache(app)
 
 oauth.register(
     name="oidc",
-    client_id=AppConfig.OIDC_CLIENT_ID,
-    client_secret=AppConfig.OIDC_CLIENT_SECRET,
-    server_metadata_url=AppConfig.OIDC_DISCOVERY_URL,
-    client_kwargs={"scope": AppConfig.OIDC_SCOPE},
+    client_id=config.OIDC_CLIENT_ID,
+    client_secret=config.OIDC_CLIENT_SECRET,
+    server_metadata_url=config.OIDC_DISCOVERY_URL,
+    client_kwargs={"scope": config.OIDC_SCOPE},
 )
 
-
 def _get_oidc_jwks():
+    from mlflow_oidc_auth.app import cache
     jwks = cache.get("jwks")
     if jwks:
         app.logger.debug("JWKS cache hit")
         return jwks
     app.logger.debug("JWKS cache miss")
-    metadata = requests.get(AppConfig.get_property("OIDC_DISCOVERY_URL")).json()
+    metadata = requests.get(config.OIDC_DISCOVERY_URL).json()
     jwks_uri = metadata.get("jwks_uri")
     jwks = requests.get(jwks_uri).json()
     cache.set("jwks", jwks, timeout=3600)
     return jwks
 
 
-def _validate_token(token):
+def validate_token(token):
     jwks = _get_oidc_jwks()
     payload = jwt.decode(token, jwks)
     payload.validate()
@@ -58,9 +55,9 @@ def authenticate_request_basic_auth() -> Union[Authorization, Response]:
 def authenticate_request_bearer_token() -> Union[Authorization, Response]:
     token = request.authorization.token
     try:
-        _validate_token(token)
-        app.logger.debug("User %s authenticated", token)
+        user = validate_token(token)
+        app.logger.debug("User %s authenticated", user.get("email"))
         return True
     except Exception as e:
-        app.logger.debug("User %s not authenticated", token)
+        app.logger.debug("JWT auth failed")
         return False

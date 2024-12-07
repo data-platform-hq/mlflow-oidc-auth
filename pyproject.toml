@@ -41,8 +41,8 @@ caching-redis = ["redis[hiredis]<6"]
 dev = ["black<25", "pre-commit<5"]
 
 [[project.maintainers]]
-name = "Data Platform folks"
-email = "noreply@example.com"
+name = "Alexander Kharkevich"
+email = "alexander_kharkevich@outlook.com"
 
 [project.license]
 file = "LICENSE"
