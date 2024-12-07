@@ -13,7 +13,6 @@ template_dir = os.path.dirname(__file__)
 template_dir = os.path.join(template_dir, "templates")
 
 app.config.from_object(config)
-print(app.config)
 app.secret_key = app.config["SECRET_KEY"].encode("utf8")
 app.template_folder = template_dir
 static_folder = app.static_folder
