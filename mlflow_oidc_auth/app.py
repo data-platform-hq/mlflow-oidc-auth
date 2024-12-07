@@ -4,13 +4,15 @@ from mlflow.server import app
 from flask_session import Session
 
 from mlflow_oidc_auth import routes, views
-from mlflow_oidc_auth.config import AppConfig
+from mlflow_oidc_auth.config import config
+from mlflow_oidc_auth.hooks import before_request_hook, after_request_hook
+from flask_caching import Cache
 
 # Configure custom Flask app
 template_dir = os.path.dirname(__file__)
 template_dir = os.path.join(template_dir, "templates")
 
-app.config.from_object(AppConfig)
+app.config.from_object(config)
 app.secret_key = app.config["SECRET_KEY"].encode("utf8")
 app.template_folder = template_dir
 static_folder = app.static_folder
@@ -34,12 +36,12 @@ app.add_url_rule(rule=routes.GET_CURRENT_USER, methods=["GET"], view_func=views.
 
 # UI routes support
 app.add_url_rule(rule=routes.GET_EXPERIMENTS, methods=["GET"], view_func=views.get_experiments)
-app.add_url_rule(rule=routes.GET_MODELS, methods=["GET"], view_func=views.get_models)
+app.add_url_rule(rule=routes.GET_MODELS, methods=["GET"], view_func=views.get_registered_models)
 app.add_url_rule(rule=routes.GET_USERS, methods=["GET"], view_func=views.get_users)
 app.add_url_rule(rule=routes.GET_USER_EXPERIMENTS, methods=["GET"], view_func=views.get_user_experiments)
 app.add_url_rule(rule=routes.GET_USER_MODELS, methods=["GET"], view_func=views.get_user_models)
 app.add_url_rule(rule=routes.GET_EXPERIMENT_USERS, methods=["GET"], view_func=views.get_experiment_users)
-app.add_url_rule(rule=routes.GET_MODEL_USERS, methods=["GET"], view_func=views.get_model_users)
+app.add_url_rule(rule=routes.GET_MODEL_USERS, methods=["GET"], view_func=views.get_registered_model_users)
 
 # User management
 app.add_url_rule(rule=routes.CREATE_USER, methods=["POST"], view_func=views.create_user)
@@ -82,8 +84,9 @@ app.add_url_rule(rule=routes.DELETE_GROUP_MODEL_PERMISSION, methods=["DELETE"], 
 app.add_url_rule(rule=routes.UPDATE_GROUP_MODEL_PERMISSION, methods=["PATCH"], view_func=views.update_group_model_permission)
 
 # Add new hooks
-app.before_request(views.before_request_hook)
-app.after_request(views.after_request_hook)
+app.before_request(before_request_hook)
+app.after_request(after_request_hook)
 
 # Set up session
 Session(app)
+cache = Cache(app)

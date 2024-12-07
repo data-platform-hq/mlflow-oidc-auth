@@ -2,6 +2,7 @@ import os
 import secrets
 import requests
 import secrets
+import importlib
 
 from dotenv import load_dotenv
 from mlflow.server import app
@@ -9,53 +10,46 @@ from mlflow.server import app
 load_dotenv()  # take environment variables from .env.
 app.logger.setLevel(os.environ.get("LOG_LEVEL", "INFO"))
 
-
 class AppConfig:
-    DEFAULT_MLFLOW_PERMISSION = os.environ.get("DEFAULT_MLFLOW_PERMISSION", "MANAGE")
-    SECRET_KEY = os.environ.get("SECRET_KEY", secrets.token_hex(16))
-    OIDC_USERS_DB_URI = os.environ.get("OIDC_USERS_DB_URI", "sqlite:///auth.db")
-    OIDC_GROUP_NAME = os.environ.get("OIDC_GROUP_NAME", "mlflow")
-    OIDC_ADMIN_GROUP_NAME = os.environ.get("OIDC_ADMIN_GROUP_NAME", "mlflow-admin")
-    OIDC_PROVIDER_DISPLAY_NAME = os.environ.get("OIDC_PROVIDER_DISPLAY_NAME", "Login with OIDC")
-    OIDC_DISCOVERY_URL = os.environ.get("OIDC_DISCOVERY_URL", None)
-    OIDC_GROUPS_ATTRIBUTE = os.environ.get("OIDC_GROUPS_ATTRIBUTE", "groups")
-    OIDC_SCOPE = os.environ.get("OIDC_SCOPE", "openid,email,profile")
-    OIDC_GROUP_DETECTION_PLUGIN = os.environ.get("OIDC_GROUP_DETECTION_PLUGIN", None)
-    if OIDC_DISCOVERY_URL:
-        response = requests.get(OIDC_DISCOVERY_URL)
-        config = response.json()
-        OIDC_AUTHORIZATION_URL = config.get("authorization_endpoint")
-        OIDC_TOKEN_URL = config.get("token_endpoint")
-        OIDC_USER_URL = config.get("userinfo_endpoint")
-    else:
-        OIDC_AUTHORIZATION_URL = os.environ.get("OIDC_AUTHORIZATION_URL", None)
-        OIDC_TOKEN_URL = os.environ.get("OIDC_TOKEN_URL", None)
-        OIDC_USER_URL = os.environ.get("OIDC_USER_URL", None)
-    OIDC_REDIRECT_URI = os.environ.get("OIDC_REDIRECT_URI", None)
-    OIDC_CLIENT_ID = os.environ.get("OIDC_CLIENT_ID", None)
-    OIDC_CLIENT_SECRET = os.environ.get("OIDC_CLIENT_SECRET", None)
+    def __init__(self):
+        self.DEFAULT_MLFLOW_PERMISSION = os.environ.get("DEFAULT_MLFLOW_PERMISSION", "MANAGE")
+        self.SECRET_KEY = os.environ.get("SECRET_KEY", secrets.token_hex(16))
+        self.OIDC_USERS_DB_URI = os.environ.get("OIDC_USERS_DB_URI", "sqlite:///auth.db")
+        self.OIDC_GROUP_NAME = [group.strip() for group in os.environ.get("OIDC_GROUP_NAME", "mlflow").split(",")]
+        self.OIDC_ADMIN_GROUP_NAME = os.environ.get("OIDC_ADMIN_GROUP_NAME", "mlflow-admin")
+        self.OIDC_PROVIDER_DISPLAY_NAME = os.environ.get("OIDC_PROVIDER_DISPLAY_NAME", "Login with OIDC")
+        self.OIDC_DISCOVERY_URL = os.environ.get("OIDC_DISCOVERY_URL", None)
+        self.OIDC_GROUPS_ATTRIBUTE = os.environ.get("OIDC_GROUPS_ATTRIBUTE", "groups")
+        self.OIDC_SCOPE = os.environ.get("OIDC_SCOPE", "openid,email,profile")
+        self.OIDC_GROUP_DETECTION_PLUGIN = os.environ.get("OIDC_GROUP_DETECTION_PLUGIN", None)
+        self.OIDC_REDIRECT_URI = os.environ.get("OIDC_REDIRECT_URI", None)
+        self.OIDC_CLIENT_ID = os.environ.get("OIDC_CLIENT_ID", None)
+        self.OIDC_CLIENT_SECRET = os.environ.get("OIDC_CLIENT_SECRET", None)
 
-    # https://flask-session.readthedocs.io/en/latest/config.html
-    SESSION_TYPE = os.environ.get("SESSION_TYPE", "filesystem")
-    SESSION_PERMANENT = os.environ.get("SESSION_PERMANENT", str(False)).lower() in ("true", "1", "t")
-    SESSION_KEY_PREFIX = os.environ.get("SESSION_KEY_PREFIX", "mlflow_oidc:")
-    PERMANENT_SESSION_LIFETIME = os.environ.get("PERMANENT_SESSION_LIFETIME", 86400)
-    if SESSION_TYPE == "filesystem":
-        SESSION_FILE_DIR = os.environ.get("SESSION_FILE_DIR", "./flask_session/")
-    elif SESSION_TYPE == "redis":
-        import redis
-        SESSION_REDIS = redis.Redis(
-            host=os.environ.get("REDIS_HOST", "localhost"),
-            port=os.environ.get("REDIS_PORT", 6379),
-            db=os.environ.get("REDIS_DB", 0),
-            password=os.environ.get("REDIS_PASSWORD", None),
-            ssl=os.environ.get("REDIS_SSL", str(False)).lower() in ("true", "1", "t"),
-            username=os.environ.get("REDIS_USERNAME", None),
-        )
-    else:
-        raise ValueError(f"Invalid session type: {SESSION_TYPE}")
+        # session
+        self.SESSION_TYPE = os.environ.get("SESSION_TYPE", "cachelib")
+        self.SESSION_PERMANENT = os.environ.get("SESSION_PERMANENT", str(False)).lower() in ("true", "1", "t")
+        self.SESSION_KEY_PREFIX = os.environ.get("SESSION_KEY_PREFIX", "mlflow_oidc:")
+        self.PERMANENT_SESSION_LIFETIME = os.environ.get("PERMANENT_SESSION_LIFETIME", 86400)
+        if self.SESSION_TYPE:
+            try:
+                session_module = importlib.import_module(f"mlflow_oidc_auth.session.{(self.SESSION_TYPE).lower()}")
+                app.logger.debug(f"Session module for {self.SESSION_TYPE} imported.")
+                for attr in dir(session_module):
+                    if attr.isupper():
+                        setattr(self, attr, getattr(session_module, attr))
+            except ImportError:
+                app.logger.error(f"Session module for {self.SESSION_TYPE} could not be imported.")
+        # cache
+        self.CACHE_TYPE = os.environ.get("CACHE_TYPE", "FileSystemCache")
+        if self.CACHE_TYPE:
+            try:
+                cache_module = importlib.import_module(f"mlflow_oidc_auth.cache.{(self.CACHE_TYPE).lower()}")
+                app.logger.debug(f"Cache module for {self.CACHE_TYPE} imported.")
+                for attr in dir(cache_module):
+                    if attr.isupper():
+                        setattr(self, attr, getattr(cache_module, attr))
+            except ImportError:
+                app.logger.error(f"Cache module for {self.CACHE_TYPE} could not be imported.")
 
-    @staticmethod
-    def get_property(property_name):
-        app.logger.debug(f"Getting property {property_name}")
-        return getattr(AppConfig, property_name, None)
+config = AppConfig()
