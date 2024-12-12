@@ -61,8 +61,6 @@ OIDC_DISCOVERY_URL = 'https://<your_domain>.okta.com/.well-known/openid-configur
 OIDC_CLIENT_SECRET ='<super_secret>'
 OIDC_CLIENT_ID ='<client_id>'
 OIDC_PROVIDER_DISPLAY_NAME = "Login with Okta"
-# Please note that for some OAuth2 providers like GitLab, use spaces instead of commas to separate scopes.
-# If there is a scope-related error, please confirm the string format
 OIDC_SCOPE = "openid,profile,email,groups"
 OIDC_GROUP_NAME = "mlflow-users-group-name"
 OIDC_ADMIN_GROUP_NAME = "mlflow-admin-group-name"
@@ -82,6 +80,8 @@ OIDC_ADMIN_GROUP_NAME = "mlflow_admins_group_name"
 ```
 
 > please note, that for getting group membership information, the application should have "GroupMember.Read.All" permission
+
+> Please note that for some OAuth2 providers like GitLab, use spaces instead of commas to separate scopes. If there is a scope-related error, please confirm the string format.
 
 # Development
 
