@@ -27,6 +27,7 @@ The plugin required the following environment variables but also supported `.env
 | OIDC_GROUP_DETECTION_PLUGIN | OIDC plugin to detect groups |
 | OIDC_PROVIDER_DISPLAY_NAME | any text to display |
 | OIDC_SCOPE | OIDC scope |
+| OIDC_GROUPS_ATTRIBUTE | If the group name field in userinfo is not `groups`, specify its json key |
 | OIDC_GROUP_NAME | User group name to be allowed login to MLFlow, currently supported groups in OIDC claims and Microsoft Entra ID groups |
 | OIDC_ADMIN_GROUP_NAME | User group name to be allowed login to MLFlow manage and define permissions, currently supported groups in OIDC claims and Microsoft Entra ID groups |
 | OIDC_ALLOW_ALL_USERS | Allow all users to log in, even if they are not in OIDC_ADMIN_GROUP_NAME and OIDC_GROUP_NAME |
