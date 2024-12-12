@@ -1,11 +1,11 @@
 import os
 import secrets
-import requests
 import secrets
 import importlib
 
 from dotenv import load_dotenv
 from mlflow.server import app
+from mlflow_oidc_auth.string_utils import strtobool
 
 load_dotenv()  # take environment variables from .env.
 app.logger.setLevel(os.environ.get("LOG_LEVEL", "INFO"))
@@ -25,6 +25,7 @@ class AppConfig:
         self.OIDC_REDIRECT_URI = os.environ.get("OIDC_REDIRECT_URI", None)
         self.OIDC_CLIENT_ID = os.environ.get("OIDC_CLIENT_ID", None)
         self.OIDC_CLIENT_SECRET = os.environ.get("OIDC_CLIENT_SECRET", None)
+        self.OIDC_ALLOW_ALL_USERS  =  bool(strtobool(os.environ.get("OIDC_ALLOW_ALL_USERS", "False")))
 
         # session
         self.SESSION_TYPE = os.environ.get("SESSION_TYPE", "cachelib")

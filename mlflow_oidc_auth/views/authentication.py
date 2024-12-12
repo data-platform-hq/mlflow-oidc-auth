@@ -44,14 +44,19 @@ def callback():
             token["access_token"]
         )
     else:
-        user_groups = token["userinfo"][config.OIDC_GROUPS_ATTRIBUTE]
+        try:
+            user_groups = token["userinfo"][config.OIDC_GROUPS_ATTRIBUTE]
+        except KeyError:
+            user_groups = []
 
     app.logger.debug(f"User groups: {user_groups}")
+    app.logger.debug(f"OIDC_ALLOW_ALL_USERS:{config.OIDC_ALLOW_ALL_USERS}")
 
     if config.OIDC_ADMIN_GROUP_NAME in user_groups:
         is_admin = True
-    elif not any(group in user_groups for group in config.OIDC_GROUP_NAME):
-        return "User is not allowed to login", 401
+    elif not config.OIDC_ALLOW_ALL_USERS:
+        if not any(group in user_groups for group in config.OIDC_GROUP_NAME):
+            return "The user is not in any group that is allowed to access, so login is not allowed.", 401
 
     create_user(username=email.lower(), display_name=display_name, is_admin=is_admin)
     populate_groups(group_names=user_groups)
