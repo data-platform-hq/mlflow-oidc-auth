@@ -14,7 +14,10 @@
         </button>
         <span class="spacer"></span>
 
-        <span class="pe-1 ms-auto fs-16">Hello, {{name}}</span>
+        <span class="pe-1 ms-auto fs-16">
+            Hello, {{name}}
+            <ng-container *ngIf="admin">(Admin)</ng-container>
+        </span>
         <button mat-button (click)="logout()">
             <mat-icon>exit_to_app</mat-icon>
             <span>Logout</span>

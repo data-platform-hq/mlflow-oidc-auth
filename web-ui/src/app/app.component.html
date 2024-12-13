@@ -1,5 +1,8 @@
 <ng-container *ngIf="!loading && this.user; else loader">
-    <ml-header [name]="user.display_name"></ml-header>
+  <ml-header 
+    [name]="user.display_name"
+    [admin]="user.is_admin">
+  </ml-header>
   <div class="container">
     <div class="my-3">
         <xng-breadcrumb></xng-breadcrumb>
