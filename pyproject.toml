@@ -50,7 +50,7 @@ file = "LICENSE"
 [project.urls]
 homepage = "https://github.com/data-platform-hq/mlflow-oidc-auth"
 issues = "https://github.com/data-platform-hq/mlflow-oidc-auth/issues"
-documentation = "https://github.com/data-platform-hq/mlflow-oidc-auth/tree/main/docs/"
+documentation = "https://data-platform-hq.github.io/mlflow-oidc-auth/"
 repository = "https://github.com/data-platform-hq/mlflow-oidc-auth"
 
 [project.entry-points."mlflow.app"]
