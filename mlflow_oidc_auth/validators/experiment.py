@@ -8,9 +8,7 @@ from mlflow.server.handlers import _get_tracking_store
 from mlflow_oidc_auth.app import config
 from mlflow_oidc_auth.permissions import Permission, get_permission
 from mlflow_oidc_auth.store import store
-from mlflow_oidc_auth.utils import get_experiment_id, get_request_param, get_username
-
-from ._permissions import get_permission_from_store_or_default
+from mlflow_oidc_auth.utils import get_experiment_id, get_permission_from_store_or_default, get_request_param, get_username
 
 
 def _get_permission_from_experiment_id() -> Permission:
