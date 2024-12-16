@@ -34,10 +34,10 @@ export class HomePageComponent implements OnInit {
     this.currentUserInfo = this.authService.getUserInfo();
 
     if (this.currentUserInfo) {
-      const { experiment_permissions, registered_model_permissions } = this.currentUserInfo;
+      const { experiments, models } = this.currentUserInfo;
 
-      this.modelsDataSource = registered_model_permissions;
-      this.experimentsDataSource = experiment_permissions;
+      this.modelsDataSource = models;
+      this.experimentsDataSource = experiments;
     }
   }
 

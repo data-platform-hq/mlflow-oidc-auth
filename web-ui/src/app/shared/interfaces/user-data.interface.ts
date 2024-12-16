@@ -1,9 +1,9 @@
 export interface CurrentUserModel {
   display_name: string;
-  experiment_permissions: ExperimentPermission[];
+  experiments: ExperimentPermission[];
   id: number;
   is_admin: boolean;
-  registered_model_permissions: RegisteredModelPermission[];
+  models: RegisteredModelPermission[];
   username: string;
 }
 
@@ -11,12 +11,14 @@ export interface ExperimentPermission {
   id: string;
   name: string;
   permission: string;
+  type: string;
 }
 
 export interface RegisteredModelPermission {
   name: string;
   permission: string;
   user_id: number;
+  type: string;
 }
 
 export interface TokenModel {

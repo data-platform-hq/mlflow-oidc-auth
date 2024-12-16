@@ -1,8 +1,9 @@
 from flask import jsonify, make_response
 from mlflow.server.handlers import _get_model_registry_store, catch_mlflow_exception
 
+from mlflow_oidc_auth.responses.client_error import make_forbidden_response
 from mlflow_oidc_auth.store import store
-from mlflow_oidc_auth.utils import get_request_param
+from mlflow_oidc_auth.utils import get_is_admin, get_permission_from_store_or_default, get_request_param, get_username
 
 
 @catch_mlflow_exception
@@ -41,8 +42,19 @@ def delete_registered_model_permission():
 
 @catch_mlflow_exception
 def get_registered_models():
-    # TODO: Implement pagination
-    registered_models = _get_model_registry_store().search_registered_models(max_results=1000)
+    current_user = store.get_user(get_username())
+    is_admin = get_is_admin()
+    if is_admin:
+        registered_models = _get_model_registry_store().search_registered_models(max_results=1000)
+    else:
+        registered_models = []
+        for model in _get_model_registry_store().search_registered_models(max_results=1000):
+            permission = get_permission_from_store_or_default(
+                lambda: store.get_registered_model_permission(model.name, current_user.username).permission,
+                lambda: store.get_user_groups_registered_model_permission(model.name, current_user.username).permission,
+            ).permission
+            if permission.can_manage:
+                registered_models.append(model)
     models = [
         {
             "name": model.name,
@@ -57,7 +69,15 @@ def get_registered_models():
 
 @catch_mlflow_exception
 def get_registered_model_users(model_name):
-    # Get the list of all users
+    current_user = store.get_user(get_username())
+    is_admin = get_is_admin()
+    if not is_admin:
+        permission = get_permission_from_store_or_default(
+            lambda: store.get_registered_model_permission(model_name, current_user.username).permission,
+            lambda: store.get_user_groups_registered_model_permission(model_name, current_user.username).permission,
+        ).permission
+        if not permission.can_manage:
+            return make_forbidden_response()
     list_users = store.list_users()
     # Filter users who are associated with the given model
     users = []

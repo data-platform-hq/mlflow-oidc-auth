@@ -1,4 +1,4 @@
-from typing import Callable
+from typing import Callable, NamedTuple
 
 from flask import request, session
 from mlflow.exceptions import ErrorCode, MlflowException
@@ -76,9 +76,14 @@ def get_experiment_id() -> str:
     )
 
 
+class PermissionResult(NamedTuple):
+    permission: Permission
+    type: str
+
+
 def get_permission_from_store_or_default(
     store_permission_user_func: Callable[[], str], store_permission_group_func: Callable[[], str]
-) -> Permission:
+) -> PermissionResult:
     """
     Attempts to get permission from store,
     and returns default permission if no record is found.
@@ -87,17 +92,16 @@ def get_permission_from_store_or_default(
     try:
         perm = store_permission_user_func()
         app.logger.debug("User permission found")
+        perm_type = "user"
     except MlflowException as e:
         if e.error_code == ErrorCode.Name(RESOURCE_DOES_NOT_EXIST):
             try:
                 perm = store_permission_group_func()
                 app.logger.debug("Group permission found")
+                perm_type = "group"
             except MlflowException as e:
                 if e.error_code == ErrorCode.Name(RESOURCE_DOES_NOT_EXIST):
                     perm = config.DEFAULT_MLFLOW_PERMISSION
                     app.logger.debug("Default permission used")
-                else:
-                    raise
-        else:
-            raise
-    return get_permission(perm)
+                    perm_type = "fallback"
+    return PermissionResult(get_permission(perm), perm_type)
