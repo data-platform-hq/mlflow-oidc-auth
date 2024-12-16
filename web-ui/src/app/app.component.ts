@@ -26,8 +26,8 @@ export class AppComponent implements OnInit {
         finalize(() => this.loading = false),
       )
       .subscribe((userInfo) => {
-        this.authService.setUserInfo(userInfo);
-        this.user = userInfo;
+        this.authService.setUserInfo(userInfo.user);
+        this.user = userInfo.user;
       });
   }
 }

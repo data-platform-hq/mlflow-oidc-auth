@@ -17,7 +17,7 @@ def _get_permission_from_experiment_id() -> Permission:
     return get_permission_from_store_or_default(
         lambda: store.get_experiment_permission(experiment_id, username).permission,
         lambda: store.get_user_groups_experiment_permission(experiment_id, username).permission,
-    )
+    ).permission
 
 
 def _get_permission_from_experiment_name() -> Permission:
@@ -32,7 +32,7 @@ def _get_permission_from_experiment_name() -> Permission:
     return get_permission_from_store_or_default(
         lambda: store.get_experiment_permission(store_exp.experiment_id, username).permission,
         lambda: store.get_user_groups_experiment_permission(store_exp.experiment_id, username).permission,
-    )
+    ).permission
 
 
 _EXPERIMENT_ID_PATTERN = re.compile(r"^(\d+)/")
@@ -52,7 +52,7 @@ def _get_permission_from_experiment_id_artifact_proxy() -> Permission:
         return get_permission_from_store_or_default(
             lambda: store.get_experiment_permission(experiment_id, username).permission,
             lambda: store.get_user_groups_experiment_permission(experiment_id, username).permission,
-        )
+        ).permission
     return get_permission(config.DEFAULT_MLFLOW_PERMISSION)
 
 
