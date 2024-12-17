@@ -1,4 +1,4 @@
-import { PermissionEnum } from 'src/app/core/configs/permissions';
+import { PermissionEnum, PermissionTypeEnum } from 'src/app/core/configs/permissions';
 
 export interface ExperimentModel {
   id: string;
@@ -14,8 +14,8 @@ export interface ExperimentForUserModel {
   id: string,
   name: string,
   permissions: PermissionEnum,
+  type: PermissionTypeEnum,
 }
-
 
 export interface UserPermissionModel {
   permission: PermissionEnum;
