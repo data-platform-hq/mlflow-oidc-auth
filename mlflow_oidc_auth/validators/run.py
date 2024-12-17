@@ -1,10 +1,8 @@
-from mlflow_oidc_auth.store import store
-from mlflow_oidc_auth.utils import get_request_param, get_username
+from mlflow.server.handlers import _get_tracking_store
+
 from mlflow_oidc_auth.permissions import Permission
-from mlflow.server.handlers import (
-    _get_tracking_store,
-)
-from ._permissions import get_permission_from_store_or_default
+from mlflow_oidc_auth.store import store
+from mlflow_oidc_auth.utils import get_permission_from_store_or_default, get_request_param, get_username
 
 
 def _get_permission_from_run_id() -> Permission:
@@ -17,7 +15,7 @@ def _get_permission_from_run_id() -> Permission:
     return get_permission_from_store_or_default(
         lambda: store.get_experiment_permission(experiment_id, username).permission,
         lambda: store.get_user_groups_experiment_permission(experiment_id, username).permission,
-    )
+    ).permission
 
 
 def validate_can_read_run():

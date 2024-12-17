@@ -8,9 +8,7 @@ from mlflow.server.handlers import _get_tracking_store
 from mlflow_oidc_auth.app import config
 from mlflow_oidc_auth.permissions import Permission, get_permission
 from mlflow_oidc_auth.store import store
-from mlflow_oidc_auth.utils import get_experiment_id, get_request_param, get_username
-
-from ._permissions import get_permission_from_store_or_default
+from mlflow_oidc_auth.utils import get_experiment_id, get_permission_from_store_or_default, get_request_param, get_username
 
 
 def _get_permission_from_experiment_id() -> Permission:
@@ -19,7 +17,7 @@ def _get_permission_from_experiment_id() -> Permission:
     return get_permission_from_store_or_default(
         lambda: store.get_experiment_permission(experiment_id, username).permission,
         lambda: store.get_user_groups_experiment_permission(experiment_id, username).permission,
-    )
+    ).permission
 
 
 def _get_permission_from_experiment_name() -> Permission:
@@ -34,7 +32,7 @@ def _get_permission_from_experiment_name() -> Permission:
     return get_permission_from_store_or_default(
         lambda: store.get_experiment_permission(store_exp.experiment_id, username).permission,
         lambda: store.get_user_groups_experiment_permission(store_exp.experiment_id, username).permission,
-    )
+    ).permission
 
 
 _EXPERIMENT_ID_PATTERN = re.compile(r"^(\d+)/")
@@ -54,7 +52,7 @@ def _get_permission_from_experiment_id_artifact_proxy() -> Permission:
         return get_permission_from_store_or_default(
             lambda: store.get_experiment_permission(experiment_id, username).permission,
             lambda: store.get_user_groups_experiment_permission(experiment_id, username).permission,
-        )
+        ).permission
     return get_permission(config.DEFAULT_MLFLOW_PERMISSION)
 
 

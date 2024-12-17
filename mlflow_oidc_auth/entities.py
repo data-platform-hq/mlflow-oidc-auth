@@ -77,8 +77,6 @@ class User:
             "username": self.username,
             "is_admin": self.is_admin,
             "display_name": self.display_name,
-            "experiment_permissions": [p.to_json() for p in self.experiment_permissions],
-            "registered_model_permissions": [p.to_json() for p in self.registered_model_permissions],
             "groups": [g.to_json() for g in self.groups],
         }
 

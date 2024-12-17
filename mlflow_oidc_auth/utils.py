@@ -1,11 +1,16 @@
+from typing import Callable, NamedTuple
+
 from flask import request, session
-from mlflow.exceptions import MlflowException
-from mlflow.protos.databricks_pb2 import BAD_REQUEST, INVALID_PARAMETER_VALUE
+from mlflow.exceptions import ErrorCode, MlflowException
+from mlflow.protos.databricks_pb2 import BAD_REQUEST, INVALID_PARAMETER_VALUE, RESOURCE_DOES_NOT_EXIST
 from mlflow.server import app
 from mlflow.server.handlers import _get_tracking_store
 
-from mlflow_oidc_auth.store import store
+from mlflow_oidc_auth.app import app
 from mlflow_oidc_auth.auth import validate_token
+from mlflow_oidc_auth.config import config
+from mlflow_oidc_auth.permissions import Permission, get_permission
+from mlflow_oidc_auth.store import store
 
 
 def get_request_param(param: str) -> str:
@@ -69,3 +74,34 @@ def get_experiment_id() -> str:
         "Either 'experiment_id' or 'experiment_name' must be provided in the request data.",
         INVALID_PARAMETER_VALUE,
     )
+
+
+class PermissionResult(NamedTuple):
+    permission: Permission
+    type: str
+
+
+def get_permission_from_store_or_default(
+    store_permission_user_func: Callable[[], str], store_permission_group_func: Callable[[], str]
+) -> PermissionResult:
+    """
+    Attempts to get permission from store,
+    and returns default permission if no record is found.
+    user permission takes precedence over group permission
+    """
+    try:
+        perm = store_permission_user_func()
+        app.logger.debug("User permission found")
+        perm_type = "user"
+    except MlflowException as e:
+        if e.error_code == ErrorCode.Name(RESOURCE_DOES_NOT_EXIST):
+            try:
+                perm = store_permission_group_func()
+                app.logger.debug("Group permission found")
+                perm_type = "group"
+            except MlflowException as e:
+                if e.error_code == ErrorCode.Name(RESOURCE_DOES_NOT_EXIST):
+                    perm = config.DEFAULT_MLFLOW_PERMISSION
+                    app.logger.debug("Default permission used")
+                    perm_type = "fallback"
+    return PermissionResult(get_permission(perm), perm_type)

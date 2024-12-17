@@ -1,8 +1,6 @@
 from mlflow_oidc_auth.permissions import Permission
 from mlflow_oidc_auth.store import store
-from mlflow_oidc_auth.utils import get_request_param, get_username
-
-from ._permissions import get_permission_from_store_or_default
+from mlflow_oidc_auth.utils import get_permission_from_store_or_default, get_request_param, get_username
 
 
 def _get_permission_from_registered_model_name() -> Permission:
@@ -11,7 +9,7 @@ def _get_permission_from_registered_model_name() -> Permission:
     return get_permission_from_store_or_default(
         lambda: store.get_registered_model_permission(model_name, username).permission,
         lambda: store.get_user_groups_registered_model_permission(model_name, username).permission,
-    )
+    ).permission
 
 
 def validate_can_read_registered_model():

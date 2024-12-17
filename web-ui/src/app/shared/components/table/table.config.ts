@@ -27,7 +27,7 @@ const DELETE_ACTION = {
 };
 
 const REVOKE_ACTION = {
-  name: 'Revoke',
+  name: 'Reset to fallback',
   icon: 'key_off',
   action: TableActionEnum.REVOKE
 };

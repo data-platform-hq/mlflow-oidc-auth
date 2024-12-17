@@ -1,10 +1,10 @@
 from flask import jsonify
-from mlflow.server.handlers import _get_tracking_store, catch_mlflow_exception
+from mlflow.server.handlers import _get_model_registry_store, _get_tracking_store, catch_mlflow_exception
 
-from mlflow_oidc_auth.permissions import NO_PERMISSIONS, get_permission
+from mlflow_oidc_auth.permissions import NO_PERMISSIONS
 from mlflow_oidc_auth.store import store
 from mlflow_oidc_auth.user import create_user, generate_token
-from mlflow_oidc_auth.utils import get_is_admin, get_request_param, get_username
+from mlflow_oidc_auth.utils import get_is_admin, get_permission_from_store_or_default, get_request_param, get_username
 
 
 def create_user(username: str, display_name: str, is_admin: bool = False):
@@ -44,37 +44,100 @@ def update_username_password():
 
 @catch_mlflow_exception
 def get_user_experiments(username):
-    # get list of experiments for the user
-    list_experiments = store.list_experiment_permissions(username)
-    experiments_list = []
-    for experiments in list_experiments:
-        experiment = _get_tracking_store().get_experiment(experiments.experiment_id)
-        experiments_list.append(
-            {
-                "name": experiment.name,
-                "id": experiments.experiment_id,
-                "permission": experiments.permission,
-            }
-        )
+    current_user = store.get_user(get_username())
+    all_experiments = _get_tracking_store().search_experiments()
+    is_admin = get_is_admin()
+
+    if is_admin:
+        list_experiments = all_experiments
+    else:
+        if username == current_user.username:
+            list_experiments = [
+                exp
+                for exp in all_experiments
+                if get_permission_from_store_or_default(
+                    lambda: store.get_experiment_permission(exp.experiment_id, username).permission,
+                    lambda: store.get_user_groups_experiment_permission(exp.experiment_id, username).permission,
+                ).permission.name
+                != NO_PERMISSIONS.name
+            ]
+        else:
+            list_experiments = [
+                exp
+                for exp in all_experiments
+                if get_permission_from_store_or_default(
+                    lambda: store.get_experiment_permission(exp.experiment_id, current_user.username).permission,
+                    lambda: store.get_user_groups_experiment_permission(exp.experiment_id, current_user.username).permission,
+                ).permission.can_manage
+            ]
+
+    experiments_list = [
+        {
+            "name": _get_tracking_store().get_experiment(exp.experiment_id).name,
+            "id": exp.experiment_id,
+            "permission": (
+                perm := get_permission_from_store_or_default(
+                    lambda: store.get_experiment_permission(exp.experiment_id, username).permission,
+                    lambda: store.get_user_groups_experiment_permission(exp.experiment_id, username).permission,
+                )
+            ).permission.name,
+            "type": perm.type,
+        }
+        for exp in list_experiments
+    ]
     return jsonify({"experiments": experiments_list})
 
 
 @catch_mlflow_exception
 def get_user_models(username):
-    # get list of models for current user
-    registered_models = store.list_registered_model_permissions(username)
-    models = []
-    for model in registered_models:
-        models.append({"name": model.name, "permission": model.permission})
-    # return as json
+    all_registered_models = _get_model_registry_store().search_registered_models(max_results=1000)
+    current_user = store.get_user(get_username())
+    is_admin = get_is_admin()
+    if is_admin:
+        list_registered_models = all_registered_models
+    else:
+        if username == current_user.username:
+            list_registered_models = [
+                model
+                for model in all_registered_models
+                if get_permission_from_store_or_default(
+                    lambda: store.get_registered_model_permission(model.name, username).permission,
+                    lambda: store.get_user_groups_registered_model_permission(model.name, username).permission,
+                ).permission.name
+                != NO_PERMISSIONS.name
+            ]
+        else:
+            list_registered_models = [
+                model
+                for model in all_registered_models
+                if get_permission_from_store_or_default(
+                    lambda: store.get_registered_model_permission(model.name, current_user.username).permission,
+                    lambda: store.get_user_groups_registered_model_permission(model.name, current_user.username).permission,
+                ).permission.can_manage
+            ]
+    models = [
+        {
+            "name": model.name,
+            "permission": (
+                perm := get_permission_from_store_or_default(
+                    lambda: store.get_registered_model_permission(model.name, username).permission,
+                    lambda: store.get_user_groups_registered_model_permission(model.name, username).permission,
+                )
+            ).permission.name,
+            "type": perm.type,
+        }
+        for model in list_registered_models
+    ]
     return jsonify({"models": models})
 
 
 @catch_mlflow_exception
 def get_users():
-    # check is admin
-    # if not get_is_admin():
-    #     return make_forbidden_response()
+    # is_admin = get_is_admin()
+    # if is_admin:
+    #     users = [user.username for user in store.list_users()]
+    # else:
+    #     users = [get_username()]
     users = [user.username for user in store.list_users()]
     return jsonify({"users": users})
 
@@ -88,23 +151,4 @@ def update_user_admin():
 
 @catch_mlflow_exception
 def get_current_user():
-    user = store.get_user(get_username())
-    user_json = user.to_json()
-    user_json["experiment_permissions"] = [
-        {
-            "name": _get_tracking_store().get_experiment(permission.experiment_id).name,
-            "id": permission.experiment_id,
-            "permission": permission.permission,
-        }
-        for permission in user.experiment_permissions
-    ]
-    if not get_is_admin():
-        user_json["experiment_permissions"] = [
-            permission for permission in user_json["experiment_permissions"] if permission["permission"] != NO_PERMISSIONS.name
-        ]
-        user_json["registered_model_permissions"] = [
-            registered_model_permission
-            for registered_model_permission in user_json["registered_model_permissions"]
-            if registered_model_permission["permission"] != get_permission(NO_PERMISSIONS.name)
-        ]
-    return jsonify(user_json)
+    return store.get_user(get_username()).to_json()
