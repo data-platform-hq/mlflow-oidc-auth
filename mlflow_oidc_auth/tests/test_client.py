@@ -20,7 +20,7 @@ from mlflow_oidc_auth.routes import (
 
 @pytest.fixture
 def client():
-    return AuthServiceClient(tracking_uri="http://test")
+    return AuthServiceClient(tracking_uri="https://test")
 
 
 class TestClientExceptions:

@@ -6,6 +6,7 @@ from mlflow_oidc_auth.auth import (
     authenticate_request_basic_auth,
     authenticate_request_bearer_token,
 )
+import importlib
 
 
 class TestAuth:
@@ -32,6 +33,29 @@ class TestAuth:
             client_kwargs={"scope": "mock_scope"},
         )
         assert result == mock_oauth_instance
+
+    def test__get_oidc_jwks(self):
+        with patch("mlflow_oidc_auth.auth.requests") as mock_requests:
+            mlflow_oidc_app = importlib.import_module("mlflow_oidc_auth.app")
+            mock_cache = MagicMock()
+            mock_app = MagicMock()
+            mock_app.logger.debug = MagicMock()
+            mock_requests.get.return_value.json.return_value = {"jwks_uri": "mock_jwks_uri"}
+            mock_cache.get.return_value = None
+
+            with patch.object(mlflow_oidc_app, "cache", mock_cache):
+                with patch.object(mlflow_oidc_app, "app", mock_app):
+                    result = _get_oidc_jwks()
+
+                    assert len(mock_requests.get.call_args) == 2
+
+                    assert mock_requests.get.call_args[0][0] == "mock_jwks_uri"
+                    assert mock_requests.get.call_args[1] == {}  # TODO: proper patch for first .get() return_value
+
+                    mock_cache.set.assert_called_once_with(
+                        "jwks", mock_requests.get.return_value.json.return_value, timeout=3600
+                    )
+                    assert result == mock_requests.get.return_value.json.return_value
 
     @patch("mlflow_oidc_auth.auth._get_oidc_jwks")
     @patch("mlflow_oidc_auth.auth.jwt.decode")

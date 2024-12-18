@@ -15,13 +15,13 @@ class TestUser(unittest.TestCase):
             groups=[Group("group1", "Group 1")],
         )
 
+        # expected_json does not contain "experiment_permissions" and "registered_model_permissions",
+        # this is expected
         expected_json = {
             "id": "123",
             "username": "test_user",
             "is_admin": True,
             "display_name": "Test User",
-            # "experiment_permissions" is not included in to_json
-            # "registered_model_permissions" is not included in to_json
             "groups": [{"id": "group1", "group_name": "Group 1"}],
         }
         self.assertEqual(user.to_json(), expected_json)

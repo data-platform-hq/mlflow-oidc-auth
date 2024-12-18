@@ -19,22 +19,13 @@ jobs:
         uses: actions/setup-python@39cd14951b08e74b54015e9e001cdefcf80e669f # v5.1.1
         with:
           python-version: 3.11
-      - name: Install build dependencies
+      - name: Run tests
         run: |
           python -m pip install --upgrade pip
           pip install tox
           tox -e py
-      - name: Build coverage file
-        run: |
-          tox -e py
-          pytest --cache-clear --junitxml=coverage.xml --cov-report=term-missing:skip-covered --cov=mlflow_oidc_auth > pytest-coverage.txt
       - name: Override Coverage Source Path for Sonar
         run: sed -i "s@<source>/home/runner/work/mlflow-oidc-auth/mlflow-oidc-auth</source>@<source>/github/workspace</source>@g" /home/runner/work/mlflow-oidc-auth/mlflow-oidc-auth/coverage.xml
-      - name: debug cov
-        run: |
-          pwd
-          ls -alh
-          head -n50 coverage.xml
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@e44258b109568baa0df60ed515909fc6c72cba92 # v2.3.0
         env:
