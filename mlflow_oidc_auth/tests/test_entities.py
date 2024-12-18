@@ -20,11 +20,10 @@ class TestUser(unittest.TestCase):
             "username": "test_user",
             "is_admin": True,
             "display_name": "Test User",
-            "experiment_permissions": [{"experiment_id": "exp1", "permission": "read", "user_id": None, "group_id": None}],
-            "registered_model_permissions": [{"name": "model1", "permission": "write", "user_id": None, "group_id": None}],
+            # "experiment_permissions" is not included in to_json
+            # "registered_model_permissions" is not included in to_json
             "groups": [{"id": "group1", "group_name": "Group 1"}],
         }
-
         self.assertEqual(user.to_json(), expected_json)
 
     def test_user_from_json(self):
