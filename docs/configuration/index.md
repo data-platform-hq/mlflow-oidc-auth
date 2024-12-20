@@ -35,5 +35,3 @@ The plugin required the following environment variables but also supported `.env
 | REDIS_USERNAME | Redis username | None |
 | REDIS_PASSWORD | Redis password | None |
 | REDIS_SSL | Use SSL | false |
-
-
