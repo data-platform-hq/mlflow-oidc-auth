@@ -15,42 +15,45 @@ def store(_mock_migrate_if_needed):
 
 
 class TestSqlAlchemyStore:
-    @patch("mlflow_oidc_auth.sqlalchemy_store.SqlAlchemyStore._get_user")
+    @patch(
+        "mlflow_oidc_auth.sqlalchemy_store.SqlAlchemyStore._get_user", return_value=MagicMock(password_hash="hashed_password")
+    )
     @patch("mlflow_oidc_auth.sqlalchemy_store.check_password_hash", return_value=True)
-    def test_authenticate_user(self, _mock_check_password_hash, mock_get_user, store):
-        mock_get_user.return_value = MagicMock(password_hash="hashed_password")
+    def test_authenticate_user(self, mock_check_password_hash, mock_get_user, store):
         auth_result = store.authenticate_user("test_user", "password")
+        mock_check_password_hash.assert_called_once()
         mock_get_user.assert_called_once()
         assert mock_get_user.call_args[0][1] == "test_user"
         assert auth_result is True
 
-    @patch("mlflow_oidc_auth.sqlalchemy_store.SqlAlchemyStore._get_user")
+    @patch(
+        "mlflow_oidc_auth.sqlalchemy_store.SqlAlchemyStore._get_user", return_value=MagicMock(password_hash="hashed_password")
+    )
     @patch("mlflow_oidc_auth.sqlalchemy_store.check_password_hash", return_value=False)
-    def test_authenticate_user_failure(self, _mock_check_password_hash, mock_get_user, store):
-        mock_get_user.return_value = MagicMock(password_hash="hashed_password")
+    def test_authenticate_user_failure(self, mock_check_password_hash, mock_get_user, store):
         auth_result = store.authenticate_user("test_user", "password")
         mock_get_user.assert_called_once()
+        mock_check_password_hash.assert_called_once()
         assert mock_get_user.call_args[0][1] == "test_user"
         assert auth_result is False
 
     @patch("mlflow_oidc_auth.sqlalchemy_store.generate_password_hash", return_value="hashed_password")
-    def test_create_user(self, _generate_password_hash, store):
+    def test_create_user(self, generate_password_hash, store):
         store.ManagedSessionMaker = MagicMock()
-        mock_session = MagicMock()
-        mock_session.flush = MagicMock()
-        mock_session.add = MagicMock()
+        mock_session = MagicMock(flush=MagicMock(), add=MagicMock())
         store.ManagedSessionMaker.return_value.__enter__.return_value = mock_session
 
         user = store.create_user("test_user", "password", "Test User")
 
-        #  display_name="Test User", is_admin=False)
         mock_session.add.assert_called_once()
+        mock_session.flush.assert_called_once()
+        generate_password_hash.assert_called_once_with("password")
+
         assert mock_session.add.call_args[0][0].username == "test_user"
         assert mock_session.add.call_args[0][0].password_hash == "hashed_password"
         assert mock_session.add.call_args[0][0].display_name == "Test User"
         assert mock_session.add.call_args[0][0].is_admin is False
 
-        mock_session.flush.assert_called_once()
         assert user.username == "test_user"
         assert user.display_name == "Test User"
         assert user.is_admin is False
@@ -58,9 +61,7 @@ class TestSqlAlchemyStore:
     @patch("mlflow_oidc_auth.sqlalchemy_store.generate_password_hash", return_value="hashed_password")
     def test_create_admin_user(self, _generate_password_hash, store):
         store.ManagedSessionMaker = MagicMock()
-        mock_session = MagicMock()
-        mock_session.flush = MagicMock()
-        mock_session.add = MagicMock()
+        mock_session = MagicMock(flush=MagicMock(), add=MagicMock())
         store.ManagedSessionMaker.return_value.__enter__.return_value = mock_session
 
         admin_user = store.create_user("admin_user", "password", "Admin User", is_admin=True)
@@ -73,9 +74,7 @@ class TestSqlAlchemyStore:
 
     def test_create_user_existing(self, store):
         store.ManagedSessionMaker = MagicMock()
-        mock_session = MagicMock()
-        mock_session.flush = MagicMock()
-        mock_session.add = MagicMock(side_effect=IntegrityError("", {}, Exception))
+        mock_session = MagicMock(flush=MagicMock(), add=MagicMock(side_effect=IntegrityError("", {}, Exception)))
         store.ManagedSessionMaker.return_value.__enter__.return_value = mock_session
 
         with pytest.raises(MlflowException):
@@ -83,8 +82,7 @@ class TestSqlAlchemyStore:
 
     def test_get_user_not_found(self, store):
         store.ManagedSessionMaker = MagicMock()
-        mock_session = MagicMock()
-        mock_session.query = MagicMock(side_effect=NoResultFound("", {}, Exception))
+        mock_session = MagicMock(query=MagicMock(side_effect=NoResultFound("", {}, Exception)))
         store.ManagedSessionMaker.return_value.__enter__.return_value = mock_session
 
         with pytest.raises(MlflowException):
@@ -92,9 +90,7 @@ class TestSqlAlchemyStore:
 
     @patch("mlflow_oidc_auth.sqlalchemy_store.generate_password_hash", return_value="hashed_password")
     def test_update_user(self, _generate_password_hash, store):
-        retrieved_user = MagicMock()
-        retrieved_user.is_admin = PropertyMock()
-        retrieved_user.password_hash = PropertyMock()
+        retrieved_user = MagicMock(is_admin=PropertyMock(), password_hash=PropertyMock())
         store._get_user = MagicMock(return_value=retrieved_user)
         store.update_user("test_user", password="new_password", is_admin=True)
         assert retrieved_user.is_admin == True
@@ -102,9 +98,7 @@ class TestSqlAlchemyStore:
 
     def test_delete_user(self, store):
         store.ManagedSessionMaker = MagicMock()
-        mock_session = MagicMock()
-        mock_session.flush = MagicMock()
-        mock_session.delete = MagicMock()
+        mock_session = MagicMock(flush=MagicMock(), delete=MagicMock())
         store.ManagedSessionMaker.return_value.__enter__.return_value = mock_session
         store._get_user = MagicMock(return_value=MagicMock())
 
@@ -119,14 +113,11 @@ class TestSqlAlchemyStore:
     @patch("mlflow_oidc_auth.sqlalchemy_store.SqlAlchemyStore._get_user")
     def test_create_experiment_permission(self, mock_get_user, store):
         store.ManagedSessionMaker = MagicMock()
-        mock_session = MagicMock()
-        mock_session.flush = MagicMock()
-        mock_session.add = MagicMock
+        mock_session = MagicMock(flush=MagicMock(), add=MagicMock())
         store.ManagedSessionMaker.return_value.__enter__.return_value = mock_session
 
-        mock_user = MagicMock()
-        mock_user.id = 1
-        store._get_user.return_value = mock_user  # = MagicMock(return_value=mock_user)
+        mock_user = MagicMock(id=1)
+        store._get_user.return_value = mock_user
         mock_get_user.return_value = mock_user
 
         permission = store.create_experiment_permission("1", "test_user", "READ")
@@ -140,9 +131,7 @@ class TestSqlAlchemyStore:
 
     def test_create_registered_model_permission_fails_on_duplicate(self, store):
         store.ManagedSessionMaker = MagicMock()
-        mock_session = MagicMock()
-        mock_session.flush = MagicMock()
-        mock_session.add = MagicMock(side_effect=IntegrityError("", {}, Exception))
+        mock_session = MagicMock(flush=MagicMock(), add=MagicMock(side_effect=IntegrityError("", {}, Exception)))
         store.ManagedSessionMaker.return_value.__enter__.return_value = mock_session
         with pytest.raises(MlflowException):
             store.create_registered_model_permission("model", "test_user", "READ")
@@ -167,9 +156,7 @@ class TestSqlAlchemyStore:
 
     def test_delete_registered_model_permission(self, store):
         store.ManagedSessionMaker = MagicMock()
-        mock_session = MagicMock()
-        mock_session.flush = MagicMock()
-        mock_session.delete = MagicMock()
+        mock_session = MagicMock(flush=MagicMock(), delete=MagicMock())
         store.ManagedSessionMaker.return_value.__enter__.return_value = mock_session
         store._get_registered_model_permission = MagicMock(
             return_value=SqlRegisteredModelPermission(name="model", user_id=1, permission="READ")
@@ -181,8 +168,7 @@ class TestSqlAlchemyStore:
 
     def test_populate_groups_is_idempotent(self, store):
         store.ManagedSessionMaker = MagicMock()
-        mock_session = MagicMock()
-        mock_session.add = MagicMock()
+        mock_session = MagicMock(add=MagicMock())
         mock_session.query.return_value.filter.return_value.first.return_value = None
         store.ManagedSessionMaker.return_value.__enter__.return_value = mock_session
 
