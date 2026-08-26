@@ -126,6 +126,13 @@ class TestFindFastapiValidator:
         assert self._find("/ajax-api/3.0/mlflow/assistant") is not None
         assert self._find("/ajax-api/3.0/mlflow/assistant/chat") is not None
 
+    def test_mcp_server_registry_routes_return_validator(self):
+        """Test MCP server registry routes return a validator on both prefixes."""
+        assert self._find("/api/3.0/mlflow/mcp-servers") is not None
+        assert self._find("/api/3.0/mlflow/mcp-servers/com.example/server") is not None
+        assert self._find("/ajax-api/3.0/mlflow/mcp-servers") is not None
+        assert self._find("/ajax-api/3.0/mlflow/mcp-servers/endpoints") is not None
+
     def test_flask_route_returns_none(self):
         """Test Flask-handled routes return None (pass-through)."""
         assert self._find("/api/2.0/mlflow/experiments/list") is None
@@ -286,6 +293,44 @@ class TestRequireAuthenticationValidator:
         request = MagicMock(spec=Request)
         result = await validator("user@example.com", request)
         assert result is True
+
+
+# ---------------------------------------------------------------------------
+# Unit tests: MCP server registry validator
+# ---------------------------------------------------------------------------
+
+
+class TestMCPServerRegistryValidator:
+    """Test the MCP server registry validator: reads open, writes admin-only."""
+
+    def _validator(self):
+        from mlflow_oidc_auth.middleware.fastapi_permission_middleware import (
+            _get_mcp_server_registry_validator,
+        )
+
+        return _get_mcp_server_registry_validator()
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("method", ["GET", "HEAD"])
+    async def test_reads_allowed_for_any_user(self, method):
+        """Test that a non-admin authenticated user may read the registry."""
+        validator = self._validator()
+        request = MagicMock(spec=Request)
+        request.method = method
+        assert await validator("user@example.com", request) is True
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("method", ["POST", "PATCH", "DELETE", "PUT"])
+    async def test_writes_denied_for_non_admin(self, method):
+        """Test that a non-admin authenticated user may not mutate the registry.
+
+        Admins never reach this validator, so denying here is what makes
+        mutation admin-only.
+        """
+        validator = self._validator()
+        request = MagicMock(spec=Request)
+        request.method = method
+        assert await validator("user@example.com", request) is False
 
 
 # ---------------------------------------------------------------------------
