@@ -367,6 +367,32 @@ class TestAuthMiddleware:
         assert "username" not in session  # session.clear() was called
 
     @pytest.mark.asyncio
+    async def test_authenticate_session_expired_survives_when_idp_expiry_not_enforced(self, auth_middleware, create_mock_request):
+        """With enforcement off, an expired token neither ends the session nor reaches the IdP.
+
+        The IdP call is the thing being avoided: against a provider that rotates refresh tokens
+        with reuse detection, parallel requests refreshing at once cost the user the session.
+        """
+        from mlflow_oidc_auth.middleware import auth_middleware as middleware_mod
+        from unittest.mock import AsyncMock, patch as _patch
+
+        session = {"session_id": "sid-user", "expires_at": 100, "refresh_token": "rt-123"}
+        refresh = AsyncMock(return_value=False)
+
+        with (
+            _patch("mlflow_oidc_auth.routers.auth.refresh_session_with_idp", new=refresh),
+            _patch.object(middleware_mod.config, "OIDC_ENFORCE_IDP_TOKEN_EXPIRY", False, create=True),
+        ):
+            request = create_mock_request(session=session)
+            success, username, error = await auth_middleware._authenticate_session(request)
+
+        assert success is True
+        assert username == "user@example.com"
+        assert error == ""
+        refresh.assert_not_awaited()
+        assert session["session_id"] == "sid-user"
+
+    @pytest.mark.asyncio
     async def test_authenticate_session_expired_refresh_succeeds(self, auth_middleware, create_mock_request):
         """When OIDC_USE_REFRESH_TOKEN is on and refresh succeeds, the session is accepted."""
         from mlflow_oidc_auth.middleware import auth_middleware as middleware_mod

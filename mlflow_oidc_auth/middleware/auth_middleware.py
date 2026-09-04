@@ -492,7 +492,15 @@ class AuthMiddleware(BaseHTTPMiddleware):
         Returns False when no expiry is recorded — older sessions predating this
         feature should keep working until the cookie TTL takes them out, instead
         of being summarily logged out at deploy time.
+
+        Also returns False when ``OIDC_ENFORCE_IDP_TOKEN_EXPIRY`` is off. The check lives here
+        rather than only at the point the expiry is recorded so that sessions established before
+        the setting changed stop being expired too, instead of each having to be logged out once
+        more to take effect.
         """
+
+        if not config.OIDC_ENFORCE_IDP_TOKEN_EXPIRY:
+            return False
 
         expires_at = session.get("expires_at")
         if not isinstance(expires_at, (int, float)):
