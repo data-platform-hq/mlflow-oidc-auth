@@ -46,6 +46,10 @@ _GEMINI_STREAM = re.compile(r"^/gateway/gemini/v1beta/models/([^/:]+):streamGene
 # Pattern: /gateway/{endpoint_name}/mlflow/invocations
 _INVOCATIONS_RE = re.compile(r"^/gateway/([^/]+)/mlflow/invocations$")
 
+# MCP server registry, mounted by MLflow under both the API and the UI prefix
+# (mlflow.server.mcp_server_api.get_mcp_server_api_route_prefixes)
+_MCP_SERVER_PREFIXES = ("/api/3.0/mlflow/mcp-servers", "/ajax-api/3.0/mlflow/mcp-servers")
+
 
 # ---------------------------------------------------------------------------
 # Endpoint-name extraction (mirrors upstream _extract_gateway_endpoint_name)
@@ -142,6 +146,22 @@ def _get_require_authentication_validator() -> Callable[[str, Request], Awaitabl
     return validator
 
 
+def _get_mcp_server_registry_validator() -> Callable[[str, Request], Awaitable[bool]]:
+    """Return a validator for the MCP server registry routes.
+
+    The registry is a single catalog shared by every tenant, and there is no
+    per-server permission model for it yet. Reading it is open to any
+    authenticated user; mutating it is admin-only. Admins never reach this
+    validator (the middleware short-circuits on ``is_admin``), so denying
+    every write method here is what makes mutation admin-only.
+    """
+
+    async def validator(username: str, request: Request) -> bool:
+        return request.method in ("GET", "HEAD")
+
+    return validator
+
+
 # ---------------------------------------------------------------------------
 # Route → validator dispatcher
 # ---------------------------------------------------------------------------
@@ -166,6 +186,9 @@ def _find_fastapi_validator(
 
     if path.startswith("/ajax-api/3.0/mlflow/assistant"):
         return _get_require_authentication_validator()
+
+    if path.startswith(_MCP_SERVER_PREFIXES):
+        return _get_mcp_server_registry_validator()
 
     return None
 
