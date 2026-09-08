@@ -764,6 +764,30 @@ class TestPersistSessionAuth:
 
         assert "refresh_token" not in session
 
+    def test_stores_neither_value_when_idp_expiry_not_enforced(self, mock_config):
+        mock_config.OIDC_ENFORCE_IDP_TOKEN_EXPIRY = False
+        mock_config.OIDC_USE_REFRESH_TOKEN = True
+        session = {}
+        token = {"expires_at": 9999999999, "refresh_token": "rt-abc"}
+
+        with patch("mlflow_oidc_auth.routers.auth.config", mock_config):
+            _persist_session_auth(session, token)
+
+        assert "expires_at" not in session
+        assert "refresh_token" not in session
+
+    def test_discards_values_from_an_earlier_login_when_enforcement_is_turned_off(self, mock_config):
+        """A session established while enforcement was on must not keep the credential."""
+        mock_config.OIDC_ENFORCE_IDP_TOKEN_EXPIRY = False
+        mock_config.OIDC_USE_REFRESH_TOKEN = True
+        session = {"expires_at": 100, "refresh_token": "rt-stale"}
+
+        with patch("mlflow_oidc_auth.routers.auth.config", mock_config):
+            _persist_session_auth(session, {"expires_at": 9999999999, "refresh_token": "rt-new"})
+
+        assert "expires_at" not in session
+        assert "refresh_token" not in session
+
     def test_keeps_existing_refresh_token_when_response_omits_one(self, mock_config):
         """Many IdPs (Entra, some Keycloak configs) emit refresh_token only on
         the initial token exchange and reuse the same one across refreshes.

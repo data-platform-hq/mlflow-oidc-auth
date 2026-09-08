@@ -211,7 +211,16 @@ def _persist_session_auth(session, token_response: dict[str, Any]) -> None:
     gates persistence of the refresh token because storing one in a signed
     (but not encrypted) cookie has security implications, and many enterprises
     disallow ``offline_access`` outright.
+
+    With ``OIDC_ENFORCE_IDP_TOKEN_EXPIRY`` off, neither value is kept: the expiry is what
+    would end the session, and the refresh token exists only to extend it. Holding a
+    credential in the cookie that nothing will ever present is a liability, not a spare.
     """
+
+    if not config.OIDC_ENFORCE_IDP_TOKEN_EXPIRY:
+        session.pop("expires_at", None)
+        session.pop("refresh_token", None)
+        return
 
     expiry = _extract_session_expiry(token_response)
     if expiry is not None:
