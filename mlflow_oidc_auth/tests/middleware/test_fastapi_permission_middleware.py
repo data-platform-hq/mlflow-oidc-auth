@@ -338,7 +338,7 @@ class TestMCPServerRegistryValidator:
 # ---------------------------------------------------------------------------
 
 
-def _create_app_with_auth(username=None, is_admin=False):
+def _create_app_with_auth(username=None, is_admin=False, workspace=None):
     """Create a test FastAPI app with auth context and permission middleware.
 
     Starlette ``@app.middleware("http")`` uses LIFO ordering: the last middleware
@@ -346,6 +346,7 @@ def _create_app_with_auth(username=None, is_admin=False):
     permission middleware FIRST, then the auth-context middleware, so that
     auth context is set before the permission middleware reads it.
     """
+    from mlflow_oidc_auth.entities.auth_context import AUTH_CONTEXT_KEY, AuthContext
     from mlflow_oidc_auth.middleware.fastapi_permission_middleware import (
         add_fastapi_permission_middleware,
     )
@@ -382,6 +383,7 @@ def _create_app_with_auth(username=None, is_admin=False):
         async def inject_auth_context(request: Request, call_next):
             request.state.username = username
             request.state.is_admin = is_admin
+            request.scope[AUTH_CONTEXT_KEY] = AuthContext(username=username, is_admin=is_admin, workspace=workspace)
             return await call_next(request)
 
     return app
@@ -529,3 +531,85 @@ class TestFastapiPermissionMiddlewareIntegration:
         client = TestClient(app)
         response = client.get("/gateway/my-ep/mlflow/invocations")
         assert response.status_code == 403
+
+
+# ---------------------------------------------------------------------------
+# Integration tests: AuthContext ContextVar bridging for workspace resolution
+# ---------------------------------------------------------------------------
+
+
+class TestAuthContextBridging:
+    """Test that the middleware bridges AuthContext via ContextVar for FastAPI-native routes."""
+
+    @patch("mlflow_oidc_auth.utils.effective_experiment_permission")
+    def test_otel_validator_receives_workspace_via_contextvar(self, mock_perm):
+        """Workspace is available via get_request_workspace during OTel validatio.n"""
+        from mlflow_oidc_auth.bridge.user import get_request_workspace
+
+        captured_workspace = {}
+
+        def capture_workspace(experiment_id, username):
+            captured_workspace["value"] = get_request_workspace()
+            result = MagicMock()
+            result.permission.can_update = True
+            return result
+
+        mock_perm.side_effect = capture_workspace
+
+        app = _create_app_with_auth(username="user@example.com", is_admin=False, workspace="team-ws")
+        client = TestClient(app)
+        response = client.get("/v1/traces", headers={"X-Mlflow-Experiment-Id": "42"})
+
+        assert response.status_code == 200
+        assert captured_workspace["value"] == "team-ws"
+
+    @patch("mlflow_oidc_auth.utils.effective_experiment_permission")
+    def test_contextvar_cleared_after_request(self, mock_perm):
+        """ContextVar is cleared after the middleware processes the request."""
+        from mlflow_oidc_auth.bridge.user import _auth_context_var
+
+        mock_result = MagicMock()
+        mock_result.permission.can_update = True
+        mock_perm.return_value = mock_result
+
+        app = _create_app_with_auth(username="user@example.com", is_admin=False, workspace="team-ws")
+        client = TestClient(app)
+        response = client.get("/v1/traces", headers={"X-Mlflow-Experiment-Id": "42"})
+
+        assert _auth_context_var.get() is None
+
+    @patch("mlflow_oidc_auth.utils.effective_experiment_permission")
+    def test_contextvar_cleared_on_validator_exception(self, mock_perm):
+        """ContextVar is cleared when the validator raises."""
+        from mlflow_oidc_auth.bridge.user import _auth_context_var
+
+        mock_perm.side_effect = RuntimeError("boom")
+
+        app = _create_app_with_auth(username="user@example.com", is_admin=False, workspace="team-ws")
+        client = TestClient(app)
+        response = client.get("/v1/traces", headers={"X-Mlflow-Experiment-Id": "42"})
+
+        assert response.status_code == 403
+        assert _auth_context_var.get() is None
+
+    @patch("mlflow_oidc_auth.utils.effective_experiment_permission")
+    def test_no_workspace_header_contextvar_has_none_workspace(self, mock_perm):
+        """With workspace header, ContextVar AuthContext has workspace=None."""
+        from mlflow_oidc_auth.bridge.user import get_request_workspace
+
+        captured_workspace = {}
+
+        def capture_workspace(experiment_id, username):
+            captured_workspace["value"] = get_request_workspace()
+            result = MagicMock()
+            result.permission.can_update = True
+            return result
+
+        mock_perm.side_effect = capture_workspace
+
+        app = _create_app_with_auth(username="user@example.com", is_admin=False, workspace=None)
+        client = TestClient(app)
+        response = client.get("/v1/traces", headers={"X-Mlflow-Experiment-Id": "42"})
+
+        assert response.status_code == 200
+        assert captured_workspace["value"] is None
